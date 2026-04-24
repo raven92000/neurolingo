@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --neuri-success:      #58CC02;
+  --neuri-energy:       #F59E0B;
+  --neuri-active:       #8B5CF6;
+  --neuri-focus:        #3B82F6;
+  --neuri-pause:        #EF4444;
+
+  --dark-bg:            #111827;
+  --dark-surface:       #1E2535;
+  --dark-surface-alt:   #263044;
+  --dark-border:        #2D3748;
+  --dark-text:          #F9FAFB;
+  --dark-text-2:        #94A3B8;
+
+  --font-display: 'Nunito', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--dark-bg);
+  color: var(--dark-text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
