@@ -59,17 +59,30 @@ export default function Dashboard() {
   const [cardPressed, setCardPressed] = useState(false)
 
   useEffect(() => {
-    async function chargerProfil() {
-      const { data, error } = await supabase
+  async function chargerProfil() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { navigate('/login'); return }
+
+    const { data, error } = await supabase
+      .from('profils')
+      .select('*')
+      .eq('user_id', user.id)
+      .single()
+
+    if (!error && data) {
+      setProfil(data)
+    } else {
+      const { data: fallback } = await supabase
         .from('profils')
         .select('*')
         .limit(1)
         .single()
-      if (!error && data) setProfil(data)
-      setChargement(false)
+      if (fallback) setProfil(fallback)
     }
-    chargerProfil()
-  }, [])
+    setChargement(false)
+  }
+  chargerProfil()
+}, [])
 
   if (chargement) return (
     <div style={{ minHeight: '100vh', background: '#090E1A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
