@@ -44,11 +44,7 @@ function Home() {
       </p>
 
       {/* Neuri 3D */}
-      <div style={{
-        width: '260px',
-        height: '260px',
-        marginBottom: '8px',
-      }}>
+      <div style={{ width: '260px', height: '260px', marginBottom: '8px' }}>
         <Neuri3D color="#8B5CF6" />
       </div>
 
@@ -87,7 +83,7 @@ function Home() {
         maxWidth: '320px',
       }}>
         <button
-          onClick={() => navigate('/onboarding')}
+          onClick={() => navigate('/login')}
           style={{
             background: '#58CC02',
             color: 'white',
@@ -103,7 +99,7 @@ function Home() {
         </button>
 
         <button
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/login')}
           style={{
             background: 'transparent',
             color: '#94A3B8',
@@ -120,11 +116,7 @@ function Home() {
       </div>
 
       {/* Tags */}
-      <div style={{
-        display: 'flex',
-        gap: '24px',
-        marginTop: '40px',
-      }}>
+      <div style={{ display: 'flex', gap: '24px', marginTop: '40px' }}>
         {['TDAH', 'Dyslexie', 'Tout âge'].map(tag => (
           <span key={tag} style={{
             fontFamily: 'DM Sans, sans-serif',
