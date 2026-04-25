@@ -1,6 +1,9 @@
+import { useNavigate } from 'react-router-dom'
 import Neuri3D from '../components/Neuri3D'
 
 function Home() {
+  const navigate = useNavigate()
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -83,31 +86,35 @@ function Home() {
         width: '100%',
         maxWidth: '320px',
       }}>
-        <button style={{
-          background: '#58CC02',
-          color: 'white',
-          border: 'none',
-          borderRadius: '16px',
-          padding: '18px',
-          fontSize: '17px',
-          fontFamily: 'Nunito, sans-serif',
-          fontWeight: '800',
-          cursor: 'pointer',
-        }}>
+        <button
+          onClick={() => navigate('/onboarding')}
+          style={{
+            background: '#58CC02',
+            color: 'white',
+            border: 'none',
+            borderRadius: '16px',
+            padding: '18px',
+            fontSize: '17px',
+            fontFamily: 'Nunito, sans-serif',
+            fontWeight: '800',
+            cursor: 'pointer',
+          }}>
           Commencer gratuitement
         </button>
 
-        <button style={{
-          background: 'transparent',
-          color: '#94A3B8',
-          border: '1.5px solid #2D3748',
-          borderRadius: '16px',
-          padding: '18px',
-          fontSize: '16px',
-          fontFamily: 'Nunito, sans-serif',
-          fontWeight: '700',
-          cursor: 'pointer',
-        }}>
+        <button
+          onClick={() => navigate('/dashboard')}
+          style={{
+            background: 'transparent',
+            color: '#94A3B8',
+            border: '1.5px solid #2D3748',
+            borderRadius: '16px',
+            padding: '18px',
+            fontSize: '16px',
+            fontFamily: 'Nunito, sans-serif',
+            fontWeight: '700',
+            cursor: 'pointer',
+          }}>
           J'ai déjà un compte
         </button>
       </div>

@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Neuri3D from '../components/Neuri3D'
 
 function ParticlesBg({ active }) {
@@ -72,6 +73,7 @@ function FluidBg({ active }) {
 
 export default function Onboarding() {
   const [profil, setProfil] = useState(null)
+  const navigate = useNavigate()
 
   const neurColor = profil === 'tdah' ? '#8B5CF6' : profil === 'dyslexie' ? '#3B82F6' : '#7C3AED'
 
@@ -94,7 +96,6 @@ export default function Onboarding() {
       overflow: 'hidden',
     }}>
 
-      {/* Neuri */}
       <div style={{
         width: '150px', height: '150px',
         transition: 'transform 0.4s ease',
@@ -104,7 +105,6 @@ export default function Onboarding() {
         <Neuri3D color={neurColor} />
       </div>
 
-      {/* H1 */}
       <h1 style={{
         fontFamily: 'Nunito, sans-serif',
         fontSize: '34px',
@@ -117,7 +117,6 @@ export default function Onboarding() {
         Je m'adapte à toi.
       </h1>
 
-      {/* H2 */}
       <p style={{
         fontFamily: 'DM Sans, sans-serif',
         fontSize: '17px',
@@ -130,7 +129,6 @@ export default function Onboarding() {
         {profil ? 'Parfait. Je construis ton parcours.' : 'Chaque cerveau apprend différemment.'}
       </p>
 
-      {/* Cartes */}
       <div style={{
         display: 'flex', flexDirection: 'column',
         gap: '16px', width: '100%', maxWidth: '340px',
@@ -144,58 +142,35 @@ export default function Onboarding() {
             position: 'relative', overflow: 'hidden',
             borderRadius: '22px', padding: '22px 20px',
             cursor: 'pointer',
-            background: profil === 'tdah'
-              ? 'rgba(139,92,246,0.14)'
-              : 'rgba(255,255,255,0.04)',
+            background: profil === 'tdah' ? 'rgba(139,92,246,0.14)' : 'rgba(255,255,255,0.04)',
             backdropFilter: 'blur(20px)',
-            border: profil === 'tdah'
-              ? '1.5px solid rgba(139,92,246,0.55)'
-              : '1px solid rgba(255,255,255,0.08)',
-            boxShadow: profil === 'tdah'
-              ? '0 0 32px rgba(139,92,246,0.22), inset 0 0 24px rgba(139,92,246,0.06)'
-              : '0 2px 20px rgba(0,0,0,0.25)',
+            border: profil === 'tdah' ? '1.5px solid rgba(139,92,246,0.55)' : '1px solid rgba(255,255,255,0.08)',
+            boxShadow: profil === 'tdah' ? '0 0 32px rgba(139,92,246,0.22)' : '0 2px 20px rgba(0,0,0,0.25)',
             transform: profil === 'tdah' ? 'scale(1.025)' : profil === 'dyslexie' ? 'scale(0.98)' : 'scale(1)',
             opacity: profil === 'dyslexie' ? 0.75 : 1,
             transition: 'all 0.2s ease',
           }}
-          onMouseEnter={e => { if (profil !== 'tdah') e.currentTarget.style.transform = 'scale(1.015)' }}
-          onMouseLeave={e => { if (profil !== 'tdah') e.currentTarget.style.transform = profil === 'dyslexie' ? 'scale(0.98)' : 'scale(1)' }}
         >
           <ParticlesBg active={profil === 'tdah'} />
           <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '14px' }}>
-            {/* Icône */}
             <div style={{
               width: '48px', height: '48px', borderRadius: '14px', flexShrink: 0,
               background: 'rgba(139,92,246,0.15)',
               border: '1px solid rgba(139,92,246,0.25)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: profil === 'tdah' ? '0 0 16px rgba(139,92,246,0.3)' : 'none',
-              transition: 'box-shadow 0.2s ease',
             }}>
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                 <path d="M1 11 L5 5 L8 14 L12 3 L15 13 L18 7 L21 11" stroke="#A78BFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            {/* Texte */}
             <div style={{ flex: 1 }}>
-              <p style={{
-                fontFamily: 'Nunito, sans-serif', fontSize: '21px', fontWeight: '600',
-                color: '#FFFFFF', margin: '0 0 5px',
-              }}>TDAH</p>
-              <p style={{
-                fontFamily: 'DM Sans, sans-serif', fontSize: '14px',
-                color: 'rgba(255,255,255,0.72)', margin: 0, lineHeight: '1.4',
-              }}>
-                Rythme rapide&nbsp;·&nbsp;Visuel&nbsp;·&nbsp;Récompenses fréquentes
+              <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '21px', fontWeight: '600', color: '#FFFFFF', margin: '0 0 5px' }}>TDAH</p>
+              <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.72)', margin: 0, lineHeight: '1.4' }}>
+                Rythme rapide · Visuel · Récompenses fréquentes
               </p>
             </div>
-            {/* Check */}
             {profil === 'tdah' && (
-              <div style={{
-                width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0,
-                background: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 0 12px rgba(139,92,246,0.5)',
-              }}>
+              <div style={{ width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0, background: '#7C3AED', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
                   <path d="M2 5.5 L4.5 8 L9 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
@@ -211,61 +186,36 @@ export default function Onboarding() {
             position: 'relative', overflow: 'hidden',
             borderRadius: '22px', padding: '22px 20px',
             cursor: 'pointer',
-            background: profil === 'dyslexie'
-              ? 'rgba(59,130,246,0.12)'
-              : 'rgba(255,255,255,0.04)',
+            background: profil === 'dyslexie' ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.04)',
             backdropFilter: 'blur(20px)',
-            border: profil === 'dyslexie'
-              ? '1.5px solid rgba(59,130,246,0.55)'
-              : '1px solid rgba(255,255,255,0.08)',
-            boxShadow: profil === 'dyslexie'
-              ? '0 0 32px rgba(59,130,246,0.2), inset 0 0 24px rgba(59,130,246,0.05)'
-              : '0 2px 20px rgba(0,0,0,0.25)',
+            border: profil === 'dyslexie' ? '1.5px solid rgba(59,130,246,0.55)' : '1px solid rgba(255,255,255,0.08)',
+            boxShadow: profil === 'dyslexie' ? '0 0 32px rgba(59,130,246,0.2)' : '0 2px 20px rgba(0,0,0,0.25)',
             transform: profil === 'dyslexie' ? 'scale(1.025)' : profil === 'tdah' ? 'scale(0.98)' : 'scale(1)',
             opacity: profil === 'tdah' ? 0.75 : 1,
             transition: 'all 0.25s ease',
           }}
-          onMouseEnter={e => { if (profil !== 'dyslexie') e.currentTarget.style.transform = 'scale(1.015)' }}
-          onMouseLeave={e => { if (profil !== 'dyslexie') e.currentTarget.style.transform = profil === 'tdah' ? 'scale(0.98)' : 'scale(1)' }}
         >
           <FluidBg active={profil === 'dyslexie'} />
           <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '14px' }}>
-            {/* Icône */}
             <div style={{
               width: '48px', height: '48px', borderRadius: '14px', flexShrink: 0,
               background: 'rgba(59,130,246,0.12)',
               border: '1px solid rgba(59,130,246,0.25)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: profil === 'dyslexie' ? '0 0 16px rgba(59,130,246,0.3)' : 'none',
-              transition: 'box-shadow 0.2s ease',
             }}>
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                 <circle cx="11" cy="11" r="2.5" fill="#60A5FA"/>
                 <path d="M5.5 11 C5.5 7.96 7.96 5.5 11 5.5 C14.04 5.5 16.5 7.96 16.5 11 C16.5 14.04 14.04 16.5 11 16.5" stroke="#60A5FA" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-                <path d="M2 11 C2 5.48 5.48 1 11 1" stroke="#60A5FA" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.45"/>
-                <path d="M20 11 C20 16.52 16.52 21 11 21" stroke="#60A5FA" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.45"/>
               </svg>
             </div>
-            {/* Texte */}
             <div style={{ flex: 1 }}>
-              <p style={{
-                fontFamily: 'Nunito, sans-serif', fontSize: '21px', fontWeight: '600',
-                color: '#FFFFFF', margin: '0 0 5px',
-              }}>Dyslexie</p>
-              <p style={{
-                fontFamily: 'DM Sans, sans-serif', fontSize: '14px',
-                color: 'rgba(255,255,255,0.72)', margin: 0, lineHeight: '1.4',
-              }}>
-                Lecture simplifiée&nbsp;·&nbsp;Audio&nbsp;·&nbsp;Confort visuel
+              <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '21px', fontWeight: '600', color: '#FFFFFF', margin: '0 0 5px' }}>Dyslexie</p>
+              <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.72)', margin: 0, lineHeight: '1.4' }}>
+                Lecture simplifiée · Audio · Confort visuel
               </p>
             </div>
-            {/* Check */}
             {profil === 'dyslexie' && (
-              <div style={{
-                width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0,
-                background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 0 12px rgba(59,130,246,0.5)',
-              }}>
+              <div style={{ width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0, background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
                   <path d="M2 5.5 L4.5 8 L9 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
@@ -279,12 +229,11 @@ export default function Onboarding() {
       {/* CTA */}
       <button
         disabled={!profil}
+        onClick={() => navigate('/dashboard')}
         style={{
           width: '100%', maxWidth: '340px',
           height: '54px',
-          background: profil
-            ? 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)'
-            : 'rgba(255,255,255,0.05)',
+          background: profil ? 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)' : 'rgba(255,255,255,0.05)',
           color: profil ? '#FFFFFF' : 'rgba(255,255,255,0.25)',
           border: profil ? 'none' : '1px solid rgba(255,255,255,0.08)',
           borderRadius: '18px',
