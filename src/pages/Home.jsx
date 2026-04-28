@@ -99,20 +99,20 @@ function Home() {
         </button>
 
         <button
-          onClick={() => navigate('/login')}
-          style={{
-            background: 'transparent',
-            color: '#94A3B8',
-            border: '1.5px solid #2D3748',
-            borderRadius: '16px',
-            padding: '18px',
-            fontSize: '16px',
-            fontFamily: 'Nunito, sans-serif',
-            fontWeight: '700',
-            cursor: 'pointer',
-          }}>
-          J'ai déjà un compte
-        </button>
+  onClick={() => navigate('/login?mode=connexion')}
+  style={{
+    background: 'transparent',
+    color: '#94A3B8',
+    border: '1.5px solid #2D3748',
+    borderRadius: '16px',
+    padding: '18px',
+    fontSize: '16px',
+    fontFamily: 'Nunito, sans-serif',
+    fontWeight: '700',
+    cursor: 'pointer',
+  }}>
+  J'ai déjà un compte
+</button>
       </div>
 
       {/* Tags */}

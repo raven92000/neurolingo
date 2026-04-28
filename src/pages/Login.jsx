@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import Neuri3D from '../components/Neuri3D'
 
 export default function Login() {
   const navigate = useNavigate()
-  const [mode, setMode] = useState('inscription')
+  const [searchParams] = useSearchParams()
+  const [mode, setMode] = useState(searchParams.get('mode') || 'inscription')
   const [email, setEmail] = useState('')
   const [motDePasse, setMotDePasse] = useState('')
   const [confirmMotDePasse, setConfirmMotDePasse] = useState('')

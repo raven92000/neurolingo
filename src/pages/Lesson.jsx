@@ -88,41 +88,60 @@ function EcranChargement() {
 
 // ─── ÉCRAN INTRO ─────────────────────────────────────────────
 function EcranIntro({ mots, onStart }) {
-  const [visibles, setVisibles] = useState([])
-  const [actif, setActif] = useState(null)
+  const [index, setIndex] = useState(0)
+  const [touchStart, setTouchStart] = useState(null)
+  const [touchEnd, setTouchEnd] = useState(null)
+  const [audioDebloque, setAudioDebloque] = useState(false)
 
+  const motActuel = mots[index]
+  const estDernier = index === mots.length - 1
+
+  // Audio auto au changement de mot (sauf au tout premier affichage)
   useEffect(() => {
-    mots.forEach((_, i) => {
-      setTimeout(() => setVisibles(v => [...v, i]), i * 250)
-    })
-  }, [mots])
+    if (audioDebloque && motActuel) {
+      setTimeout(() => playWord(motActuel.en), 200)
+    }
+  }, [index, audioDebloque, motActuel])
 
-  const renderCarte = (mot, i) => (
-    <div
-      key={mot.id}
-      onClick={() => { playWord(mot.en); setActif(mot.id) }}
-      style={{
-        background: actif === mot.id ? 'rgba(139,92,246,0.25)' : 'rgba(255,255,255,0.04)',
-        border: actif === mot.id ? '1.5px solid rgba(139,92,246,0.7)' : '1px solid rgba(255,255,255,0.08)',
-        borderRadius: '14px', padding: '16px 8px',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-        cursor: 'pointer',
-        boxShadow: actif === mot.id ? '0 0 24px rgba(139,92,246,0.35)' : 'none',
-        opacity: visibles.includes(i) ? 1 : 0,
-        transform: visibles.includes(i) ? 'translateY(0)' : 'translateY(8px)',
-        transition: 'opacity 0.3s ease, transform 0.3s ease, background 0.2s ease, border 0.2s ease',
-      }}
-    >
-      <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '15px', fontWeight: '800', color: actif === mot.id ? '#C4B5FD' : '#FFFFFF', margin: 0, textAlign: 'center' }}>
-        {mot.en}
-      </p>
-      <div style={{ width: '24px', height: '2px', borderRadius: '99px', background: actif === mot.id ? '#8B5CF6' : 'rgba(255,255,255,0.15)' }}/>
-    </div>
-  )
+  const debloquerAudioEtJouer = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel()
+      const u = new SpeechSynthesisUtterance(' ')
+      u.volume = 0.01
+      window.speechSynthesis.speak(u)
+    }
+    setAudioDebloque(true)
+    setTimeout(() => playWord(motActuel.en), 100)
+  }
+
+  const swipeSuivant = () => {
+    if (index < mots.length - 1) setIndex(index + 1)
+  }
+  const swipePrecedent = () => {
+    if (index > 0) setIndex(index - 1)
+  }
+
+  const handleTouchStart = (e) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+    const distance = touchStart - touchEnd
+    if (distance > 50) swipeSuivant()
+    if (distance < -50) swipePrecedent()
+  }
+
+  if (!motActuel) return null
 
   return (
     <div style={{ minHeight: '100vh', background: '#090E1A', display: 'flex', flexDirection: 'column', padding: '0 20px 40px', maxWidth: '430px', margin: '0 auto' }}>
-      <div style={{ padding: '52px 0 24px' }}>
+
+      {/* Header progression chapitre */}
+      <div style={{ padding: '52px 0 16px' }}>
         <div style={{ display: 'flex', gap: '6px' }}>
           {[1,2,3,4,5,6,7].map((_, i) => (
             <div key={i} style={{ flex: 1, height: '3px', borderRadius: '99px', background: i === 0 ? '#8B5CF6' : 'rgba(255,255,255,0.08)' }}/>
@@ -130,39 +149,165 @@ function EcranIntro({ mots, onStart }) {
         </div>
       </div>
 
-      <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', fontWeight: '600', color: '#8B5CF6', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 8px' }}>Chapitre 1 · Unité 1</p>
-        <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '32px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 6px', lineHeight: 1.1 }}>Les Salutations</h1>
-        <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '15px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>Anglais · Niveau débutant</p>
+      {/* Titre chapitre */}
+      <div style={{ marginBottom: '24px' }}>
+        <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', fontWeight: '600', color: '#8B5CF6', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 6px' }}>Chapitre 1 · Unité 1</p>
+        <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '26px', fontWeight: '900', color: '#FFFFFF', margin: 0, lineHeight: 1.1 }}>Les Salutations</h1>
       </div>
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '36px' }}>
-        {['~6 minutes', `${mots.length} mots · 7 exercices`].map((t, i) => (
-          <div key={i} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '7px 14px', fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>{t}</div>
+      {/* Dots carrousel */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+        {mots.map((_, i) => (
+          <div key={i} style={{
+            width: i === index ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '99px',
+            background: i === index ? '#8B5CF6' : 'rgba(255,255,255,0.15)',
+            transition: 'all 0.3s ease',
+          }}/>
         ))}
       </div>
 
-      <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', fontWeight: '600', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 14px', textAlign: 'center' }}>Tes mots</p>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-        {mots.slice(0, 3).map((mot, i) => renderCarte(mot, i))}
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '28px' }}>
-        {mots.slice(3).map((mot, i) => renderCarte(mot, i + 3))}
-      </div>
-
-      <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.25)', textAlign: 'center', margin: '0 0 28px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-        <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-          <path d="M3 6H1V12H3L7 15V3L3 6Z" fill="rgba(255,255,255,0.3)"/>
-          <path d="M11 5.5C12.5 6.8 13.5 8.3 13.5 9C13.5 9.7 12.5 11.2 11 12.5" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeLinecap="round"/>
-        </svg>
-        Appuie sur un mot pour l'écouter
+      <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', margin: '0 0 24px', letterSpacing: '0.08em' }}>
+        Mot {index + 1} sur {mots.length}
       </p>
 
-      <button onClick={onStart} style={{ width: '100%', height: '54px', background: 'linear-gradient(135deg, #7C3AED, #6D28D9)', color: '#FFFFFF', border: 'none', borderRadius: '16px', fontSize: '17px', fontFamily: 'Nunito, sans-serif', fontWeight: '800', cursor: 'pointer', boxShadow: '0 0 28px rgba(124,58,237,0.35)' }}>
-        Commencer
-      </button>
-      <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.2)', textAlign: 'center', margin: '16px 0 0' }}>Neuri est avec toi.</p>
+      {/* Carte du mot — zone swipeable */}
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '24px',
+          padding: '20px 0',
+          minHeight: '380px',
+        }}
+      >
+        {/* Illustration */}
+        <div
+          onClick={debloquerAudioEtJouer}
+          style={{
+            width: '180px',
+            height: '180px',
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(139,92,246,0.25)',
+            borderRadius: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 0 40px rgba(139,92,246,0.18)',
+            transition: 'all 0.4s ease',
+            transform: 'scale(1.1)',
+          }}
+        >
+          {motActuel.svg}
+        </div>
+
+        {/* Mot anglais + bouton audio */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <h2 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '44px', fontWeight: '900', color: '#FFFFFF', margin: 0, letterSpacing: '0.01em' }}>
+            {motActuel.en}
+          </h2>
+          <button
+            onClick={debloquerAudioEtJouer}
+            style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '12px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M3 6H1V12H3L7 15V3L3 6Z" fill="#A78BFA"/>
+              <path d="M11 5.5C12.5 6.8 13.5 8.3 13.5 9C13.5 9.7 12.5 11.2 11 12.5" stroke="#A78BFA" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Traduction française */}
+        <div style={{
+          background: 'rgba(139,92,246,0.1)',
+          border: '1px solid rgba(139,92,246,0.2)',
+          borderRadius: '20px',
+          padding: '10px 22px',
+        }}>
+          <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '18px', color: '#C4B5FD', margin: 0, fontWeight: '500' }}>
+            {motActuel.fr}
+          </p>
+        </div>
+      </div>
+
+      {/* Hint swipe (seulement sur le 1er mot) */}
+      {index === 0 && (
+        <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', margin: '0 0 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          ← Glisse pour découvrir le mot suivant →
+        </p>
+      )}
+
+      {/* Boutons navigation */}
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <button
+          onClick={swipePrecedent}
+          disabled={index === 0}
+          style={{
+            width: '54px',
+            height: '54px',
+            background: index === 0 ? 'rgba(255,255,255,0.04)' : 'rgba(139,92,246,0.12)',
+            border: index === 0 ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(139,92,246,0.25)',
+            borderRadius: '16px',
+            cursor: index === 0 ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: index === 0 ? 0.4 : 1,
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M11 4 L5 9 L11 14" stroke="#A78BFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+
+        {estDernier ? (
+          <button
+            onClick={onStart}
+            style={{
+              flex: 1,
+              height: '54px',
+              background: 'linear-gradient(135deg, #7C3AED, #6D28D9)',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '16px',
+              fontSize: '16px',
+              fontFamily: 'Nunito, sans-serif',
+              fontWeight: '800',
+              cursor: 'pointer',
+              boxShadow: '0 0 28px rgba(124,58,237,0.35)',
+            }}
+          >
+            Commencer la leçon
+          </button>
+        ) : (
+          <button
+            onClick={swipeSuivant}
+            style={{
+              flex: 1,
+              height: '54px',
+              background: 'rgba(139,92,246,0.12)',
+              border: '1px solid rgba(139,92,246,0.25)',
+              color: '#C4B5FD',
+              borderRadius: '16px',
+              fontSize: '15px',
+              fontFamily: 'Nunito, sans-serif',
+              fontWeight: '700',
+              cursor: 'pointer',
+            }}
+          >
+            Mot suivant →
+          </button>
+        )}
+      </div>
+
     </div>
   )
 }
@@ -464,25 +609,36 @@ export default function Lesson() {
   const erreursRef = useRef([])
 
   useEffect(() => {
-    async function chargerMots() {
-      const { data, error } = await supabase
-        .from('mots')
-        .select('*')
-        .order('ordre')
-      if (!error && data) {
-        setMots(data.map(m => ({
-          id: m.id,
-          en: m.mot_en,
-          fr: m.mot_fr,
-          distracteurs: [m.distracteur_1, m.distracteur_2, m.distracteur_3].filter(Boolean),
-          svg: SVG_MAP[m.mot_en] || SVG_MAP['default'],
-        })))
-      }
-      setChargement(false)
-    }
-    chargerMots()
-  }, [])
+  async function chargerMots() {
+    // 1. Récupérer la leçon "Les Salutations"
+    const { data: lecon } = await supabase
+      .from('lecons')
+      .select('id')
+      .eq('titre', 'Les Salutations')
+      .single()
 
+    if (!lecon) { setChargement(false); return }
+
+    // 2. Récupérer les mots de cette leçon uniquement
+    const { data, error } = await supabase
+      .from('mots')
+      .select('*')
+      .eq('lecon_id', lecon.id)
+      .order('ordre')
+
+    if (!error && data) {
+      setMots(data.map(m => ({
+        id: m.id,
+        en: m.mot_en,
+        fr: m.mot_fr,
+        distracteurs: [m.distracteur_1, m.distracteur_2, m.distracteur_3].filter(Boolean),
+        svg: SVG_MAP[m.mot_en] || SVG_MAP['default'],
+      })))
+    }
+    setChargement(false)
+  }
+  chargerMots()
+}, [])
   const sequence = useMemo(() => [
     ...mots.map((_, i) => ({ type: 'exposition', index: i })),
     ...mots.map((_, i) => ({ type: 'exercice', index: i })),
