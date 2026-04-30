@@ -55,34 +55,47 @@ function BottomNav({ active }) {
 export default function Dashboard() {
   const navigate = useNavigate()
   const [profil, setProfil] = useState(null)
+  const [prochaineLecon, setProchaineLecon] = useState(null)
   const [chargement, setChargement] = useState(true)
   const [cardPressed, setCardPressed] = useState(false)
 
   useEffect(() => {
-  async function chargerProfil() {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { navigate('/login'); return }
+    async function chargerDonnees() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { navigate('/login'); return }
 
-    const { data, error } = await supabase
-      .from('profils')
-      .select('*')
-      .eq('user_id', user.id)
-      .single()
-
-    if (!error && data) {
-      setProfil(data)
-    } else {
-      const { data: fallback } = await supabase
+      // 1. Charger le profil
+      const { data: profilData } = await supabase
         .from('profils')
         .select('*')
-        .limit(1)
+        .eq('user_id', user.id)
         .single()
-      if (fallback) setProfil(fallback)
+      if (profilData) setProfil(profilData)
+
+      // 2. Toutes les leçons dans l'ordre
+      const { data: toutesLecons } = await supabase
+        .from('lecons')
+        .select('id, titre, duree_minutes, nombre_mots, ordre')
+        .order('ordre')
+
+      if (!toutesLecons || toutesLecons.length === 0) { setChargement(false); return }
+
+      // 3. Leçons déjà complétées par cet utilisateur
+      const { data: completees } = await supabase
+        .from('progression')
+        .select('lecon_id')
+        .eq('user_id', user.id)
+
+      const idsCompletes = new Set((completees || []).map(p => p.lecon_id))
+
+      // 4. Première leçon non complétée
+      const prochaine = toutesLecons.find(l => !idsCompletes.has(l.id))
+      setProchaineLecon(prochaine || toutesLecons[0])
+
+      setChargement(false)
     }
-    setChargement(false)
-  }
-  chargerProfil()
-}, [])
+    chargerDonnees()
+  }, [navigate])
 
   if (chargement) return (
     <div style={{ minHeight: '100vh', background: '#090E1A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -95,7 +108,7 @@ export default function Dashboard() {
   const lecons = profil?.lecons_completees ?? 0
   const mots = profil?.mots_appris ?? 0
   const temps = profil?.temps_total_minutes ?? 0
-  const nom = profil?.nom ?? 'Wells'
+  const nom = profil?.nom ?? 'Toi'
   const objectif = 60
   const progression = xp % objectif
   const restant = objectif - progression
@@ -106,18 +119,20 @@ export default function Dashboard() {
     return h > 0 ? `${h}h${m > 0 ? m : ''}` : `${m}min`
   }
 
+  const lancerLecon = () => {
+    if (prochaineLecon) navigate(`/lesson?lecon=${prochaineLecon.id}`)
+  }
+
   return (
     <>
       <style>{pulseStyle}</style>
       <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.14) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px 100px', maxWidth: '430px', margin: '0 auto' }}>
 
-        {/* HEADER */}
         <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '56px 0 12px' }}>
           <div>
             <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.35)', margin: '0 0 2px' }}>Salut</p>
             <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '22px', fontWeight: '800', color: '#FFFFFF', margin: 0 }}>{nom}</p>
           </div>
-
           <div style={{ display: 'flex', gap: '10px' }}>
             <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: '14px', padding: '8px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -128,7 +143,6 @@ export default function Dashboard() {
               </div>
               <span style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '9px', color: 'rgba(245,158,11,0.6)' }}>jours de série</span>
             </div>
-
             <div style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.18)', borderRadius: '14px', padding: '8px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M7 1L8.5 5.5H13L9.5 8L11 12.5L7 10L3 12.5L4.5 8L1 5.5H5.5L7 1Z" fill="#8B5CF6"/>
@@ -138,49 +152,40 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* NEURI + MESSAGE */}
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
           <div style={{ width: '155px', height: '155px', marginBottom: '10px' }}>
             <Neuri3D color="#8B5CF6" />
           </div>
           <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '26px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 4px', textAlign: 'center' }}>
-            4 min pour progresser
+            {prochaineLecon ? `${prochaineLecon.duree_minutes} min pour progresser` : 'Toutes les leçons complétées !'}
           </p>
           <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'rgba(139,92,246,0.8)', margin: 0 }}>
-            Ta leçon t'attend
+            {prochaineLecon ? "Ta leçon t'attend" : 'Reviens demain pour la suite'}
           </p>
         </div>
 
-        {/* CARTE LEÇON */}
-        <div
-          onClick={() => navigate('/lesson')}
-          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
-          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-          onMouseDown={() => setCardPressed(true)}
-          onMouseUp={() => setCardPressed(false)}
-          onTouchStart={() => setCardPressed(true)}
-          onTouchEnd={() => setCardPressed(false)}
-          style={{ width: '100%', background: 'rgba(139,92,246,0.12)', backdropFilter: 'blur(20px)', border: '1.5px solid rgba(139,92,246,0.3)', borderRadius: '22px', padding: '22px', marginBottom: '14px', cursor: 'pointer', animation: 'cardPulse 2.5s ease-in-out infinite', transform: cardPressed ? 'scale(0.98)' : 'scale(1)', transition: 'transform 0.15s ease' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ width: '72px', height: '72px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '52px', filter: 'drop-shadow(0 4px 12px rgba(124,58,237,0.4))' }}>
-              📚
-            </div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(167,139,250,0.7)', margin: '0 0 4px', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: '500' }}>
-                Chapitre 1 · Leçon 1
-              </p>
-              <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '20px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 5px' }}>
-                Les salutations
-              </p>
-              <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.38)', margin: 0 }}>
-                5 mots · ~6 min
-              </p>
+        {prochaineLecon && (
+          <div
+            onClick={lancerLecon}
+            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            onMouseDown={() => setCardPressed(true)}
+            onMouseUp={() => setCardPressed(false)}
+            onTouchStart={() => setCardPressed(true)}
+            onTouchEnd={() => setCardPressed(false)}
+            style={{ width: '100%', background: 'rgba(139,92,246,0.12)', backdropFilter: 'blur(20px)', border: '1.5px solid rgba(139,92,246,0.3)', borderRadius: '22px', padding: '22px', marginBottom: '14px', cursor: 'pointer', animation: 'cardPulse 2.5s ease-in-out infinite', transform: cardPressed ? 'scale(0.98)' : 'scale(1)', transition: 'transform 0.15s ease' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ width: '72px', height: '72px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '52px' }}>📚</div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(167,139,250,0.7)', margin: '0 0 4px', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: '500' }}>Leçon suivante</p>
+                <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '20px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 5px' }}>{prochaineLecon.titre}</p>
+                <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.38)', margin: 0 }}>{prochaineLecon.nombre_mots} mots · ~{prochaineLecon.duree_minutes} min</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* OBJECTIF DU JOUR */}
         <div style={{ width: '100%', background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '18px 20px', marginBottom: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
             <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '15px', fontWeight: '700', color: '#FFFFFF', margin: 0 }}>Objectif du jour</p>
@@ -190,7 +195,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.07)', borderRadius: '99px', overflow: 'visible', position: 'relative' }}>
-            <div style={{ width: `${(progression / objectif) * 100}%`, height: '100%', background: 'linear-gradient(90deg, #7C3AED, #58CC02)', borderRadius: '99px', position: 'relative' }}>
+            <div style={{ width: `${Math.min((progression / objectif) * 100, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #7C3AED, #58CC02)', borderRadius: '99px', position: 'relative' }}>
               <div style={{ position: 'absolute', right: '-8px', top: '50%', transform: 'translateY(-50%)', width: '18px', height: '18px', background: '#58CC02', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 10px rgba(88,204,2,0.5)', animation: 'progressStar 2s ease-in-out infinite' }}>
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                   <path d="M5 1L6 3.8H9L6.8 5.5L7.6 8.5L5 7L2.4 8.5L3.2 5.5L1 3.8H4L5 1Z" fill="white"/>
@@ -200,7 +205,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* STATS RAPIDES */}
         <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           {[
             { label: 'Leçons complétées', value: `${lecons}`, color: '#58CC02' },
