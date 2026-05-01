@@ -4,6 +4,7 @@ import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
 import Lesson from './pages/Lesson'
 import Login from './pages/Login'
+import Profile from './pages/Profile'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/lesson" element={<Lesson />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </BrowserRouter>
   )
