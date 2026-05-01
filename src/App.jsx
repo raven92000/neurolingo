@@ -6,6 +6,7 @@ import Lesson from './pages/Lesson'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
 import Stats from './pages/Stats'
+import Learn from './pages/Learn'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/lesson" element={<Lesson />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/stats" element={<Stats />} />
+        <Route path="/learn" element={<Learn />} />
       </Routes>
     </BrowserRouter>
   )
