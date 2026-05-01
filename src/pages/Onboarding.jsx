@@ -82,8 +82,60 @@ function ProgressBar({ etape, total }) {
   )
 }
 
+// ─── ÉCRAN 0 — PRÉNOM ─────────────────────────────────────────
+function EcranPrenom({ nom, setNom, onNext }) {
+  return (
+    <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.18) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', position: 'relative' }}>
+      <ProgressBar etape={1} total={4} />
+      <div style={{ width: '140px', height: '140px', marginBottom: '24px' }}>
+        <Neuri3D color="#8B5CF6" />
+      </div>
+      <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '32px', fontWeight: '900', color: '#FFFFFF', textAlign: 'center', margin: '0 0 8px' }}>
+        Comment tu t'appelles ?
+      </h1>
+      <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '15px', color: 'rgba(255,255,255,0.55)', textAlign: 'center', margin: '0 0 36px' }}>
+        Pour qu'on puisse te parler comme il faut.
+      </p>
+      <input
+        type="text"
+        value={nom}
+        onChange={e => setNom(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && nom.trim().length >= 2 && onNext()}
+        placeholder="Ton prénom..."
+        autoFocus
+        style={{
+          width: '100%', maxWidth: '340px', height: '56px',
+          background: 'rgba(255,255,255,0.06)',
+          border: nom.trim().length >= 2 ? '1.5px solid rgba(139,92,246,0.6)' : '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '18px', padding: '0 20px',
+          fontFamily: 'Nunito, sans-serif', fontSize: '18px', fontWeight: '600',
+          color: '#FFFFFF', outline: 'none',
+          marginBottom: '16px', boxSizing: 'border-box',
+          transition: 'border 0.3s ease',
+        }}
+      />
+      <button
+        disabled={nom.trim().length < 2}
+        onClick={onNext}
+        style={{
+          width: '100%', maxWidth: '340px', height: '54px',
+          background: nom.trim().length >= 2 ? 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)' : 'rgba(255,255,255,0.05)',
+          color: nom.trim().length >= 2 ? '#FFFFFF' : 'rgba(255,255,255,0.25)',
+          border: 'none', borderRadius: '18px',
+          fontSize: '17px', fontFamily: 'Nunito, sans-serif', fontWeight: '700',
+          cursor: nom.trim().length >= 2 ? 'pointer' : 'not-allowed',
+          transition: 'all 0.3s ease',
+          boxShadow: nom.trim().length >= 2 ? '0 0 28px rgba(124,58,237,0.35)' : 'none',
+        }}
+      >
+        Continuer
+      </button>
+    </div>
+  )
+}
+
 // ─── ÉCRAN 1 — PROFIL ─────────────────────────────────────────
-function EcranProfil({ profil, setProfil, onNext }) {
+function EcranProfil({ profil, setProfil, onNext, onBack }) {
   const neurColor = profil === 'tdah' ? '#8B5CF6' : profil === 'dyslexie' ? '#3B82F6' : '#7C3AED'
   const bgGradient = profil === 'tdah'
     ? 'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.22) 0%, #090E1A 55%)'
@@ -93,7 +145,7 @@ function EcranProfil({ profil, setProfil, onNext }) {
 
   return (
     <div style={{ minHeight: '100vh', background: bgGradient, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', transition: 'background 0.8s ease', overflow: 'hidden', position: 'relative' }}>
-      <ProgressBar etape={1} total={3} />
+      <ProgressBar etape={2} total={4} />
       <div style={{ width: '150px', height: '150px', transition: 'transform 0.4s ease', transform: profil ? 'scale(1.06)' : 'scale(1)', marginBottom: '20px' }}>
         <Neuri3D color={neurColor} />
       </div>
@@ -147,9 +199,14 @@ function EcranProfil({ profil, setProfil, onNext }) {
         </div>
       </div>
 
-      <button disabled={!profil} onClick={onNext} style={{ width: '100%', maxWidth: '340px', height: '54px', background: profil ? 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)' : 'rgba(255,255,255,0.05)', color: profil ? '#FFFFFF' : 'rgba(255,255,255,0.25)', border: profil ? 'none' : '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', fontSize: '17px', fontFamily: 'Nunito, sans-serif', fontWeight: '600', cursor: profil ? 'pointer' : 'not-allowed', transition: 'all 0.3s ease', opacity: profil ? 1 : 0.5, boxShadow: profil ? '0 0 28px rgba(124,58,237,0.35)' : 'none', letterSpacing: '0.02em' }}>
-        Continuer
-      </button>
+      <div style={{ display: 'flex', gap: '12px', width: '100%', maxWidth: '340px' }}>
+        <button onClick={onBack} style={{ width: '54px', height: '54px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', borderRadius: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 4 L5 9 L11 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+        <button disabled={!profil} onClick={onNext} style={{ flex: 1, height: '54px', background: profil ? 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)' : 'rgba(255,255,255,0.05)', color: profil ? '#FFFFFF' : 'rgba(255,255,255,0.25)', border: profil ? 'none' : '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', fontSize: '17px', fontFamily: 'Nunito, sans-serif', fontWeight: '600', cursor: profil ? 'pointer' : 'not-allowed', transition: 'all 0.3s ease', opacity: profil ? 1 : 0.5, boxShadow: profil ? '0 0 28px rgba(124,58,237,0.35)' : 'none', letterSpacing: '0.02em' }}>
+          Continuer
+        </button>
+      </div>
     </div>
   )
 }
@@ -164,7 +221,7 @@ function EcranLangue({ langue, setLangue, onNext, onBack }) {
 
   return (
     <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.18) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', position: 'relative' }}>
-      <ProgressBar etape={2} total={3} />
+      <ProgressBar etape={3} total={4} />
       <div style={{ width: '120px', height: '120px', marginBottom: '20px' }}>
         <Neuri3D color="#8B5CF6" />
       </div>
@@ -217,7 +274,7 @@ function EcranObjectifTDAH({ objectif, setObjectif, onFinish, onBack, sauvegarde
 
   return (
     <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.18) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', position: 'relative' }}>
-      <ProgressBar etape={3} total={3} />
+      <ProgressBar etape={4} total={4} />
       <div style={{ width: '120px', height: '120px', marginBottom: '20px' }}>
         <Neuri3D color="#8B5CF6" />
       </div>
@@ -272,7 +329,7 @@ function EcranObjectifDyslexie({ objectif, setObjectif, onFinish, onBack, sauveg
 
   return (
     <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(37,99,235,0.18) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', position: 'relative' }}>
-      <ProgressBar etape={3} total={3} />
+      <ProgressBar etape={4} total={4} />
       <div style={{ width: '120px', height: '120px', marginBottom: '32px' }}>
         <Neuri3D color="#3B82F6" />
       </div>
@@ -312,6 +369,7 @@ function EcranObjectifDyslexie({ objectif, setObjectif, onFinish, onBack, sauveg
 export default function Onboarding() {
   const navigate = useNavigate()
   const [etape, setEtape] = useState(1)
+  const [nom, setNom] = useState('')
   const [profil, setProfil] = useState(null)
   const [langue, setLangue] = useState(null)
   const [objectif, setObjectif] = useState(null)
@@ -324,6 +382,7 @@ export default function Onboarding() {
       if (!user) { navigate('/login'); return }
 
       await supabase.from('profils').update({
+        nom: nom.trim(),
         profil_type: profil,
         langue_id: langue,
         objectif_minutes: objectif,
@@ -336,12 +395,12 @@ export default function Onboarding() {
     }
   }
 
-  if (etape === 1) return <EcranProfil profil={profil} setProfil={setProfil} onNext={() => setEtape(2)} />
-  if (etape === 2) return <EcranLangue langue={langue} setLangue={setLangue} onNext={() => setEtape(3)} onBack={() => setEtape(1)} />
-  
-  // Écran 3 conditionnel selon le profil
+  if (etape === 1) return <EcranPrenom nom={nom} setNom={setNom} onNext={() => setEtape(2)} />
+  if (etape === 2) return <EcranProfil profil={profil} setProfil={setProfil} onNext={() => setEtape(3)} onBack={() => setEtape(1)} />
+  if (etape === 3) return <EcranLangue langue={langue} setLangue={setLangue} onNext={() => setEtape(4)} onBack={() => setEtape(2)} />
+
   if (profil === 'dyslexie') {
-    return <EcranObjectifDyslexie objectif={objectif} setObjectif={setObjectif} onFinish={handleFinish} onBack={() => setEtape(2)} sauvegarde={sauvegarde} />
+    return <EcranObjectifDyslexie objectif={objectif} setObjectif={setObjectif} onFinish={handleFinish} onBack={() => setEtape(3)} sauvegarde={sauvegarde} />
   }
-  return <EcranObjectifTDAH objectif={objectif} setObjectif={setObjectif} onFinish={handleFinish} onBack={() => setEtape(2)} sauvegarde={sauvegarde} />
+  return <EcranObjectifTDAH objectif={objectif} setObjectif={setObjectif} onFinish={handleFinish} onBack={() => setEtape(3)} sauvegarde={sauvegarde} />
 }
