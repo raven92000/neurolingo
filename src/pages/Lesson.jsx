@@ -175,9 +175,10 @@ function EcranExercice({ mot, etape, total, onNext, onErreur, settings }) {
   const [countdown, setCountdown] = useState(null)
   const countdownRef = useRef(null)
   const choix = useMemo(() => {
-    const distracteursMelanges = shuffle(mot.distracteurs).slice(0, 2)
+    const nbDistracteurs = settings.qcmChoix - 1
+    const distracteursMelanges = shuffle(mot.distracteurs).slice(0, nbDistracteurs)
     return shuffle([mot.en, ...distracteursMelanges])
-  }, [mot])
+  }, [mot, settings.qcmChoix])
 
   useEffect(() => {
     setTimeout(() => playWord(mot.en, settings.audioRate), 400)

@@ -11,6 +11,9 @@ export const PROFILE_SETTINGS = {
     feedbackCorrect: 1,       // Délai après bonne réponse (en secondes)
     feedbackErreur: 2,        // Délai après mauvaise réponse (en secondes)
 
+    // Exercices
+    qcmChoix: 3,              // Nombre de choix dans le QCM
+
     // Visuel
     animationsReduites: false,
   },
@@ -23,6 +26,9 @@ export const PROFILE_SETTINGS = {
     expositionDuree: 4000,    // Plus de temps pour mémoriser
     feedbackCorrect: 2,       // Plus de temps pour lire le feedback
     feedbackErreur: 3,
+
+    // Exercices
+    qcmChoix: 2,              // Moins de choix pour réduire la charge cognitive
 
     // Visuel
     animationsReduites: true,
