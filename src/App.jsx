@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import Lesson from './pages/Lesson'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
+import Stats from './pages/Stats'
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/lesson" element={<Lesson />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/stats" element={<Stats />} />
       </Routes>
     </BrowserRouter>
   )
