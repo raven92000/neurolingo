@@ -127,11 +127,11 @@ function EcranIntro({ mots, titreLecon, onStart }) {
 function EcranExposition({ mot, etape, total, onNext }) {
   const [progress, setProgress] = useState(0)
   const [visible, setVisible] = useState(false)
-  const DUREE = 3500
+  const DUREE = 2200
 
   useEffect(() => {
     setTimeout(() => setVisible(true), 100)
-    setTimeout(() => playWord(mot.en), 500)
+    setTimeout(() => playWord(mot.en), 300)
     const interval = setInterval(() => { setProgress(p => { if (p >= 100) { clearInterval(interval); return 100 } return p + (100 / (DUREE / 50)) }) }, 50)
     const timer = setTimeout(() => onNext(), DUREE)
     return () => { clearInterval(interval); clearTimeout(timer) }
@@ -160,7 +160,7 @@ function EcranExposition({ mot, etape, total, onNext }) {
         <div style={{ width: '120px', height: '3px', background: 'rgba(255,255,255,0.08)', borderRadius: '99px', overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg, #8B5CF6, #A78BFA)', borderRadius: '99px', transition: 'width 0.05s linear' }}/>
         </div>
-        <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.2)', margin: 0 }}>Mémorise ce mot...</p>
+        <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.2)', margin: 0 }}>Écoute simplement...</p>
       </div>
     </div>
   )
@@ -194,11 +194,11 @@ function EcranExercice({ mot, etape, total, onNext, onErreur }) {
     setFeedback(correct ? 'correct' : 'wrong')
     if (!correct) onErreur()
     setTimeout(() => setShowNeuri(true), 400)
-    startCountdown(correct ? 1 : 3)
+    startCountdown(correct ? 1 : 2)
   }, [selected, mot, onErreur])
 
   const neurColor = feedback === 'correct' ? '#58CC02' : '#8B5CF6'
-  const neuriMessage = feedback === 'correct' ? "Bien joué, tu l'as reconnu !" : `Presque ! Le bon mot était ${mot.en}. On le reverra plus tard.`
+  const neuriMessage = feedback === 'correct' ? "Bien joué !" : `Presque ! C'était ${mot.en}.`
 
   return (
     <div style={{ minHeight: '100vh', background: '#090E1A', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px 40px', maxWidth: '430px', margin: '0 auto' }}>
@@ -224,11 +224,6 @@ function EcranExercice({ mot, etape, total, onNext, onErreur }) {
           )
         })}
       </div>
-      {feedback === 'wrong' && (
-        <div style={{ width: '100%', background: 'rgba(88,204,2,0.06)', border: '1px solid rgba(88,204,2,0.25)', borderRadius: '14px', padding: '14px 18px', marginBottom: '14px' }}>
-          <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '15px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>Tu as entendu : <span style={{ color: '#86EFAC', fontWeight: '700' }}>{mot.en}</span></p>
-        </div>
-      )}
       {showNeuri && (
         <div style={{ width: '100%', display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '16px' }}>
           <div style={{ width: '52px', height: '52px', flexShrink: 0 }}><Neuri3D color={neurColor} /></div>
@@ -243,7 +238,7 @@ function EcranExercice({ mot, etape, total, onNext, onErreur }) {
             <div style={{ marginBottom: '10px' }}>
               <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.25)', margin: '0 0 6px', textAlign: 'center' }}>Continuer dans {countdown}...</p>
               <div style={{ width: '100%', height: '2px', background: 'rgba(255,255,255,0.06)', borderRadius: '99px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', background: feedback === 'correct' ? '#58CC02' : '#8B5CF6', borderRadius: '99px', animation: `shrink ${feedback === 'correct' ? 1 : 3}s linear forwards` }}/>
+                <div style={{ height: '100%', background: feedback === 'correct' ? '#58CC02' : '#8B5CF6', borderRadius: '99px', animation: `shrink ${feedback === 'correct' ? 1 : 2}s linear forwards` }}/>
               </div>
             </div>
           )}
@@ -287,7 +282,7 @@ function EcranRepetition({ mot, etape, total, onNext }) {
       </div>
       {!showContinue && (
         <button onClick={handleRepete} style={{ width: '100%', height: '54px', background: 'linear-gradient(135deg, #7C3AED, #6D28D9)', color: '#FFFFFF', border: 'none', borderRadius: '16px', fontSize: '17px', fontFamily: 'Nunito, sans-serif', fontWeight: '800', cursor: 'pointer', marginBottom: '12px' }}>
-          {repetitions === 0 ? "J'ai répété" : 'Encore une fois'}
+          {repetitions === 0 ? "Je l'ai dit" : 'Encore une fois'}
         </button>
       )}
       <div style={{ width: '100%', opacity: showContinue ? 1 : 0, transform: showContinue ? 'translateY(0)' : 'translateY(8px)', transition: 'all 0.4s ease', pointerEvents: showContinue ? 'auto' : 'none' }}>
@@ -297,7 +292,7 @@ function EcranRepetition({ mot, etape, total, onNext }) {
   )
 }
 
-function EcranFin({ xp, total, leconId, navigate }) {
+function EcranFin({ xp, total, leconId, navigate, mots }) {
   const [sauvegarde, setSauvegarde] = useState('en_cours')
 
   useEffect(() => {
@@ -322,7 +317,7 @@ function EcranFin({ xp, total, leconId, navigate }) {
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M8 20 L16 28 L32 12" stroke="#58CC02" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
       </div>
       <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '28px', fontWeight: '900', color: '#FFFFFF', textAlign: 'center', margin: '0 0 8px' }}>Leçon terminée !</h1>
-      <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '15px', color: 'rgba(255,255,255,0.45)', textAlign: 'center', margin: '0 0 40px' }}>Tu as appris {total} mots aujourd'hui</p>
+      <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '15px', color: 'rgba(255,255,255,0.45)', textAlign: 'center', margin: '0 0 32px' }}>Ton cerveau a bien travaillé.</p>
       <div style={{ display: 'flex', gap: '14px', marginBottom: '24px', width: '100%' }}>
         {[{ label: 'Mots appris', value: `${total}/${total}`, color: '#58CC02' }, { label: 'XP gagnés', value: `+${xp}`, color: '#8B5CF6' }].map((s, i) => (
           <div key={i} style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '20px', textAlign: 'center' }}>
@@ -331,7 +326,18 @@ function EcranFin({ xp, total, leconId, navigate }) {
           </div>
         ))}
       </div>
-      <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ width: '100%', marginBottom: '20px' }}>
+        <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.35)', textAlign: 'center', margin: '0 0 12px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Mots appris aujourd'hui</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+          {mots && mots.map((m, i) => (
+            <div key={i} style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: '20px', padding: '6px 14px' }}>
+              <span style={{ fontFamily: 'Nunito, sans-serif', fontSize: '14px', fontWeight: '700', color: '#C4B5FD' }}>{m.en}</span>
+              <span style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginLeft: '6px' }}>{m.fr}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
         {sauvegarde === 'en_cours' && (<><div style={{ width: '12px', height: '12px', border: '2px solid rgba(139,92,246,0.3)', borderTop: '2px solid #8B5CF6', borderRadius: '50%', animation: 'spin 1s linear infinite' }}/><p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.3)', margin: 0 }}>Sauvegarde en cours...</p></>)}
         {sauvegarde === 'ok' && (<><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="rgba(88,204,2,0.2)"/><path d="M4 7 L6 9 L10 5" stroke="#58CC02" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg><p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(88,204,2,0.7)', margin: 0 }}>Progression sauvegardée ✓</p></>)}
         {sauvegarde === 'erreur' && (<p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(245,158,11,0.6)', margin: 0 }}>Non connecté — progression non sauvegardée</p>)}
@@ -374,11 +380,15 @@ export default function Lesson() {
     chargerMots()
   }, [leconId])
 
-  const sequence = useMemo(() => [
-    ...mots.map((_, i) => ({ type: 'exposition', index: i })),
-    ...mots.map((_, i) => ({ type: 'exercice', index: i })),
-    ...mots.map((_, i) => ({ type: 'repetition', index: i })),
-  ], [mots])
+  const sequence = useMemo(() => {
+    const indices = mots.map((_, i) => i)
+    const repetitionIndices = indices.slice(0, 3)
+    return [
+      ...mots.map((_, i) => ({ type: 'exposition', index: i })),
+      ...mots.map((_, i) => ({ type: 'exercice', index: i })),
+      ...repetitionIndices.map(i => ({ type: 'repetition', index: i })),
+    ]
+  }, [mots])
 
   const [etape, setEtape] = useState(0)
   const current = sequence[etape]
@@ -393,7 +403,7 @@ export default function Lesson() {
 
   if (chargement) return <EcranChargement />
   if (phase === 'intro') return <EcranIntro mots={mots} titreLecon={titreLecon} onStart={() => setPhase('exercice')} />
-  if (phase === 'fin') return <EcranFin xp={xp} total={mots.length} leconId={leconId} navigate={navigate} />
+  if (phase === 'fin') return <EcranFin xp={xp} total={mots.length} leconId={leconId} navigate={navigate} mots={mots} />
   if (!current || !mot) return null
   if (current.type === 'exposition') return <EcranExposition key={`exp-${etape}`} mot={mot} etape={etape + 1} total={sequence.length} onNext={() => handleNext(false)} />
   if (current.type === 'exercice') return <EcranExercice key={`ex-${etape}`} mot={mot} etape={etape + 1} total={sequence.length} onNext={handleNext} onErreur={handleErreur} />
