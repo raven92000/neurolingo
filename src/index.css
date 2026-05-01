@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600&family=Atkinson+Hyperlegible:wght@400;700&display=swap');
 
 :root {
   --neuri-success:      #58CC02;
@@ -16,6 +16,7 @@
 
   --font-display: 'Nunito', sans-serif;
   --font-body:    'DM Sans', sans-serif;
+  --font-dyslexie: 'Atkinson Hyperlegible', sans-serif;
 }
 
 * {
@@ -30,4 +31,20 @@ body {
   color: var(--dark-text);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+}
+
+/* ─── PROFIL DYSLEXIE — FORCE LA POLICE PARTOUT ─────────────── */
+body.profil-dyslexie,
+body.profil-dyslexie *,
+body.profil-dyslexie h1,
+body.profil-dyslexie h2,
+body.profil-dyslexie h3,
+body.profil-dyslexie p,
+body.profil-dyslexie span,
+body.profil-dyslexie button,
+body.profil-dyslexie div,
+body.profil-dyslexie input {
+  font-family: 'Atkinson Hyperlegible', sans-serif !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1.7 !important;
 }

@@ -1,53 +1,100 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Neuri3D from '../components/Neuri3D'
 import { supabase } from '../supabase'
+import Neuri3D from '../components/Neuri3D'
 
-const pulseStyle = `
-  @keyframes cardPulse {
-    0%, 100% { box-shadow: 0 0 24px rgba(139,92,246,0.15), 0 0 0 0 rgba(139,92,246,0.08); }
-    50% { box-shadow: 0 0 36px rgba(139,92,246,0.28), 0 0 0 8px rgba(139,92,246,0.04); }
-  }
-  @keyframes progressStar {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-  }
-`
-
-function BottomNav({ active }) {
-  const navigate = useNavigate()
-  const items = [
-    { id: 'home', label: 'Accueil', path: '/dashboard', icon: (
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-        <path d="M3 9.5L11 3L19 9.5V19C19 19.6 18.6 20 18 20H14V15H8V20H4C3.4 20 3 19.6 3 19V9.5Z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-      </svg>
-    )},
-    { id: 'learn', label: 'Apprendre', path: '/lesson', icon: (
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-        <path d="M3 5L11 2L19 5V10C19 14.4 15.5 18.5 11 20C6.5 18.5 3 14.4 3 10V5Z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-      </svg>
-    )},
-    { id: 'stats', label: 'Statistiques', path: '/dashboard', icon: (
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-        <path d="M4 16L8 10L12 13L16 7L20 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    )},
-    { id: 'profile', label: 'Profil', path: '/dashboard', icon: (
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-        <circle cx="11" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.6" fill="none"/>
-        <path d="M4 19C4 15.7 7.1 13 11 13C14.9 13 18 15.7 18 19" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" fill="none"/>
-      </svg>
-    )},
-  ]
-
+function BottomNav() {
   return (
-    <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', background: 'rgba(9,14,26,0.95)', backdropFilter: 'blur(24px)', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-around', padding: '12px 0 28px', zIndex: 100 }}>
-      {items.map(item => (
-        <div key={item.id} onClick={() => navigate(item.path)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: active === item.id ? '#8B5CF6' : 'rgba(255,255,255,0.28)', cursor: 'pointer', transition: 'color 0.2s ease' }}>
-          {item.icon}
-          <span style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '10px', fontWeight: '500' }}>{item.label}</span>
+    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(9,14,26,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '12px 0 24px', display: 'flex', justifyContent: 'space-around', maxWidth: '430px', margin: '0 auto' }}>
+      {[
+        { label: 'Accueil', actif: true, icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 11 L11 4 L19 11 L19 19 L13 19 L13 14 L9 14 L9 19 L3 19 Z" stroke="#8B5CF6" strokeWidth="1.8" strokeLinejoin="round" fill="rgba(139,92,246,0.1)"/></svg> },
+        { label: 'Apprendre', actif: false, icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3 L19 8 L19 16 L11 21 L3 16 L3 8 Z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinejoin="round" fill="none"/></svg> },
+        { label: 'Statistiques', actif: false, icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 17 L8 12 L12 15 L19 7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg> },
+        { label: 'Profil', actif: false, icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="8" r="3.5" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" fill="none"/><path d="M4 19 C4 15 7 13 11 13 C15 13 18 15 18 19" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" fill="none"/></svg> },
+      ].map((nav, i) => (
+        <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+          {nav.icon}
+          <span style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', fontWeight: nav.actif ? '700' : '500', color: nav.actif ? '#8B5CF6' : 'rgba(255,255,255,0.4)' }}>{nav.label}</span>
         </div>
       ))}
+    </div>
+  )
+}
+
+function PopupReset({ onConfirm, onCancel }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '24px' }}>
+      <div style={{ background: '#0F1626', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px', padding: '28px 24px', maxWidth: '340px', width: '100%' }}>
+        <h2 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '22px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 12px', textAlign: 'center' }}>Recommencer depuis le début ?</h2>
+        <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '15px', color: 'rgba(255,255,255,0.6)', textAlign: 'center', margin: '0 0 24px', lineHeight: 1.5 }}>Ta progression sera remise à zéro, mais tu pourras refaire les leçons.</p>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={onCancel} style={{ flex: 1, height: '50px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', borderRadius: '14px', fontSize: '15px', fontFamily: 'Nunito, sans-serif', fontWeight: '700', cursor: 'pointer' }}>Annuler</button>
+          <button onClick={onConfirm} style={{ flex: 1, height: '50px', background: 'linear-gradient(135deg, #7C3AED, #6D28D9)', border: 'none', color: '#FFFFFF', borderRadius: '14px', fontSize: '15px', fontFamily: 'Nunito, sans-serif', fontWeight: '700', cursor: 'pointer' }}>Oui, recommencer</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function EcranToutComplete({ profil, leconsCompletes, navigate, onReset, onContinuer }) {
+  const [popup, setPopup] = useState(false)
+
+  const handleConfirmReset = async () => {
+    setPopup(false)
+    await onReset()
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(88,204,2,0.18) 0%, #090E1A 55%)', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
+      <div style={{ padding: '52px 24px 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+          <div>
+            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.5)', margin: '0 0 2px' }}>Salut</p>
+            <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '24px', fontWeight: '900', color: '#FFFFFF', margin: 0 }}>{profil?.nom || 'toi'}</h1>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '14px' }}>💧</span>
+              <span style={{ fontFamily: 'Nunito, sans-serif', fontSize: '14px', fontWeight: '900', color: '#F59E0B' }}>{profil?.streak || 0}</span>
+            </div>
+            <div style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '12px' }}>★</span>
+              <span style={{ fontFamily: 'Nunito, sans-serif', fontSize: '14px', fontWeight: '900', color: '#A78BFA' }}>{profil?.xp || 0} XP</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 0' }}>
+          <div style={{ width: '160px', height: '160px', marginBottom: '16px' }}>
+            <Neuri3D color="#58CC02" />
+          </div>
+          <div style={{ background: 'rgba(88,204,2,0.15)', border: '1px solid rgba(88,204,2,0.3)', borderRadius: '20px', padding: '6px 16px', marginBottom: '16px' }}>
+            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', fontWeight: '700', color: '#86EFAC', margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>🎉 Bravo !</p>
+          </div>
+          <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '28px', fontWeight: '900', color: '#FFFFFF', textAlign: 'center', margin: '0 0 8px', lineHeight: 1.2 }}>Tu as tout complété !</h1>
+          <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '15px', color: 'rgba(255,255,255,0.6)', textAlign: 'center', margin: '0 0 32px', maxWidth: '280px', lineHeight: 1.5 }}>Continue à t'entraîner pour ancrer ce que tu as appris.</p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+          {[
+            { label: 'XP gagnés', value: profil?.xp || 0, color: '#8B5CF6' },
+            { label: 'Mots appris', value: profil?.mots_appris || 0, color: '#58CC02' },
+            { label: 'Leçons', value: profil?.lecons_completees || 0, color: '#F59E0B' },
+          ].map((s, i) => (
+            <div key={i} style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', padding: '14px 8px', textAlign: 'center' }}>
+              <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '22px', fontWeight: '900', color: s.color, margin: '0 0 2px' }}>{s.value}</p>
+              <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: 0 }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        <button onClick={onContinuer} style={{ width: '100%', height: '54px', background: 'linear-gradient(135deg, #58CC02, #3DAD00)', color: '#FFFFFF', border: 'none', borderRadius: '16px', fontSize: '16px', fontFamily: 'Nunito, sans-serif', fontWeight: '800', cursor: 'pointer', boxShadow: '0 0 28px rgba(88,204,2,0.35)', marginBottom: '12px' }}>Continuer à m'entraîner</button>
+
+        <button onClick={() => setPopup(true)} style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', fontSize: '14px', fontFamily: 'Nunito, sans-serif', fontWeight: '600', cursor: 'pointer' }}>Revoir depuis le début</button>
+      </div>
+
+      {popup && <PopupReset onConfirm={handleConfirmReset} onCancel={() => setPopup(false)} />}
+      <BottomNav />
     </div>
   )
 }
@@ -55,172 +102,145 @@ function BottomNav({ active }) {
 export default function Dashboard() {
   const navigate = useNavigate()
   const [profil, setProfil] = useState(null)
-  const [prochaineLecon, setProchaineLecon] = useState(null)
+  const [leconSuivante, setLeconSuivante] = useState(null)
+  const [toutComplete, setToutComplete] = useState(false)
   const [chargement, setChargement] = useState(true)
-  const [cardPressed, setCardPressed] = useState(false)
 
-  useEffect(() => {
-    async function chargerDonnees() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { navigate('/login'); return }
+  const charger = async () => {
+    setChargement(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { navigate('/login'); return }
 
-      // 1. Charger le profil
-      const { data: profilData } = await supabase
-        .from('profils')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-      if (profilData) setProfil(profilData)
+    const { data: p } = await supabase.from('profils').select('*').eq('user_id', user.id).single()
+    setProfil(p)
 
-      // 2. Toutes les leçons dans l'ordre
-      const { data: toutesLecons } = await supabase
-        .from('lecons')
-        .select('id, titre, duree_minutes, nombre_mots, ordre')
-        .order('ordre')
+    const { data: lecons } = await supabase.from('lecons').select('id, titre, duree_minutes, nombre_mots, ordre').order('ordre')
+    const { data: progressions } = await supabase.from('progression').select('lecon_id').eq('user_id', user.id)
 
-      if (!toutesLecons || toutesLecons.length === 0) { setChargement(false); return }
+    const idsCompletes = new Set((progressions || []).map(pr => pr.lecon_id))
+    const prochaine = lecons.find(l => !idsCompletes.has(l.id))
 
-      // 3. Leçons déjà complétées par cet utilisateur
-      const { data: completees } = await supabase
-        .from('progression')
-        .select('lecon_id')
-        .eq('user_id', user.id)
-
-      const idsCompletes = new Set((completees || []).map(p => p.lecon_id))
-
-      // 4. Première leçon non complétée
-      const prochaine = toutesLecons.find(l => !idsCompletes.has(l.id))
-      setProchaineLecon(prochaine || toutesLecons[0])
-
-      setChargement(false)
+    if (!prochaine) {
+      setToutComplete(true)
+      setLeconSuivante(null)
+    } else {
+      setToutComplete(false)
+      setLeconSuivante(prochaine)
     }
-    chargerDonnees()
-  }, [navigate])
-
-  if (chargement) return (
-    <div style={{ minHeight: '100vh', background: '#090E1A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <p style={{ fontFamily: 'DM Sans, sans-serif', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>Chargement...</p>
-    </div>
-  )
-
-  const xp = profil?.xp ?? 0
-  const streak = profil?.streak ?? 0
-  const lecons = profil?.lecons_completees ?? 0
-  const mots = profil?.mots_appris ?? 0
-  const temps = profil?.temps_total_minutes ?? 0
-  const nom = profil?.nom ?? 'Toi'
-  const objectif = 60
-  const progression = xp % objectif
-  const restant = objectif - progression
-
-  const formatTemps = (minutes) => {
-    const h = Math.floor(minutes / 60)
-    const m = minutes % 60
-    return h > 0 ? `${h}h${m > 0 ? m : ''}` : `${m}min`
+    setChargement(false)
   }
 
-  const lancerLecon = () => {
-    if (prochaineLecon) navigate(`/lesson?lecon=${prochaineLecon.id}`)
+  useEffect(() => { charger() }, [])
+
+  const handleReset = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    await supabase.from('progression').delete().eq('user_id', user.id)
+    await supabase.from('profils').update({ lecons_completees: 0, mots_appris: 0 }).eq('user_id', user.id)
+    await charger()
   }
+
+  const handleContinuer = async () => {
+    const { data: lecons } = await supabase.from('lecons').select('id').order('ordre')
+    if (!lecons || lecons.length === 0) return
+    const aleatoire = lecons[Math.floor(Math.random() * lecons.length)]
+    navigate(`/lesson?lecon=${aleatoire.id}`)
+  }
+
+  if (chargement) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#090E1A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(139,92,246,0.2)', borderTop: '3px solid #8B5CF6', borderRadius: '50%', animation: 'spin 1s linear infinite' }}/>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    )
+  }
+
+  if (toutComplete) {
+    return <EcranToutComplete profil={profil} navigate={navigate} onReset={handleReset} onContinuer={handleContinuer} />
+  }
+
+  const xpObjectif = (profil?.objectif_minutes || 10) * 6
+  const xpAujourdhui = Math.min(profil?.xp || 0, xpObjectif)
+  const xpRestant = Math.max(xpObjectif - xpAujourdhui, 0)
+  const pourcentage = (xpAujourdhui / xpObjectif) * 100
 
   return (
-    <>
-      <style>{pulseStyle}</style>
-      <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.14) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px 100px', maxWidth: '430px', margin: '0 auto' }}>
-
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '56px 0 12px' }}>
+    <div style={{ minHeight: '100vh', background: '#090E1A', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
+      <div style={{ padding: '52px 24px 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
           <div>
-            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.35)', margin: '0 0 2px' }}>Salut</p>
-            <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '22px', fontWeight: '800', color: '#FFFFFF', margin: 0 }}>{nom}</p>
+            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.5)', margin: '0 0 2px' }}>Salut</p>
+            <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '24px', fontWeight: '900', color: '#FFFFFF', margin: 0 }}>{profil?.nom || 'toi'}</h1>
           </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: '14px', padding: '8px 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                  <path d="M7 1C7 1 4 4.5 4 7.5C4 9.4 5.3 11 7 11C8.7 11 10 9.4 10 7.5C10 4.5 7 1 7 1Z" fill="#F59E0B"/>
-                </svg>
-                <span style={{ fontFamily: 'Nunito, sans-serif', fontSize: '16px', fontWeight: '800', color: '#F59E0B' }}>{streak}</span>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '14px' }}>💧</span>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '14px', fontWeight: '900', color: '#F59E0B', margin: 0 }}>{profil?.streak || 0}</p>
+                <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '9px', color: 'rgba(255,255,255,0.4)', margin: 0 }}>jours de série</p>
               </div>
-              <span style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '9px', color: 'rgba(245,158,11,0.6)' }}>jours de série</span>
             </div>
-            <div style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.18)', borderRadius: '14px', padding: '8px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M7 1L8.5 5.5H13L9.5 8L11 12.5L7 10L3 12.5L4.5 8L1 5.5H5.5L7 1Z" fill="#8B5CF6"/>
-              </svg>
-              <span style={{ fontFamily: 'Nunito, sans-serif', fontSize: '16px', fontWeight: '800', color: '#8B5CF6' }}>{xp} XP</span>
+            <div style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: '12px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '12px' }}>★</span>
+              <span style={{ fontFamily: 'Nunito, sans-serif', fontSize: '15px', fontWeight: '900', color: '#A78BFA' }}>{profil?.xp || 0} XP</span>
             </div>
           </div>
         </div>
 
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
-          <div style={{ width: '155px', height: '155px', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
+          <div style={{ width: '180px', height: '180px' }}>
             <Neuri3D color="#8B5CF6" />
           </div>
-          <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '26px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 4px', textAlign: 'center' }}>
-            {prochaineLecon ? `${prochaineLecon.duree_minutes} min pour progresser` : 'Toutes les leçons complétées !'}
-          </p>
-          <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'rgba(139,92,246,0.8)', margin: 0 }}>
-            {prochaineLecon ? "Ta leçon t'attend" : 'Reviens demain pour la suite'}
-          </p>
         </div>
 
-        {prochaineLecon && (
-          <div
-            onClick={lancerLecon}
-            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-            onMouseDown={() => setCardPressed(true)}
-            onMouseUp={() => setCardPressed(false)}
-            onTouchStart={() => setCardPressed(true)}
-            onTouchEnd={() => setCardPressed(false)}
-            style={{ width: '100%', background: 'rgba(139,92,246,0.12)', backdropFilter: 'blur(20px)', border: '1.5px solid rgba(139,92,246,0.3)', borderRadius: '22px', padding: '22px', marginBottom: '14px', cursor: 'pointer', animation: 'cardPulse 2.5s ease-in-out infinite', transform: cardPressed ? 'scale(0.98)' : 'scale(1)', transition: 'transform 0.15s ease' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ width: '72px', height: '72px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '52px' }}>📚</div>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(167,139,250,0.7)', margin: '0 0 4px', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: '500' }}>Leçon suivante</p>
-                <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '20px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 5px' }}>{prochaineLecon.titre}</p>
-                <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.38)', margin: 0 }}>{prochaineLecon.nombre_mots} mots · ~{prochaineLecon.duree_minutes} min</p>
-              </div>
-            </div>
-          </div>
-        )}
+        <h2 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '26px', fontWeight: '900', color: '#FFFFFF', textAlign: 'center', margin: '0 0 4px' }}>{leconSuivante?.duree_minutes || 6} min pour progresser</h2>
+        <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '15px', color: '#A78BFA', textAlign: 'center', margin: '0 0 24px' }}>Ta leçon t'attend</p>
 
-        <div style={{ width: '100%', background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '18px 20px', marginBottom: '14px' }}>
+        <div onClick={() => navigate(`/lesson?lecon=${leconSuivante.id}`)} style={{ background: 'rgba(139,92,246,0.08)', border: '1.5px solid rgba(139,92,246,0.4)', borderRadius: '20px', padding: '20px 22px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 0 28px rgba(139,92,246,0.18)', marginBottom: '20px' }}>
+          <div style={{ fontSize: '40px' }}>📚</div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', fontWeight: '700', color: '#A78BFA', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 4px' }}>Leçon suivante</p>
+            <h3 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '20px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 4px' }}>{leconSuivante?.titre}</h3>
+            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>{leconSuivante?.nombre_mots} mots · ~{leconSuivante?.duree_minutes} min</p>
+          </div>
+        </div>
+
+        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '16px 18px', marginBottom: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '15px', fontWeight: '700', color: '#FFFFFF', margin: 0 }}>Objectif du jour</p>
-            <div style={{ textAlign: 'right' }}>
-              <span style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: '#58CC02', fontWeight: '600' }}>Encore {restant} XP</span>
-              <span style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.25)', marginLeft: '6px' }}>{progression}/{objectif}</span>
-            </div>
+            <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '15px', fontWeight: '800', color: '#FFFFFF', margin: 0 }}>Objectif du jour</p>
+            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', margin: 0 }}>
+              <span style={{ color: '#86EFAC', fontWeight: '700' }}>Encore {xpRestant} XP</span>
+              <span style={{ color: 'rgba(255,255,255,0.4)' }}> {xpAujourdhui}/{xpObjectif}</span>
+            </p>
           </div>
-          <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.07)', borderRadius: '99px', overflow: 'visible', position: 'relative' }}>
-            <div style={{ width: `${Math.min((progression / objectif) * 100, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #7C3AED, #58CC02)', borderRadius: '99px', position: 'relative' }}>
-              <div style={{ position: 'absolute', right: '-8px', top: '50%', transform: 'translateY(-50%)', width: '18px', height: '18px', background: '#58CC02', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 10px rgba(88,204,2,0.5)', animation: 'progressStar 2s ease-in-out infinite' }}>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                  <path d="M5 1L6 3.8H9L6.8 5.5L7.6 8.5L5 7L2.4 8.5L3.2 5.5L1 3.8H4L5 1Z" fill="white"/>
-                </svg>
-              </div>
+          <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.06)', borderRadius: '99px', position: 'relative' }}>
+            <div style={{ height: '100%', width: `${pourcentage}%`, background: 'linear-gradient(90deg, #8B5CF6, #58CC02)', borderRadius: '99px', position: 'relative' }}>
+              {pourcentage > 5 && (<div style={{ position: 'absolute', right: '-8px', top: '-4px', width: '16px', height: '16px', background: '#58CC02', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}>★</div>)}
             </div>
           </div>
         </div>
 
-        <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          {[
-            { label: 'Leçons complétées', value: `${lecons}`, color: '#58CC02' },
-            { label: 'Jours de série', value: `${streak}`, color: '#F59E0B' },
-            { label: 'Mots appris', value: `${mots}`, color: '#3B82F6' },
-            { label: 'Temps total', value: formatTemps(temps), color: '#8B5CF6' },
-          ].map((stat, i) => (
-            <div key={i} style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '16px' }}>
-              <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '24px', fontWeight: '900', color: stat.color, margin: '0 0 4px' }}>{stat.value}</p>
-              <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.35)', margin: 0 }}>{stat.label}</p>
-            </div>
-          ))}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', padding: '14px 16px' }}>
+            <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '24px', fontWeight: '900', color: '#58CC02', margin: '0 0 2px' }}>{profil?.lecons_completees || 0}</p>
+            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>Leçons complétées</p>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', padding: '14px 16px' }}>
+            <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '24px', fontWeight: '900', color: '#F59E0B', margin: '0 0 2px' }}>{profil?.streak || 0}</p>
+            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>Jours de série</p>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', padding: '14px 16px' }}>
+            <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '24px', fontWeight: '900', color: '#3B82F6', margin: '0 0 2px' }}>{profil?.mots_appris || 0}</p>
+            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>Mots appris</p>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', padding: '14px 16px' }}>
+            <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '24px', fontWeight: '900', color: '#A78BFA', margin: '0 0 2px' }}>{profil?.temps_total_minutes || 0}min</p>
+            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>Temps total</p>
+          </div>
         </div>
-
       </div>
-      <BottomNav active="home" />
-    </>
+      <BottomNav />
+    </div>
   )
 }
