@@ -2,25 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import Neuri3D from '../components/Neuri3D'
-
-function BottomNav() {
-  const navigate = useNavigate()
-  return (
-    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(9,14,26,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '12px 0 24px', display: 'flex', justifyContent: 'space-around', maxWidth: '430px', margin: '0 auto' }}>
-      {[
-        { label: 'Accueil', actif: true, page: '/dashboard', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 11 L11 4 L19 11 L19 19 L13 19 L13 14 L9 14 L9 19 L3 19 Z" stroke="#8B5CF6" strokeWidth="1.8" strokeLinejoin="round" fill="rgba(139,92,246,0.1)"/></svg> },
-        { label: 'Apprendre', actif: false, page: '/learn', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3 L19 8 L19 16 L11 21 L3 16 L3 8 Z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinejoin="round" fill="none"/></svg> },
-        { label: 'Progression', actif: false, page: '/stats', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 17 L8 12 L12 15 L19 7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg> },
-        { label: 'Profil', actif: false, page: '/profile', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="8" r="3.5" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" fill="none"/><path d="M4 19 C4 15 7 13 11 13 C15 13 18 15 18 19" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" fill="none"/></svg> },
-      ].map((nav, i) => (
-        <div key={i} onClick={() => nav.page && navigate(nav.page)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: nav.page ? 'pointer' : 'default', opacity: nav.page ? 1 : 0.4 }}>
-          {nav.icon}
-          <span style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', fontWeight: nav.actif ? '700' : '500', color: nav.actif ? '#8B5CF6' : 'rgba(255,255,255,0.4)' }}>{nav.label}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
+import BottomNav from '../components/BottomNav'
 
 function PopupReset({ onConfirm, onCancel }) {
   return (
@@ -161,6 +143,7 @@ export default function Dashboard() {
     return <EcranToutComplete profil={profil} navigate={navigate} onReset={handleReset} onContinuer={handleContinuer} />
   }
 
+  const couleurNeuri = profil?.profil_type === 'dyslexie' ? '#3B82F6' : '#8B5CF6'
   const xpObjectif = (profil?.objectif_minutes || 10) * 6
   const xpAujourdhui = Math.min(profil?.xp || 0, xpObjectif)
   const xpRestant = Math.max(xpObjectif - xpAujourdhui, 0)
@@ -191,7 +174,7 @@ export default function Dashboard() {
 
         <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
           <div style={{ width: '180px', height: '180px' }}>
-            <Neuri3D color="#8B5CF6" />
+            <Neuri3D color={couleurNeuri} />
           </div>
         </div>
 

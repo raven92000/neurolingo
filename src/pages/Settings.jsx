@@ -1,30 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Neuri3D from '../components/Neuri3D'
+import BottomNav from '../components/BottomNav'
+import { supabase } from '../supabase'
 
 // ═══════════════════════════════════════════════════════════════════
 // COMPOSANTS RÉUTILISABLES
 // ═══════════════════════════════════════════════════════════════════
-
-function BottomNav({ actif }) {
-  const navigate = useNavigate()
-  return (
-    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(8,13,24,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '12px 0 24px', display: 'flex', justifyContent: 'space-around', maxWidth: 430, margin: '0 auto', zIndex: 100 }}>
-      {[
-        { label: 'Accueil', page: '/dashboard', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 11 L11 4 L19 11 L19 19 L13 19 L13 14 L9 14 L9 19 L3 19 Z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8" strokeLinejoin="round" fill="none"/></svg> },
-        { label: 'Apprendre', page: '/learn', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3 L19 8 L19 16 L11 21 L3 16 L3 8 Z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinejoin="round" fill="none"/></svg> },
-        { label: 'Progression', page: '/stats', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 17 L8 12 L12 15 L19 7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg> },
-        { label: 'Profil', page: '/profile', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="8" r="3.5" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" fill="none"/><path d="M4 19 C4 15 7 13 11 13 C15 13 18 15 18 19" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" fill="none"/></svg> },
-        { label: 'Paramètres', page: '/settings', actif: true, icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="3" stroke="#8B5CF6" strokeWidth="1.5" fill="rgba(139,92,246,0.1)"/><path d="M11 2 L11 5 M11 17 L11 20 M2 11 L5 11 M17 11 L20 11 M4.5 4.5 L6.5 6.5 M15.5 15.5 L17.5 17.5 M4.5 17.5 L6.5 15.5 M15.5 6.5 L17.5 4.5" stroke="#8B5CF6" strokeWidth="1.5" strokeLinecap="round"/></svg> },
-      ].map((nav, i) => (
-        <div key={i} onClick={() => navigate(nav.page)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
-          {nav.icon}
-          <span style={{ fontSize: 11, fontWeight: nav.actif ? 700 : 500, color: nav.actif ? '#8B5CF6' : 'rgba(255,255,255,0.4)' }}>{nav.label}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 function Toggle({ value, onChange, color = '#8B5CF6' }) {
   return (
@@ -92,6 +74,21 @@ function ChevronToggle({ open, color }) {
   )
 }
 
+function PopupConfirm({ title, message, onConfirm, onCancel, confirmLabel, danger }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 24 }}>
+      <div style={{ background: '#0F1626', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: 28, maxWidth: 340, width: '100%' }}>
+        <h2 style={{ fontSize: 20, fontWeight: 900, color: '#FFFFFF', margin: '0 0 12px', textAlign: 'center' }}>{title}</h2>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', textAlign: 'center', margin: '0 0 24px', lineHeight: 1.5 }}>{message}</p>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={onCancel} style={{ flex: 1, height: 48, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Annuler</button>
+          <button onClick={onConfirm} style={{ flex: 1, height: 48, background: danger ? '#FF6B6B' : '#8B5CF6', border: 'none', color: '#FFFFFF', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{confirmLabel || 'Confirmer'}</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // CONFIG SECTIONS
 // ═══════════════════════════════════════════════════════════════════
@@ -121,10 +118,6 @@ function SectionIcon({ sectionKey, color }) {
   return icons[sectionKey] || null
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// LIGNE SELECTOR (label + pills)
-// ═══════════════════════════════════════════════════════════════════
-
 function SelectorRow({ label, options, value, onChange, color, last }) {
   return (
     <div style={{
@@ -137,6 +130,70 @@ function SelectorRow({ label, options, value, onChange, color, last }) {
     </div>
   )
 }
+function PopupChangePassword({ onClose, onSuccess }) {
+  const [newPwd, setNewPwd] = useState('')
+  const [confirmPwd, setConfirmPwd] = useState('')
+  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async () => {
+    setError(null)
+
+    if (newPwd.length < 8) {
+      setError('Le mot de passe doit faire au moins 8 caractères.')
+      return
+    }
+    if (newPwd !== confirmPwd) {
+      setError('Les mots de passe ne correspondent pas.')
+      return
+    }
+
+    setLoading(true)
+    const { error: err } = await supabase.auth.updateUser({ password: newPwd })
+    setLoading(false)
+
+    if (err) {
+      setError(err.message)
+      return
+    }
+    onSuccess()
+    onClose()
+  }
+
+  const inputStyle = {
+    width: '100%', height: 46, padding: '0 14px',
+    background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 12, color: '#FFFFFF', fontSize: 14, fontFamily: 'inherit',
+    marginBottom: 10, boxSizing: 'border-box', outline: 'none'
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 24 }}>
+      <div style={{ background: '#0F1626', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: 28, maxWidth: 360, width: '100%' }}>
+        <h2 style={{ fontSize: 20, fontWeight: 900, color: '#FFFFFF', margin: '0 0 8px', textAlign: 'center' }}>Modifier le mot de passe</h2>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: '0 0 20px' }}>
+          Choisis un nouveau mot de passe d'au moins 8 caractères.
+        </p>
+
+        <input type="password" placeholder="Nouveau mot de passe" value={newPwd}
+          onChange={e => setNewPwd(e.target.value)} style={inputStyle} />
+        <input type="password" placeholder="Confirmer le nouveau mot de passe" value={confirmPwd}
+          onChange={e => setConfirmPwd(e.target.value)} style={inputStyle} />
+
+        {error && (
+          <p style={{ fontSize: 13, color: '#FF6B6B', margin: '0 0 12px', textAlign: 'center' }}>{error}</p>
+        )}
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+          <button onClick={onClose} disabled={loading} style={{ flex: 1, height: 48, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Annuler</button>
+          <button onClick={handleSubmit} disabled={loading} style={{ flex: 1, height: 48, background: '#8B5CF6', border: 'none', color: '#FFFFFF', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.6 : 1 }}>
+            {loading ? '...' : 'Enregistrer'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // ═══════════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL
@@ -145,15 +202,21 @@ function SelectorRow({ label, options, value, onChange, color, last }) {
 export default function Settings() {
   const navigate = useNavigate()
   const [openSection, setOpenSection] = useState(null)
+  const [chargement, setChargement] = useState(true)
+  const [user, setUser] = useState(null)
+  const [profilId, setProfilId] = useState(null)
+  const [popupChangePwd, setPopupChangePwd] = useState(false)
+  const [popupDelete, setPopupDelete] = useState(false)
+  const [toast, setToast] = useState(null)
 
-  // États
+  // États synchronisés avec Supabase
   const [profil, setProfil] = useState('TDAH')
   const [dureeSession, setDureeSession] = useState('5 min')
-  const [modeFocus, setModeFocus] = useState(true)
+  const [modeFocus, setModeFocus] = useState(false)
   const [repetitionEspacee, setRepetitionEspacee] = useState(true)
   const [tailleTexte, setTailleTexte] = useState('Moyenne')
-  const [policeDyslexie, setPoliceDyslexie] = useState(true)
-  const [contrasteEleve, setContrasteEleve] = useState(true)
+  const [policeDyslexie, setPoliceDyslexie] = useState(false)
+  const [contrasteEleve, setContrasteEleve] = useState(false)
   const [espacementTexte, setEspacementTexte] = useState('Moyen')
   const [modeSimplified, setModeSimplified] = useState(false)
   const [vitesseLecture, setVitesseLecture] = useState('1.0x')
@@ -170,62 +233,181 @@ export default function Settings() {
   const [objectifXP, setObjectifXP] = useState('60 XP')
   const [afficherStreak, setAfficherStreak] = useState(true)
 
+  // Mappers entre format affichage <-> format DB
+  const profilToDB = { 'TDAH': 'tdah', 'Dyslexie': 'dyslexie', 'Standard': 'standard' }
+  const profilToUI = { 'tdah': 'TDAH', 'dyslexie': 'Dyslexie', 'standard': 'Standard' }
+  const dureeToDB = { '3 min': 3, '5 min': 5, '10 min': 10 }
+  const dureeToUI = { 3: '3 min', 5: '5 min', 10: '10 min' }
+  const xpToDB = { '30 XP': 30, '60 XP': 60, '100 XP': 100 }
+  const xpToUI = { 30: '30 XP', 60: '60 XP', 100: '100 XP' }
+
+  // ─── Charger les settings depuis Supabase ────────────────────
+  useEffect(() => {
+    async function charger() {
+      const { data: { user: u } } = await supabase.auth.getUser()
+      if (!u) { navigate('/login'); return }
+      setUser(u)
+
+      const { data, error } = await supabase.from('profils').select('*').eq('user_id', u.id).single()
+      if (error || !data) { setChargement(false); return }
+
+      setProfilId(data.id)
+      setProfil(profilToUI[data.profil_type] || 'TDAH')
+      setDureeSession(dureeToUI[data.objectif_minutes] || '5 min')
+      setModeFocus(data.mode_focus ?? false)
+      setRepetitionEspacee(data.repetition_espacee ?? true)
+      setTailleTexte(data.taille_texte || 'Moyenne')
+      setPoliceDyslexie(data.police_dyslexie ?? false)
+      setContrasteEleve(data.contraste_eleve ?? false)
+      setEspacementTexte(data.espacement_texte || 'Moyen')
+      setModeSimplified(data.mode_simplifie ?? false)
+      setVitesseLecture(data.vitesse_lecture || '1.0x')
+      setRepetitionAuto(data.repetition_auto ?? true)
+      setVoix(data.voix || 'Féminine')
+      setVolume(data.volume ?? 80)
+      setFrequenceNeuri(data.frequence_neuri || 'Normal')
+      setTypeFeedback(data.type_feedback || 'Motivant')
+      setAnimationsNeuri(data.animations_neuri ?? true)
+      setRappelQuotidien(data.rappel_quotidien ?? true)
+      setHeureRappel(data.heure_rappel || '19:00')
+      setStreakReminder(data.streak_reminder ?? true)
+      setNotifPedagogiques(data.notif_pedagogiques ?? true)
+      setObjectifXP(xpToUI[data.objectif_xp_quotidien] || '60 XP')
+      setAfficherStreak(data.afficher_streak ?? true)
+
+      setChargement(false)
+    }
+    charger()
+  }, [])
+
+  // ─── Helper pour sauvegarder une colonne ─────────────────────
+  const sauvegarder = async (colonne, valeur) => {
+    if (!user || !profilId) return
+    const { error } = await supabase.from('profils').update({ [colonne]: valeur }).eq('id', profilId)
+    if (error) console.error('Erreur sauvegarde :', error)
+    else showToast('Sauvegardé ✓')
+  }
+
+  const showToast = (msg) => {
+    setToast(msg)
+    setTimeout(() => setToast(null), 1500)
+  }
+
+  // ─── Wrappers qui sauvegardent à chaque changement ───────────
+  const setProfilSync = (v) => { setProfil(v); sauvegarder('profil_type', profilToDB[v]) }
+  const setDureeSessionSync = (v) => { setDureeSession(v); sauvegarder('objectif_minutes', dureeToDB[v]) }
+  const setModeFocusSync = (v) => { setModeFocus(v); sauvegarder('mode_focus', v) }
+  const setRepetitionEspaceeSync = (v) => { setRepetitionEspacee(v); sauvegarder('repetition_espacee', v) }
+  const setTailleTexteSync = (v) => { setTailleTexte(v); sauvegarder('taille_texte', v) }
+  const setPoliceDyslexieSync = (v) => { setPoliceDyslexie(v); sauvegarder('police_dyslexie', v) }
+  const setContrasteEleveSync = (v) => { setContrasteEleve(v); sauvegarder('contraste_eleve', v) }
+  const setEspacementTexteSync = (v) => { setEspacementTexte(v); sauvegarder('espacement_texte', v) }
+  const setModeSimplifiedSync = (v) => { setModeSimplified(v); sauvegarder('mode_simplifie', v) }
+  const setVitesseLectureSync = (v) => { setVitesseLecture(v); sauvegarder('vitesse_lecture', v) }
+  const setRepetitionAutoSync = (v) => { setRepetitionAuto(v); sauvegarder('repetition_auto', v) }
+  const setVoixSync = (v) => { setVoix(v); sauvegarder('voix', v) }
+  const setVolumeSync = (v) => { setVolume(v); sauvegarder('volume', v) }
+  const setFrequenceNeuriSync = (v) => { setFrequenceNeuri(v); sauvegarder('frequence_neuri', v) }
+  const setTypeFeedbackSync = (v) => { setTypeFeedback(v); sauvegarder('type_feedback', v) }
+  const setAnimationsNeuriSync = (v) => { setAnimationsNeuri(v); sauvegarder('animations_neuri', v) }
+  const setRappelQuotidienSync = (v) => { setRappelQuotidien(v); sauvegarder('rappel_quotidien', v) }
+  const setHeureRappelSync = (v) => { setHeureRappel(v); sauvegarder('heure_rappel', v) }
+  const setStreakReminderSync = (v) => { setStreakReminder(v); sauvegarder('streak_reminder', v) }
+  const setNotifPedagogiquesSync = (v) => { setNotifPedagogiques(v); sauvegarder('notif_pedagogiques', v) }
+  const setObjectifXPSync = (v) => { setObjectifXP(v); sauvegarder('objectif_xp_quotidien', xpToDB[v]) }
+  const setAfficherStreakSync = (v) => { setAfficherStreak(v); sauvegarder('afficher_streak', v) }
+
+  // ─── Actions de compte ───────────────────────────────────────
   const handleUpgrade = () => navigate('/pricing')
   const handleManageSubscription = () => navigate('/pricing')
-  const handleLogout = () => { console.log('Logout placeholder'); navigate('/login') }
-  const handleDeleteAccount = () => console.log('Delete account placeholder')
-  const handleResetProgress = () => console.log('Reset progress placeholder')
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    navigate('/login')
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!user || !profilId) return
+    // Supprimer le profil (les données auth nécessitent un Edge Function pour être supprimées)
+    await supabase.from('progression').delete().eq('user_id', user.id)
+    await supabase.from('profils').delete().eq('id', profilId)
+    await supabase.auth.signOut()
+    setPopupDelete(false)
+    navigate('/login')
+  }
+
+  const handleResetProgress = async () => {
+    if (!user || !profilId) return
+    await supabase.from('progression').delete().eq('user_id', user.id)
+    await supabase.from('profils').update({
+      lecons_completees: 0, mots_appris: 0, xp: 0, streak: 0, temps_total_minutes: 0
+    }).eq('id', profilId)
+    showToast('Progression réinitialisée ✓')
+  }
 
   const toggleSection = (key) => {
     setOpenSection(openSection === key ? null : key)
   }
 
-  // ─── Contenus des sections ────────────────────────────────────
+  // ─── Loader ──────────────────────────────────────────────────
+  if (chargement) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#080D18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 40, height: 40, border: '3px solid rgba(139,92,246,0.2)', borderTop: '3px solid #8B5CF6', borderRadius: '50%', animation: 'spin 1s linear infinite' }}/>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    )
+  }
+
+  // ─── Contenus des sections ───────────────────────────────────
   const renderSectionContent = (key, color) => {
     switch (key) {
       case 'apprentissage':
         return <>
-          <SelectorRow label="Type de profil" options={['TDAH', 'Dyslexie', 'Standard']} value={profil} onChange={setProfil} color={color} />
-          <SelectorRow label="Durée des sessions" options={['3 min', '5 min', '10 min']} value={dureeSession} onChange={setDureeSession} color={color} />
-          <DetailRow label="Mode focus"><Toggle value={modeFocus} onChange={setModeFocus} color={color} /></DetailRow>
-          <DetailRow label="Répétition espacée" last><Toggle value={repetitionEspacee} onChange={setRepetitionEspacee} color={color} /></DetailRow>
+          <SelectorRow label="Type de profil" options={['TDAH', 'Dyslexie', 'Standard']} value={profil} onChange={setProfilSync} color={color} />
+          <SelectorRow label="Durée des sessions" options={['3 min', '5 min', '10 min']} value={dureeSession} onChange={setDureeSessionSync} color={color} />
+          <DetailRow label="Mode focus"><Toggle value={modeFocus} onChange={setModeFocusSync} color={color} /></DetailRow>
+          <DetailRow label="Répétition espacée" last><Toggle value={repetitionEspacee} onChange={setRepetitionEspaceeSync} color={color} /></DetailRow>
         </>
       case 'accessibilite':
         return <>
-          <SelectorRow label="Taille du texte" options={['Petite', 'Moyenne', 'Grande']} value={tailleTexte} onChange={setTailleTexte} color={color} />
-          <DetailRow label="Police adaptée dyslexie"><Toggle value={policeDyslexie} onChange={setPoliceDyslexie} color={color} /></DetailRow>
-          <DetailRow label="Contraste élevé"><Toggle value={contrasteEleve} onChange={setContrasteEleve} color={color} /></DetailRow>
-          <SelectorRow label="Espacement du texte" options={['Compact', 'Moyen', 'Large']} value={espacementTexte} onChange={setEspacementTexte} color={color} />
-          <DetailRow label="Mode simplifié" last><Toggle value={modeSimplified} onChange={setModeSimplified} color={color} /></DetailRow>
+          <SelectorRow label="Taille du texte" options={['Petite', 'Moyenne', 'Grande']} value={tailleTexte} onChange={setTailleTexteSync} color={color} />
+          <DetailRow label="Police adaptée dyslexie"><Toggle value={policeDyslexie} onChange={setPoliceDyslexieSync} color={color} /></DetailRow>
+          <DetailRow label="Contraste élevé"><Toggle value={contrasteEleve} onChange={setContrasteEleveSync} color={color} /></DetailRow>
+          <SelectorRow label="Espacement du texte" options={['Compact', 'Moyen', 'Large']} value={espacementTexte} onChange={setEspacementTexteSync} color={color} />
+          <DetailRow label="Mode simplifié" last><Toggle value={modeSimplified} onChange={setModeSimplifiedSync} color={color} /></DetailRow>
         </>
       case 'audio':
         return <>
-          <SelectorRow label="Vitesse de lecture" options={['0.75x', '1.0x', '1.25x']} value={vitesseLecture} onChange={setVitesseLecture} color={color} />
-          <DetailRow label="Répétition automatique"><Toggle value={repetitionAuto} onChange={setRepetitionAuto} color={color} /></DetailRow>
-          <SelectorRow label="Voix" options={['Féminine', 'Masculine']} value={voix} onChange={setVoix} color={color} />
+          <SelectorRow label="Vitesse de lecture" options={['0.75x', '1.0x', '1.25x']} value={vitesseLecture} onChange={setVitesseLectureSync} color={color} />
+          <DetailRow label="Répétition automatique"><Toggle value={repetitionAuto} onChange={setRepetitionAutoSync} color={color} /></DetailRow>
+          <SelectorRow label="Voix" options={['Féminine', 'Masculine']} value={voix} onChange={setVoixSync} color={color} />
           <div style={{ padding: '14px 0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
               <span style={{ fontSize: 14, fontWeight: 500, color: '#FFFFFF' }}>Volume</span>
               <span style={{ fontSize: 13, color }}>{volume}%</span>
             </div>
-            <input type="range" min={0} max={100} value={volume} onChange={e => setVolume(parseInt(e.target.value))}
+            <input type="range" min={0} max={100} value={volume}
+              onChange={e => setVolume(parseInt(e.target.value))}
+              onMouseUp={e => sauvegarder('volume', parseInt(e.target.value))}
+              onTouchEnd={e => sauvegarder('volume', volume)}
               style={{ width: '100%', accentColor: color, cursor: 'pointer' }} />
           </div>
         </>
       case 'neuri':
         return <>
-          <SelectorRow label="Fréquence d'apparition" options={['Faible', 'Normal', 'Élevée']} value={frequenceNeuri} onChange={setFrequenceNeuri} color={color} />
-          <SelectorRow label="Type de feedback" options={['Doux', 'Motivant', 'Minimal']} value={typeFeedback} onChange={setTypeFeedback} color={color} />
-          <DetailRow label="Animations de Neuri" last><Toggle value={animationsNeuri} onChange={setAnimationsNeuri} color={color} /></DetailRow>
+          <SelectorRow label="Fréquence d'apparition" options={['Faible', 'Normal', 'Élevée']} value={frequenceNeuri} onChange={setFrequenceNeuriSync} color={color} />
+          <SelectorRow label="Type de feedback" options={['Doux', 'Motivant', 'Minimal']} value={typeFeedback} onChange={setTypeFeedbackSync} color={color} />
+          <DetailRow label="Animations de Neuri" last><Toggle value={animationsNeuri} onChange={setAnimationsNeuriSync} color={color} /></DetailRow>
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: '14px 0 0', lineHeight: 1.5, fontStyle: 'italic' }}>
             Neuri t'encourage sans te mettre la pression.
           </p>
         </>
       case 'notifications':
         return <>
-          <DetailRow label="Rappel quotidien"><Toggle value={rappelQuotidien} onChange={setRappelQuotidien} color={color} /></DetailRow>
+          <DetailRow label="Rappel quotidien"><Toggle value={rappelQuotidien} onChange={setRappelQuotidienSync} color={color} /></DetailRow>
           <DetailRow label="Heure du rappel">
-            <select value={heureRappel} onChange={e => setHeureRappel(e.target.value)} style={{
+            <select value={heureRappel} onChange={e => setHeureRappelSync(e.target.value)} style={{
               background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)',
               borderRadius: 10, padding: '6px 10px', color: '#FFFFFF', fontSize: 13, cursor: 'pointer'
             }}>
@@ -234,39 +416,38 @@ export default function Settings() {
               ))}
             </select>
           </DetailRow>
-          <DetailRow label="Rappel de streak"><Toggle value={streakReminder} onChange={setStreakReminder} color={color} /></DetailRow>
-          <DetailRow label="Notifications pédagogiques" last><Toggle value={notifPedagogiques} onChange={setNotifPedagogiques} color={color} /></DetailRow>
+          <DetailRow label="Rappel de streak"><Toggle value={streakReminder} onChange={setStreakReminderSync} color={color} /></DetailRow>
+          <DetailRow label="Notifications pédagogiques" last><Toggle value={notifPedagogiques} onChange={setNotifPedagogiquesSync} color={color} /></DetailRow>
         </>
       case 'objectifs':
         return <>
-          <SelectorRow label="Objectif quotidien" options={['30 XP', '60 XP', '100 XP']} value={objectifXP} onChange={setObjectifXP} color={color} />
-          <DetailRow label="Afficher le streak"><Toggle value={afficherStreak} onChange={setAfficherStreak} color={color} /></DetailRow>
+          <SelectorRow label="Objectif quotidien" options={['30 XP', '60 XP', '100 XP']} value={objectifXP} onChange={setObjectifXPSync} color={color} />
+          <DetailRow label="Afficher le streak"><Toggle value={afficherStreak} onChange={setAfficherStreakSync} color={color} /></DetailRow>
           <DetailRow label="Réinitialiser progression" onClick={handleResetProgress} last />
         </>
       case 'compte':
         return <>
-          <DetailRow label="Adresse email" value="alex@example.com" onClick={() => {}} />
-          <DetailRow label="Mot de passe" onClick={() => {}} />
+          <DetailRow label="Adresse email" value={user?.email || ''} />
+          <DetailRow label="Modifier le mot de passe" onClick={() => setPopupChangePwd(true)} />
           <DetailRow label="Déconnexion" onClick={handleLogout} />
-          <DetailRow label="Supprimer le compte" onClick={handleDeleteAccount} danger last />
+          <DetailRow label="Supprimer le compte" onClick={() => setPopupDelete(true)} danger last />
         </>
       case 'confidentialite':
         return <>
-          <DetailRow label="Politique de confidentialité" onClick={() => {}} />
+          <DetailRow label="Politique de confidentialité" onClick={() => window.open('https://neurolingo.vercel.app/privacy', '_blank')} />
           <DetailRow label="Gestion des données" onClick={() => {}} />
           <DetailRow label="Exporter mes données" onClick={() => {}} />
-          <DetailRow label="Supprimer mes données" onClick={handleDeleteAccount} danger last />
+          <DetailRow label="Supprimer mes données" onClick={() => setPopupDelete(true)} danger last />
         </>
       default:
         return null
     }
   }
 
-  // ─── RENDER ───────────────────────────────────────────────────
+  // ─── RENDER ──────────────────────────────────────────────────
   return (
     <div style={{ minHeight: '100vh', background: '#080D18', paddingBottom: 100, maxWidth: 430, margin: '0 auto', fontFamily: "'DM Sans', sans-serif" }}>
 
-      {/* HEADER */}
       <div style={{ padding: '52px 20px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 900, color: '#FFFFFF', margin: 0, letterSpacing: '0.02em' }}>PARAMÈTRES</h1>
@@ -279,12 +460,8 @@ export default function Settings() {
 
       <div style={{ padding: '0 16px' }}>
 
-        {/* ── 1. ABONNEMENT (carte spéciale, lien vers Pricing) ── */}
-        <div style={{
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.07)',
-          borderRadius: 20, padding: 20, marginBottom: 16
-        }}>
+        {/* 1. ABONNEMENT */}
+        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: 20, marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(245,158,11,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -296,29 +473,18 @@ export default function Settings() {
             </div>
             <div style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '4px 12px', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>Gratuit</div>
           </div>
-
           <p style={{ fontSize: 16, fontWeight: 700, color: '#FFFFFF', margin: '8px 0 4px' }}>Tu es en version gratuite</p>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: '0 0 16px', lineHeight: 1.4 }}>
             Passe à Premium pour débloquer toutes les fonctionnalités avancées.
           </p>
-
-          <button onClick={handleUpgrade} style={{
-            width: '100%', height: 48, borderRadius: 14, border: 'none',
-            background: '#55D600', color: '#FFFFFF',
-            fontSize: 15, fontWeight: 800, cursor: 'pointer', marginBottom: 8
-          }}>Passer à Premium</button>
-
-          <div onClick={handleManageSubscription} style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '14px 4px 4px', cursor: 'pointer',
-            borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 8
-          }}>
+          <button onClick={handleUpgrade} style={{ width: '100%', height: 48, borderRadius: 14, border: 'none', background: '#55D600', color: '#FFFFFF', fontSize: 15, fontWeight: 800, cursor: 'pointer', marginBottom: 8 }}>Passer à Premium</button>
+          <div onClick={handleManageSubscription} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 4px 4px', cursor: 'pointer', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 8 }}>
             <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)' }}>Gérer abonnement</span>
             <ChevronRight />
           </div>
         </div>
 
-        {/* ── SECTIONS 2 à 9 — ACCORDÉON ─────────────────────── */}
+        {/* SECTIONS 2 à 9 — ACCORDÉON */}
         {Object.entries(SECTIONS).map(([key, sec]) => {
           const isOpen = openSection === key
           return (
@@ -328,11 +494,7 @@ export default function Settings() {
               borderRadius: 20, marginBottom: 12, overflow: 'hidden',
               transition: 'border 0.25s ease'
             }}>
-              {/* Header de section (cliquable) */}
-              <div onClick={() => toggleSection(key)} style={{
-                padding: '16px 18px', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 14
-              }}>
+              <div onClick={() => toggleSection(key)} style={{ padding: '16px 18px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 11, background: sec.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <SectionIcon sectionKey={key} color={sec.color} />
                 </div>
@@ -344,14 +506,8 @@ export default function Settings() {
                 </div>
                 <ChevronToggle open={isOpen} color={sec.color} />
               </div>
-
-              {/* Contenu déroulant */}
               {isOpen && (
-                <div style={{
-                  padding: '0 18px 8px',
-                  borderTop: '1px solid rgba(255,255,255,0.05)',
-                  animation: 'slideDown 0.25s ease'
-                }}>
+                <div style={{ padding: '0 18px 8px', borderTop: '1px solid rgba(255,255,255,0.05)', animation: 'slideDown 0.25s ease' }}>
                   {renderSectionContent(key, sec.color)}
                 </div>
               )}
@@ -359,13 +515,8 @@ export default function Settings() {
           )
         })}
 
-        {/* ── FOOTER NEURI ───────────────────────────────────── */}
-        <div style={{
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.07)',
-          borderRadius: 20, padding: '16px 20px', marginTop: 16,
-          display: 'flex', alignItems: 'center', gap: 14
-        }}>
+        {/* FOOTER NEURI */}
+        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: '16px 20px', marginTop: 16, display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{ width: 64, height: 64, flexShrink: 0 }}>
             <Neuri3D color="#8B5CF6" />
           </div>
@@ -374,7 +525,7 @@ export default function Settings() {
           </p>
         </div>
 
-        {/* ── DÉCONNEXION ────────────────────────────────────── */}
+        {/* DÉCONNEXION */}
         <button onClick={handleLogout} style={{
           width: '100%', height: 52, borderRadius: 16, marginTop: 16,
           background: 'rgba(255,107,107,0.06)', border: '1px solid rgba(255,107,107,0.25)',
@@ -390,10 +541,43 @@ export default function Settings() {
 
       </div>
 
+      {/* TOAST */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 110, left: '50%', transform: 'translateX(-50%)',
+          background: 'rgba(85,214,0,0.95)', color: '#FFFFFF',
+          padding: '10px 20px', borderRadius: 24, fontSize: 13, fontWeight: 700,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3)', zIndex: 200,
+          animation: 'fadeInUp 0.3s ease'
+        }}>{toast}</div>
+      )}
+
+      {/* POPUPS */}
+      {popupChangePwd && (
+  <PopupChangePassword
+    onClose={() => setPopupChangePwd(false)}
+    onSuccess={() => showToast('Mot de passe modifié ✓')}
+  />
+)}
+      {popupDelete && (
+        <PopupConfirm
+          title="Supprimer ton compte ?"
+          message="Cette action est irréversible. Toutes tes données et ta progression seront perdues."
+          confirmLabel="Supprimer"
+          danger
+          onConfirm={handleDeleteAccount}
+          onCancel={() => setPopupDelete(false)}
+        />
+      )}
+
       <style>{`
         @keyframes slideDown {
           from { opacity: 0; max-height: 0; }
           to { opacity: 1; max-height: 600px; }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translate(-50%, 10px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
         }
       `}</style>
 

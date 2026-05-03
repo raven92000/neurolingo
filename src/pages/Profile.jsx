@@ -3,26 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Neuri3D from '../components/Neuri3D'
 import { supabase } from '../supabase'
 import { applyProfileClass } from '../profileSettings'
-
-function BottomNav({ actif }) {
-  const navigate = useNavigate()
-  return (
-    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(9,14,26,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '12px 0 24px', display: 'flex', justifyContent: 'space-around', maxWidth: '430px', margin: '0 auto' }}>
-      {[
-        { label: 'Accueil', page: '/dashboard', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 11 L11 4 L19 11 L19 19 L13 19 L13 14 L9 14 L9 19 L3 19 Z" stroke={actif === 'accueil' ? '#8B5CF6' : 'rgba(255,255,255,0.4)'} strokeWidth="1.8" strokeLinejoin="round" fill={actif === 'accueil' ? 'rgba(139,92,246,0.1)' : 'none'}/></svg> },
-        { label: 'Apprendre', page: '/learn', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3 L19 8 L19 16 L11 21 L3 16 L3 8 Z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinejoin="round" fill="none"/></svg> },
-        { label: 'Progression', page: null, icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 17 L8 12 L12 15 L19 7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg> },
-        { label: 'Profil', page: '/profile', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="8" r="3.5" stroke={actif === 'profil' ? '#8B5CF6' : 'rgba(255,255,255,0.4)'} strokeWidth="1.5" fill={actif === 'profil' ? 'rgba(139,92,246,0.1)' : 'none'}/><path d="M4 19 C4 15 7 13 11 13 C15 13 18 15 18 19" stroke={actif === 'profil' ? '#8B5CF6' : 'rgba(255,255,255,0.4)'} strokeWidth="1.5" strokeLinecap="round" fill="none"/></svg> },
-        { label: 'Paramètres', page: '/settings', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="3" stroke={actif === 'paramètres' ? '#8B5CF6' : 'rgba(255,255,255,0.4)'} strokeWidth="1.5" fill={actif === 'paramètres' ? 'rgba(139,92,246,0.1)' : 'none'}/><path d="M11 2 L11 5 M11 17 L11 20 M2 11 L5 11 M17 11 L20 11 M4.5 4.5 L6.5 6.5 M15.5 15.5 L17.5 17.5 M4.5 17.5 L6.5 15.5 M15.5 6.5 L17.5 4.5" stroke={actif === 'paramètres' ? '#8B5CF6' : 'rgba(255,255,255,0.4)'} strokeWidth="1.5" strokeLinecap="round"/></svg> },
-      ].map((nav, i) => (
-        <div key={i} onClick={() => nav.page && navigate(nav.page)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: nav.page ? 'pointer' : 'default', opacity: nav.page ? 1 : 0.4 }}>
-          {nav.icon}
-          <span style={{ fontSize: '11px', fontWeight: nav.page && actif === nav.label.toLowerCase() ? '700' : '500', color: nav.page && actif === nav.label.toLowerCase() ? '#8B5CF6' : 'rgba(255,255,255,0.4)' }}>{nav.label}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
+import BottomNav from '../components/BottomNav'
 
 export default function Profile() {
   const navigate = useNavigate()
@@ -148,7 +129,7 @@ export default function Profile() {
 
       </div>
 
-      <BottomNav actif="profil" />
+      <BottomNav />
     </div>
   )
 }

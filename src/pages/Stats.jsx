@@ -2,27 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Neuri3D from '../components/Neuri3D'
 import { supabase } from '../supabase'
+import BottomNav from '../components/BottomNav'
 
-function BottomNav() {
-  const navigate = useNavigate()
-  return (
-    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(9,14,26,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '12px 0 24px', display: 'flex', justifyContent: 'space-around', maxWidth: '430px', margin: '0 auto' }}>
-      {[
-        { label: 'Accueil', actif: false, page: '/dashboard', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 11 L11 4 L19 11 L19 19 L13 19 L13 14 L9 14 L9 19 L3 19 Z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8" strokeLinejoin="round" fill="none"/></svg> },
-        { label: 'Apprendre', actif: false, page: '/learn', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3 L19 8 L19 16 L11 21 L3 16 L3 8 Z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinejoin="round" fill="none"/></svg> },
-        { label: 'Progression', actif: true, page: '/stats', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 17 L8 12 L12 15 L19 7" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg> },
-        { label: 'Profil', actif: false, page: '/profile', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="8" r="3.5" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" fill="none"/><path d="M4 19 C4 15 7 13 11 13 C15 13 18 15 18 19" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" fill="none"/></svg> },
-      ].map((nav, i) => (
-        <div key={i} onClick={() => nav.page && navigate(nav.page)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: nav.page ? 'pointer' : 'default', opacity: nav.page ? 1 : 0.4 }}>
-          {nav.icon}
-          <span style={{ fontSize: '11px', fontWeight: nav.actif ? '700' : '500', color: nav.actif ? '#8B5CF6' : 'rgba(255,255,255,0.4)' }}>{nav.label}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// Calcule les XP par jour sur les 7 derniers jours
 function calculerXPParJour(progressions, motsParLecon) {
   const aujourdhui = new Date()
   const jours = []
@@ -48,7 +29,6 @@ function calculerXPParJour(progressions, motsParLecon) {
   return jours
 }
 
-// Calcule le streak actuel
 function calculerStreak(progressions) {
   if (!progressions || progressions.length === 0) return 0
   const datesUniques = [...new Set(progressions.map(p => new Date(p.completee_le).toISOString().split('T')[0]))].sort().reverse()
@@ -59,7 +39,6 @@ function calculerStreak(progressions) {
   hier.setDate(hier.getDate() - 1)
   const hierStr = hier.toISOString().split('T')[0]
 
-  // Si pas de leçon aujourd'hui ni hier → streak = 0
   if (datesUniques[0] !== aujourdhui && datesUniques[0] !== hierStr) return 0
 
   let streak = 1
@@ -114,7 +93,6 @@ export default function Stats() {
   return (
     <div style={{ minHeight: '100vh', background: '#090E1A', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
 
-      {/* ─── HEADER ──────────────────────────────────────────── */}
       <div style={{ padding: '52px 24px 16px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 4px' }}>Progression</h1>
         <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', margin: 0 }}>Ta progression cette semaine</p>
@@ -122,7 +100,6 @@ export default function Stats() {
 
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-        {/* ─── CARTE XP PRINCIPALE ────────────────────────────── */}
         <div style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(124,58,237,0.08) 100%)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '24px', padding: '28px 24px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: '20px', right: '20px', fontSize: '24px', opacity: 0.3 }}>⚡</div>
           <p style={{ fontSize: '12px', fontWeight: '700', color: '#A78BFA', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 8px' }}>XP total</p>
@@ -132,7 +109,6 @@ export default function Stats() {
           </p>
         </div>
 
-        {/* ─── MINI CARDS 2x2 ─────────────────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           {[
             { label: 'Leçons', value: profil?.lecons_completees || 0, color: '#58CC02', icon: '📚' },
@@ -148,7 +124,6 @@ export default function Stats() {
           ))}
         </div>
 
-        {/* ─── GRAPHIQUE XP 7 JOURS ───────────────────────────── */}
         <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '20px' }}>
           <p style={{ fontSize: '14px', fontWeight: '800', color: '#FFFFFF', margin: '0 0 18px' }}>XP cette semaine</p>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '120px', gap: '6px' }}>
@@ -171,7 +146,6 @@ export default function Stats() {
           </div>
         </div>
 
-        {/* ─── OBJECTIF QUOTIDIEN 7 JOURS ─────────────────────── */}
         <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
             <p style={{ fontSize: '14px', fontWeight: '800', color: '#FFFFFF', margin: 0 }}>Objectif quotidien</p>
@@ -197,7 +171,6 @@ export default function Stats() {
           </div>
         </div>
 
-        {/* ─── MESSAGE NEURI ──────────────────────────────────── */}
         <div style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '20px', padding: '18px', display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{ width: '52px', height: '52px', flexShrink: 0 }}>
             <Neuri3D color="#8B5CF6" />

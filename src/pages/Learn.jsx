@@ -1,25 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
-
-function BottomNav() {
-  const navigate = useNavigate()
-  return (
-    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(9,14,26,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '12px 0 24px', display: 'flex', justifyContent: 'space-around', maxWidth: '430px', margin: '0 auto' }}>
-      {[
-        { label: 'Accueil', actif: false, page: '/dashboard', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 11 L11 4 L19 11 L19 19 L13 19 L13 14 L9 14 L9 19 L3 19 Z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8" strokeLinejoin="round" fill="none"/></svg> },
-        { label: 'Apprendre', actif: true, page: '/learn', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3 L19 8 L19 16 L11 21 L3 16 L3 8 Z" stroke="#8B5CF6" strokeWidth="1.5" strokeLinejoin="round" fill="rgba(139,92,246,0.1)"/></svg> },
-        { label: 'Progression', actif: false, page: '/stats', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 17 L8 12 L12 15 L19 7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg> },
-        { label: 'Profil', actif: false, page: '/profile', icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="8" r="3.5" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" fill="none"/><path d="M4 19 C4 15 7 13 11 13 C15 13 18 15 18 19" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" fill="none"/></svg> },
-      ].map((nav, i) => (
-        <div key={i} onClick={() => nav.page && navigate(nav.page)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: nav.page ? 'pointer' : 'default' }}>
-          {nav.icon}
-          <span style={{ fontSize: '11px', fontWeight: nav.actif ? '700' : '500', color: nav.actif ? '#8B5CF6' : 'rgba(255,255,255,0.4)' }}>{nav.label}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
+import BottomNav from '../components/BottomNav'
 
 const EMOJI_LECON = {
   'Salutations': '👋',
@@ -75,13 +57,11 @@ export default function Learn() {
   return (
     <div style={{ minHeight: '100vh', background: '#090E1A', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
 
-      {/* HEADER */}
       <div style={{ padding: '52px 24px 20px' }}>
         <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '28px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 4px' }}>Apprendre</h1>
         <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.5)', margin: 0 }}>Choisis ta leçon du jour</p>
       </div>
 
-      {/* CHAPITRES + LEÇONS */}
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
         {chapitres.map((chapitre) => {
           const leconsChap = lecons.filter(l => l.chapitre_id === chapitre.id)
@@ -90,8 +70,6 @@ export default function Learn() {
 
           return (
             <div key={chapitre.id}>
-
-              {/* En-tête chapitre */}
               <div style={{ marginBottom: '14px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <div>
@@ -103,13 +81,11 @@ export default function Learn() {
                   </div>
                 </div>
 
-                {/* Barre de progression chapitre */}
                 <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.06)', borderRadius: '99px' }}>
                   <div style={{ height: '100%', width: `${pourcentage}%`, background: pourcentage === 100 ? '#58CC02' : 'linear-gradient(90deg, #8B5CF6, #A78BFA)', borderRadius: '99px', transition: 'width 0.6s ease' }}/>
                 </div>
               </div>
 
-              {/* Liste des leçons */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {leconsChap.map((lecon) => {
                   const complete = idsCompletes.has(lecon.id)
@@ -131,12 +107,10 @@ export default function Learn() {
                         transition: 'all 0.2s ease',
                       }}
                     >
-                      {/* Emoji */}
                       <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: complete ? 'rgba(88,204,2,0.12)' : 'rgba(139,92,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', flexShrink: 0 }}>
                         {emoji}
                       </div>
 
-                      {/* Infos */}
                       <div style={{ flex: 1 }}>
                         <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '15px', fontWeight: '800', color: '#FFFFFF', margin: '0 0 3px' }}>{lecon.titre}</p>
                         <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: 0 }}>
@@ -144,7 +118,6 @@ export default function Learn() {
                         </p>
                       </div>
 
-                      {/* Statut */}
                       <div style={{ flexShrink: 0 }}>
                         {complete ? (
                           <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg, #58CC02, #3DAD00)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
