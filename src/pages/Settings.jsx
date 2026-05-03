@@ -500,9 +500,9 @@ export default function Settings() {
   }}
   onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
   onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}>
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <path d="M15 18 L9 12 L15 6" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+  <path d="M6 6 L18 18 M18 6 L6 18" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round"/>
+</svg>
   </button>
 
   <div style={{ marginLeft: '52px' }}>
