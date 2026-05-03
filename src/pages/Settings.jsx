@@ -448,15 +448,32 @@ export default function Settings() {
   return (
     <div style={{ minHeight: '100vh', background: '#080D18', paddingBottom: 100, maxWidth: 430, margin: '0 auto', fontFamily: "'DM Sans', sans-serif" }}>
 
-      <div style={{ padding: '52px 20px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <h1 style={{ fontSize: 28, fontWeight: 900, color: '#FFFFFF', margin: 0, letterSpacing: '0.02em' }}>PARAMÈTRES</h1>
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: '4px 0 0' }}>Personnalise ton expérience NeuroLingo</p>
-        </div>
-        <div style={{ width: 80, height: 80, marginTop: -10, flexShrink: 0 }}>
-          <Neuri3D color="#8B5CF6" />
-        </div>
-      </div>
+      <div style={{ padding: '52px 20px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative' }}>
+
+  {/* ─── BOUTON RETOUR ──────────────────────────── */}
+  <button onClick={() => navigate('/profile')} aria-label="Retour au profil" style={{
+    position: 'absolute', top: '52px', left: '20px',
+    width: '40px', height: '40px', borderRadius: '12px',
+    background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    cursor: 'pointer', padding: 0, transition: 'background 0.2s ease'
+  }}
+  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="M15 18 L9 12 L15 6" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  </button>
+
+  <div style={{ marginLeft: '52px' }}>
+    <h1 style={{ fontSize: 28, fontWeight: 900, color: '#FFFFFF', margin: 0, letterSpacing: '0.02em' }}>PARAMÈTRES</h1>
+    <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: '4px 0 0' }}>Personnalise ton expérience NeuroLingo</p>
+  </div>
+  <div style={{ width: 80, height: 80, marginTop: -10, flexShrink: 0 }}>
+    <Neuri3D color="#8B5CF6" />
+  </div>
+</div>
 
       <div style={{ padding: '0 16px' }}>
 

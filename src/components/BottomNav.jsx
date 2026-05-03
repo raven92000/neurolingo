@@ -54,22 +54,6 @@ const NAV_ITEMS = [
           strokeWidth="1.5" strokeLinecap="round" fill="none"/>
       </svg>
     )
-  },
-  {
-    label: 'Paramètres',
-    page: '/settings',
-    key: 'paramètres',
-    icon: (active) => (
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-        <circle cx="11" cy="11" r="3"
-          stroke={active ? '#8B5CF6' : 'rgba(255,255,255,0.4)'}
-          strokeWidth="1.5"
-          fill={active ? 'rgba(139,92,246,0.1)' : 'none'}/>
-        <path d="M11 2 L11 5 M11 17 L11 20 M2 11 L5 11 M17 11 L20 11 M4.5 4.5 L6.5 6.5 M15.5 15.5 L17.5 17.5 M4.5 17.5 L6.5 15.5 M15.5 6.5 L17.5 4.5"
-          stroke={active ? '#8B5CF6' : 'rgba(255,255,255,0.4)'}
-          strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-    )
   }
 ]
 
@@ -77,7 +61,6 @@ export default function BottomNav() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Détecte automatiquement quel onglet est actif selon l'URL
   const activeKey = NAV_ITEMS.find(item => location.pathname.startsWith(item.page))?.key
 
   return (
