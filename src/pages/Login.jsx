@@ -3,6 +3,126 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import Neuri3D from '../components/Neuri3D'
 
+// ═══════════════════════════════════════════════════════════════════
+// COMPOSANT INPUT MOT DE PASSE AVEC ŒIL
+// ═══════════════════════════════════════════════════════════════════
+
+function PasswordInput({ value, onChange, placeholder, style }) {
+  const [visible, setVisible] = useState(false)
+
+  return (
+    <div style={{ position: 'relative', width: '100%' }}>
+      <input
+        type={visible ? 'text' : 'password'}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        style={{ ...style, paddingRight: '48px' }}
+      />
+      <button
+        type="button"
+        onClick={() => setVisible(!visible)}
+        aria-label={visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+        style={{
+          position: 'absolute', right: '12px', top: '50%',
+          transform: 'translateY(-50%)',
+          background: 'transparent', border: 'none',
+          cursor: 'pointer', padding: '6px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}
+      >
+        {visible ? (
+          // Œil ouvert
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M2 12 C5 6 8 5 12 5 C16 5 19 6 22 12 C19 18 16 19 12 19 C8 19 5 18 2 12 Z" stroke="rgba(255,255,255,0.6)" strokeWidth="1.6" strokeLinejoin="round"/>
+            <circle cx="12" cy="12" r="3" stroke="rgba(255,255,255,0.6)" strokeWidth="1.6"/>
+          </svg>
+        ) : (
+          // Œil barré
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M2 12 C5 6 8 5 12 5 C16 5 19 6 22 12 C19 18 16 19 12 19 C8 19 5 18 2 12 Z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.6" strokeLinejoin="round"/>
+            <circle cx="12" cy="12" r="3" stroke="rgba(255,255,255,0.4)" strokeWidth="1.6"/>
+            <path d="M4 4 L20 20" stroke="rgba(255,255,255,0.7)" strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
+        )}
+      </button>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MODALE "MOT DE PASSE OUBLIÉ"
+// ═══════════════════════════════════════════════════════════════════
+
+function PopupForgotPassword({ onClose }) {
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+
+  const handleSubmit = async () => {
+    if (!email) return
+    setLoading(true)
+    // On appelle Supabase mais on ne se soucie pas du résultat (pour ne pas révéler si l'email existe)
+    await supabase.auth.resetPasswordForEmail(email)
+    setLoading(false)
+    setSuccess(true)
+  }
+
+  const inputStyle = {
+    width: '100%', height: '50px', padding: '0 16px',
+    background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '12px', color: '#FFFFFF', fontSize: '15px',
+    fontFamily: 'DM Sans, sans-serif',
+    boxSizing: 'border-box', outline: 'none', marginBottom: '14px'
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 24 }}>
+      <div style={{ background: '#0F1626', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: 28, maxWidth: 360, width: '100%' }}>
+        <h2 style={{ fontSize: 20, fontWeight: 900, color: '#FFFFFF', margin: '0 0 8px', textAlign: 'center', fontFamily: 'Nunito, sans-serif' }}>
+          Mot de passe oublié ?
+        </h2>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: '0 0 20px', lineHeight: 1.5, fontFamily: 'DM Sans, sans-serif' }}>
+          Entre ton adresse email pour recevoir un lien de réinitialisation.
+        </p>
+
+        {success ? (
+          <>
+            <div style={{ background: 'rgba(85,214,0,0.1)', border: '1px solid rgba(85,214,0,0.3)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
+              <p style={{ fontSize: 13, color: '#86EFAC', margin: 0, textAlign: 'center', lineHeight: 1.5 }}>
+                Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.
+              </p>
+            </div>
+            <button onClick={onClose} style={{ width: '100%', height: 48, background: '#8B5CF6', border: 'none', color: '#FFFFFF', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+              Fermer
+            </button>
+          </>
+        ) : (
+          <>
+            <input
+              type="email"
+              placeholder="Adresse email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              style={inputStyle}
+            />
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={onClose} disabled={loading} style={{ flex: 1, height: 48, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>Annuler</button>
+              <button onClick={handleSubmit} disabled={loading || !email} style={{ flex: 1, height: 48, background: '#8B5CF6', border: 'none', color: '#FFFFFF', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: loading ? 'wait' : 'pointer', opacity: (loading || !email) ? 0.6 : 1, fontFamily: 'DM Sans, sans-serif' }}>
+                {loading ? '...' : 'Envoyer'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// COMPOSANT PRINCIPAL
+// ═══════════════════════════════════════════════════════════════════
+
 export default function Login() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -14,6 +134,7 @@ export default function Login() {
   const [nom, setNom] = useState('')
   const [erreur, setErreur] = useState(null)
   const [chargement, setChargement] = useState(false)
+  const [popupForgot, setPopupForgot] = useState(false)
 
   const handleSubmit = async () => {
     setErreur(null)
@@ -35,7 +156,6 @@ export default function Login() {
       })
       if (error) { setErreur(error.message); setChargement(false); return }
 
-      // Créer le profil lié à l'utilisateur
       await supabase.from('profils').insert({
         user_id: signUpData.user?.id,
         nom: `${prenom} ${nom}`,
@@ -93,11 +213,16 @@ export default function Login() {
         )}
 
         <input type="email" placeholder="Adresse email" value={email} onChange={e => setEmail(e.target.value)} style={inputStyle}/>
-        <input type="password" placeholder="Mot de passe" value={motDePasse} onChange={e => setMotDePasse(e.target.value)} style={inputStyle}/>
+
+        <PasswordInput
+          placeholder="Mot de passe"
+          value={motDePasse}
+          onChange={e => setMotDePasse(e.target.value)}
+          style={inputStyle}
+        />
 
         {mode === 'inscription' && (
-          <input
-            type="password"
+          <PasswordInput
             placeholder="Confirmer le mot de passe"
             value={confirmMotDePasse}
             onChange={e => setConfirmMotDePasse(e.target.value)}
@@ -119,6 +244,20 @@ export default function Login() {
         )}
       </div>
 
+      {/* ─── LIEN MOT DE PASSE OUBLIÉ (uniquement en mode connexion) ──── */}
+      {mode === 'connexion' && (
+        <p
+          onClick={() => setPopupForgot(true)}
+          style={{
+            fontFamily: 'DM Sans, sans-serif', fontSize: '13px',
+            color: '#A78BFA', cursor: 'pointer', fontWeight: '600',
+            margin: '0 0 16px', textAlign: 'right', width: '100%'
+          }}
+        >
+          Mot de passe oublié ?
+        </p>
+      )}
+
       {erreur && (
         <div style={{ width: '100%', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '12px', padding: '12px 16px', marginBottom: '14px' }}>
           <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: '#FCA5A5', margin: 0 }}>{erreur}</p>
@@ -139,6 +278,9 @@ export default function Login() {
           {mode === 'inscription' ? 'Se connecter' : "S'inscrire"}
         </span>
       </p>
+
+      {/* MODALE MOT DE PASSE OUBLIÉ */}
+      {popupForgot && <PopupForgotPassword onClose={() => setPopupForgot(false)} />}
 
     </div>
   )

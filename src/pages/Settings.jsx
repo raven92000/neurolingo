@@ -130,6 +130,45 @@ function SelectorRow({ label, options, value, onChange, color, last }) {
     </div>
   )
 }
+function PasswordInputWithEye({ value, onChange, placeholder, style }) {
+  const [visible, setVisible] = useState(false)
+
+  return (
+    <div style={{ position: 'relative', width: '100%', marginBottom: 10 }}>
+      <input
+        type={visible ? 'text' : 'password'}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        style={{ ...style, paddingRight: '46px', marginBottom: 0 }}
+      />
+      <button
+        type="button"
+        onClick={() => setVisible(!visible)}
+        aria-label={visible ? 'Masquer' : 'Afficher'}
+        style={{
+          position: 'absolute', right: '12px', top: '50%',
+          transform: 'translateY(-50%)', background: 'transparent',
+          border: 'none', cursor: 'pointer', padding: '4px',
+          display: 'flex', alignItems: 'center'
+        }}
+      >
+        {visible ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M2 12 C5 6 8 5 12 5 C16 5 19 6 22 12 C19 18 16 19 12 19 C8 19 5 18 2 12 Z" stroke="rgba(255,255,255,0.6)" strokeWidth="1.6" strokeLinejoin="round"/>
+            <circle cx="12" cy="12" r="3" stroke="rgba(255,255,255,0.6)" strokeWidth="1.6"/>
+          </svg>
+        ) : (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M2 12 C5 6 8 5 12 5 C16 5 19 6 22 12 C19 18 16 19 12 19 C8 19 5 18 2 12 Z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.6" strokeLinejoin="round"/>
+            <circle cx="12" cy="12" r="3" stroke="rgba(255,255,255,0.4)" strokeWidth="1.6"/>
+            <path d="M4 4 L20 20" stroke="rgba(255,255,255,0.7)" strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
+        )}
+      </button>
+    </div>
+  )
+}
 function PopupChangePassword({ onClose, onSuccess }) {
   const [newPwd, setNewPwd] = useState('')
   const [confirmPwd, setConfirmPwd] = useState('')
@@ -175,10 +214,10 @@ function PopupChangePassword({ onClose, onSuccess }) {
           Choisis un nouveau mot de passe d'au moins 8 caractères.
         </p>
 
-        <input type="password" placeholder="Nouveau mot de passe" value={newPwd}
-          onChange={e => setNewPwd(e.target.value)} style={inputStyle} />
-        <input type="password" placeholder="Confirmer le nouveau mot de passe" value={confirmPwd}
-          onChange={e => setConfirmPwd(e.target.value)} style={inputStyle} />
+        <PasswordInputWithEye placeholder="Nouveau mot de passe" value={newPwd}
+  onChange={e => setNewPwd(e.target.value)} style={inputStyle} />
+        <PasswordInputWithEye placeholder="Confirmer le nouveau mot de passe" value={confirmPwd}
+  onChange={e => setConfirmPwd(e.target.value)} style={inputStyle} />
 
         {error && (
           <p style={{ fontSize: 13, color: '#FF6B6B', margin: '0 0 12px', textAlign: 'center' }}>{error}</p>
