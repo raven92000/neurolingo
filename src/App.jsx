@@ -9,6 +9,7 @@ import Stats from './pages/Stats'
 import Learn from './pages/Learn'
 import Settings from './pages/Settings'
 import Pricing from './pages/Pricing'
+import Shop from './pages/Shop'
 
 function App() {
   return (
@@ -23,7 +24,8 @@ function App() {
         <Route path="/stats" element={<Stats />} />
         <Route path="/learn" element={<Learn />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/pricing" element={<Pricing />} />``
+        <Route path="/shop" element={<Shop />} />
       </Routes>
     </BrowserRouter>
   )

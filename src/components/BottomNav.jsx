@@ -54,6 +54,22 @@ const NAV_ITEMS = [
           strokeWidth="1.5" strokeLinecap="round" fill="none"/>
       </svg>
     )
+  },
+  {
+    label: 'Boutique',
+    page: '/shop',
+    key: 'boutique',
+    icon: (active) => (
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <path d="M4 7 L18 7 L17 19 L5 19 Z"
+          stroke={active ? '#8B5CF6' : 'rgba(255,255,255,0.4)'}
+          strokeWidth="1.5" strokeLinejoin="round"
+          fill={active ? 'rgba(139,92,246,0.1)' : 'none'}/>
+        <path d="M8 7 C8 5 9 3 11 3 C13 3 14 5 14 7"
+          stroke={active ? '#8B5CF6' : 'rgba(255,255,255,0.4)'}
+          strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+      </svg>
+    )
   }
 ]
 
