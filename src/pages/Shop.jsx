@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import Neuri2D from '../components/Neuri2D'
-import { getVersionNeuri } from '../utils/neuriUtils'
+import { getVersionFromDate } from '../utils/neuriUtils'
 import BottomNav from '../components/BottomNav'
 
 // ═══════════════════════════════════════════════════════════════════
@@ -181,7 +181,7 @@ export default function Shop() {
   }, [])
 
   const xpTotal = profil?.xp || 0
-  const versionNeuri = profil?.neuri_version || getVersionNeuri(profil?.age)
+  const versionNeuri = profil?.neuri_version || getVersionFromDate(profil?.date_naissance)
 
   const getLockReason = (item) => {
     if (item.requiredChapter) {

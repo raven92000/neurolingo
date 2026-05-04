@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import Neuri2D from '../components/Neuri2D'
-import { getVersionNeuri } from '../utils/neuriUtils'
+import { getVersionFromDate } from '../utils/neuriUtils'
 import BottomNav from '../components/BottomNav'
 
 function PopupReset({ onConfirm, onCancel }) {
@@ -22,7 +22,7 @@ function PopupReset({ onConfirm, onCancel }) {
 
 function EcranToutComplete({ profil, equipes, navigate, onReset, onContinuer }) {
   const [popup, setPopup] = useState(false)
-  const versionNeuri = profil?.neuri_version || getVersionNeuri(profil?.age)
+  const versionNeuri = profil?.neuri_version || getVersionFromDate(profil?.date_naissance)
 
   const handleConfirmReset = async () => {
     setPopup(false)
@@ -156,7 +156,7 @@ export default function Dashboard() {
     return <EcranToutComplete profil={profil} equipes={equipes} navigate={navigate} onReset={handleReset} onContinuer={handleContinuer} />
   }
 
-  const versionNeuri = profil?.neuri_version || getVersionNeuri(profil?.age)
+  const versionNeuri = profil?.neuri_version || getVersionFromDate(profil?.date_naissance)
   const xpObjectif = (profil?.objectif_minutes || 10) * 6
   const xpAujourdhui = Math.min(profil?.xp || 0, xpObjectif)
   const xpRestant = Math.max(xpObjectif - xpAujourdhui, 0)

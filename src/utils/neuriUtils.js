@@ -1,3 +1,16 @@
+// Calcule l'âge depuis une date de naissance (format ISO "YYYY-MM-DD")
+export function getAgeFromDate(dateNaissance) {
+  if (!dateNaissance) return null
+  const today = new Date()
+  const birth = new Date(dateNaissance)
+  let age = today.getFullYear() - birth.getFullYear()
+  const m = today.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+    age--
+  }
+  return age
+}
+
 // Détermine la version de Neuri selon l'âge
 export function getVersionNeuri(age) {
   if (!age || age < 5) return 'adulte' // fallback
@@ -5,6 +18,11 @@ export function getVersionNeuri(age) {
   if (age <= 17) return 'ado'
   if (age <= 35) return 'adulte'
   return 'mature'
+}
+
+// Helper combiné : depuis une date → version directement
+export function getVersionFromDate(dateNaissance) {
+  return getVersionNeuri(getAgeFromDate(dateNaissance))
 }
 
 // Retourne le chemin du PNG du corps

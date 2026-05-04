@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Neuri2D from '../components/Neuri2D'
-import { getVersionNeuri } from '../utils/neuriUtils'
+import { getVersionFromDate } from '../utils/neuriUtils'
 import { supabase } from '../supabase'
 import { applyProfileClass } from '../profileSettings'
 import BottomNav from '../components/BottomNav'
@@ -58,7 +58,7 @@ export default function Profile() {
   }
 
   const estTDAH = profil?.profil_type === 'tdah'
-  const versionNeuri = profil?.neuri_version || getVersionNeuri(profil?.age)
+  const versionNeuri = profil?.neuri_version || getVersionFromDate(profil?.date_naissance)
 
   return (
     <div style={{ minHeight: '100vh', background: '#090E1A', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>

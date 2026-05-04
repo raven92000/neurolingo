@@ -82,11 +82,11 @@ function ProgressBar({ etape, total }) {
   )
 }
 
-// ─── ÉCRAN 0 — PRÉNOM ─────────────────────────────────────────
+// ─── ÉCRAN 1 — PRÉNOM ─────────────────────────────────────────
 function EcranPrenom({ nom, setNom, onNext }) {
   return (
     <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.18) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', position: 'relative' }}>
-      <ProgressBar etape={1} total={4} />
+      <ProgressBar etape={1} total={5} />
       <div style={{ width: '140px', height: '140px', marginBottom: '24px' }}>
         <Neuri3D color="#8B5CF6" />
       </div>
@@ -134,7 +134,113 @@ function EcranPrenom({ nom, setNom, onNext }) {
   )
 }
 
-// ─── ÉCRAN 1 — PROFIL ─────────────────────────────────────────
+// ─── ÉCRAN 2 — DATE DE NAISSANCE ──────────────────────────────
+function EcranDateNaissance({ dateNaissance, setDateNaissance, onNext, onBack }) {
+  // Validation : doit être une date valide, pas dans le futur, et l'utilisateur doit avoir au moins 5 ans
+  const isValide = () => {
+    if (!dateNaissance) return false
+    const date = new Date(dateNaissance)
+    const today = new Date()
+    if (isNaN(date.getTime())) return false
+    if (date > today) return false
+    const age = today.getFullYear() - date.getFullYear()
+    return age >= 5 && age <= 100
+  }
+
+  // Calculer l'âge en direct pour feedback
+  const calculerAge = () => {
+    if (!dateNaissance) return null
+    const today = new Date()
+    const birth = new Date(dateNaissance)
+    if (isNaN(birth.getTime())) return null
+    let age = today.getFullYear() - birth.getFullYear()
+    const m = today.getMonth() - birth.getMonth()
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
+    return age
+  }
+
+  const age = calculerAge()
+  const valide = isValide()
+
+  // Date max = aujourd'hui, date min = il y a 100 ans
+  const today = new Date()
+  const maxDate = today.toISOString().split('T')[0]
+  const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate()).toISOString().split('T')[0]
+
+  return (
+    <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.18) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', position: 'relative' }}>
+      <ProgressBar etape={2} total={5} />
+      <div style={{ width: '130px', height: '130px', marginBottom: '24px' }}>
+        <Neuri3D color="#8B5CF6" />
+      </div>
+      <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '30px', fontWeight: '900', color: '#FFFFFF', textAlign: 'center', margin: '0 0 8px', lineHeight: 1.2 }}>
+        Quelle est ta date de naissance ?
+      </h1>
+      <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.55)', textAlign: 'center', margin: '0 0 32px', maxWidth: '300px', lineHeight: 1.5 }}>
+        Neuri prendra une apparence adaptée à ton âge.
+      </p>
+
+      <input
+        type="date"
+        value={dateNaissance || ''}
+        onChange={e => setDateNaissance(e.target.value)}
+        max={maxDate}
+        min={minDate}
+        style={{
+          width: '100%', maxWidth: '340px', height: '56px',
+          background: 'rgba(255,255,255,0.06)',
+          border: valide ? '1.5px solid rgba(139,92,246,0.6)' : '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '18px', padding: '0 20px',
+          fontFamily: 'Nunito, sans-serif', fontSize: '17px', fontWeight: '600',
+          color: '#FFFFFF', outline: 'none',
+          marginBottom: '12px', boxSizing: 'border-box',
+          transition: 'border 0.3s ease',
+          colorScheme: 'dark'
+        }}
+      />
+
+      {/* Feedback visuel : âge calculé */}
+      <div style={{ minHeight: '24px', marginBottom: '24px' }}>
+        {age !== null && valide && (
+          <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: '#A78BFA', margin: 0, textAlign: 'center' }}>
+            Tu as {age} ans 🎉
+          </p>
+        )}
+        {age !== null && !valide && (
+          <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: '#F87171', margin: 0, textAlign: 'center' }}>
+            {age < 5 ? 'NeuroLingo est conçu pour les 5 ans et plus' : 'Cette date semble incorrecte'}
+          </p>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', gap: '12px', width: '100%', maxWidth: '340px' }}>
+        <button onClick={onBack} style={{ width: '54px', height: '54px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', borderRadius: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M11 4 L5 9 L11 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <button
+          disabled={!valide}
+          onClick={onNext}
+          style={{
+            flex: 1, height: '54px',
+            background: valide ? 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)' : 'rgba(255,255,255,0.05)',
+            color: valide ? '#FFFFFF' : 'rgba(255,255,255,0.25)',
+            border: 'none', borderRadius: '18px',
+            fontSize: '17px', fontFamily: 'Nunito, sans-serif', fontWeight: '700',
+            cursor: valide ? 'pointer' : 'not-allowed',
+            transition: 'all 0.3s ease',
+            boxShadow: valide ? '0 0 28px rgba(124,58,237,0.35)' : 'none',
+          }}
+        >
+          Continuer
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── ÉCRAN 3 — PROFIL ─────────────────────────────────────────
 function EcranProfil({ profil, setProfil, onNext, onBack }) {
   const neurColor = profil === 'tdah' ? '#8B5CF6' : profil === 'dyslexie' ? '#3B82F6' : '#7C3AED'
   const bgGradient = profil === 'tdah'
@@ -145,7 +251,7 @@ function EcranProfil({ profil, setProfil, onNext, onBack }) {
 
   return (
     <div style={{ minHeight: '100vh', background: bgGradient, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', transition: 'background 0.8s ease', overflow: 'hidden', position: 'relative' }}>
-      <ProgressBar etape={2} total={4} />
+      <ProgressBar etape={3} total={5} />
       <div style={{ width: '150px', height: '150px', transition: 'transform 0.4s ease', transform: profil ? 'scale(1.06)' : 'scale(1)', marginBottom: '20px' }}>
         <Neuri3D color={neurColor} />
       </div>
@@ -211,7 +317,7 @@ function EcranProfil({ profil, setProfil, onNext, onBack }) {
   )
 }
 
-// ─── ÉCRAN 2 — LANGUE ─────────────────────────────────────────
+// ─── ÉCRAN 4 — LANGUE ─────────────────────────────────────────
 function EcranLangue({ langue, setLangue, onNext, onBack }) {
   const langues = [
     { code: 'en', nom: 'Anglais', emoji: '🇬🇧', dispo: true },
@@ -221,7 +327,7 @@ function EcranLangue({ langue, setLangue, onNext, onBack }) {
 
   return (
     <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.18) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', position: 'relative' }}>
-      <ProgressBar etape={3} total={4} />
+      <ProgressBar etape={4} total={5} />
       <div style={{ width: '120px', height: '120px', marginBottom: '20px' }}>
         <Neuri3D color="#8B5CF6" />
       </div>
@@ -263,7 +369,7 @@ function EcranLangue({ langue, setLangue, onNext, onBack }) {
   )
 }
 
-// ─── ÉCRAN 3 — OBJECTIF (TDAH) ────────────────────────────────
+// ─── ÉCRAN 5 — OBJECTIF (TDAH) ────────────────────────────────
 function EcranObjectifTDAH({ objectif, setObjectif, onFinish, onBack, sauvegarde }) {
   const objectifs = [
     { min: 5, label: 'Tranquille', desc: 'Quelques mots', emoji: '🌱' },
@@ -274,7 +380,7 @@ function EcranObjectifTDAH({ objectif, setObjectif, onFinish, onBack, sauvegarde
 
   return (
     <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.18) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', position: 'relative' }}>
-      <ProgressBar etape={4} total={4} />
+      <ProgressBar etape={5} total={5} />
       <div style={{ width: '120px', height: '120px', marginBottom: '20px' }}>
         <Neuri3D color="#8B5CF6" />
       </div>
@@ -310,14 +416,14 @@ function EcranObjectifTDAH({ objectif, setObjectif, onFinish, onBack, sauvegarde
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M11 4 L5 9 L11 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </button>
         <button disabled={!objectif || sauvegarde} onClick={onFinish} style={{ flex: 1, height: '54px', background: objectif && !sauvegarde ? 'linear-gradient(135deg, #58CC02 0%, #3DAD00 100%)' : 'rgba(255,255,255,0.05)', color: objectif && !sauvegarde ? '#FFFFFF' : 'rgba(255,255,255,0.25)', border: 'none', borderRadius: '18px', fontSize: '17px', fontFamily: 'Nunito, sans-serif', fontWeight: '700', cursor: objectif && !sauvegarde ? 'pointer' : 'not-allowed', transition: 'all 0.3s ease', boxShadow: objectif && !sauvegarde ? '0 0 28px rgba(88,204,2,0.35)' : 'none' }}>
-          {sauvegarde ? 'Création...' : 'C\'est parti !'}
+          {sauvegarde ? 'Création...' : "C'est parti !"}
         </button>
       </div>
     </div>
   )
 }
 
-// ─── ÉCRAN 3 — OBJECTIF (DYSLEXIE) ────────────────────────────
+// ─── ÉCRAN 5 — OBJECTIF (DYSLEXIE) ────────────────────────────
 function EcranObjectifDyslexie({ objectif, setObjectif, onFinish, onBack, sauvegarde }) {
   const objectifs = [
     { min: 5, label: 'Tranquille' },
@@ -329,7 +435,7 @@ function EcranObjectifDyslexie({ objectif, setObjectif, onFinish, onBack, sauveg
 
   return (
     <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(37,99,235,0.18) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', position: 'relative' }}>
-      <ProgressBar etape={4} total={4} />
+      <ProgressBar etape={5} total={5} />
       <div style={{ width: '120px', height: '120px', marginBottom: '32px' }}>
         <Neuri3D color="#3B82F6" />
       </div>
@@ -370,6 +476,7 @@ export default function Onboarding() {
   const navigate = useNavigate()
   const [etape, setEtape] = useState(1)
   const [nom, setNom] = useState('')
+  const [dateNaissance, setDateNaissance] = useState(null)
   const [profil, setProfil] = useState(null)
   const [langue, setLangue] = useState(null)
   const [objectif, setObjectif] = useState(null)
@@ -383,6 +490,7 @@ export default function Onboarding() {
 
       await supabase.from('profils').update({
         nom: nom.trim(),
+        date_naissance: dateNaissance,
         profil_type: profil,
         langue_id: langue,
         objectif_minutes: objectif,
@@ -396,11 +504,12 @@ export default function Onboarding() {
   }
 
   if (etape === 1) return <EcranPrenom nom={nom} setNom={setNom} onNext={() => setEtape(2)} />
-  if (etape === 2) return <EcranProfil profil={profil} setProfil={setProfil} onNext={() => setEtape(3)} onBack={() => setEtape(1)} />
-  if (etape === 3) return <EcranLangue langue={langue} setLangue={setLangue} onNext={() => setEtape(4)} onBack={() => setEtape(2)} />
+  if (etape === 2) return <EcranDateNaissance dateNaissance={dateNaissance} setDateNaissance={setDateNaissance} onNext={() => setEtape(3)} onBack={() => setEtape(1)} />
+  if (etape === 3) return <EcranProfil profil={profil} setProfil={setProfil} onNext={() => setEtape(4)} onBack={() => setEtape(2)} />
+  if (etape === 4) return <EcranLangue langue={langue} setLangue={setLangue} onNext={() => setEtape(5)} onBack={() => setEtape(3)} />
 
   if (profil === 'dyslexie') {
-    return <EcranObjectifDyslexie objectif={objectif} setObjectif={setObjectif} onFinish={handleFinish} onBack={() => setEtape(3)} sauvegarde={sauvegarde} />
+    return <EcranObjectifDyslexie objectif={objectif} setObjectif={setObjectif} onFinish={handleFinish} onBack={() => setEtape(4)} sauvegarde={sauvegarde} />
   }
-  return <EcranObjectifTDAH objectif={objectif} setObjectif={setObjectif} onFinish={handleFinish} onBack={() => setEtape(3)} sauvegarde={sauvegarde} />
+  return <EcranObjectifTDAH objectif={objectif} setObjectif={setObjectif} onFinish={handleFinish} onBack={() => setEtape(4)} sauvegarde={sauvegarde} />
 }

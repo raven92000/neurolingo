@@ -265,6 +265,7 @@ export default function Settings() {
   const [frequenceNeuri, setFrequenceNeuri] = useState('Normal')
   const [typeFeedback, setTypeFeedback] = useState('Motivant')
   const [animationsNeuri, setAnimationsNeuri] = useState(true)
+  const [neuriVersion, setNeuriVersion] = useState('Auto')
   const [rappelQuotidien, setRappelQuotidien] = useState(true)
   const [heureRappel, setHeureRappel] = useState('19:00')
   const [streakReminder, setStreakReminder] = useState(true)
@@ -279,6 +280,8 @@ export default function Settings() {
   const dureeToUI = { 3: '3 min', 5: '5 min', 10: '10 min' }
   const xpToDB = { '30 XP': 30, '60 XP': 60, '100 XP': 100 }
   const xpToUI = { 30: '30 XP', 60: '60 XP', 100: '100 XP' }
+  const neuriVersionToDB = { 'Auto': null, 'Enfant': 'enfant', 'Ado': 'ado', 'Adulte': 'adulte', 'Mature': 'mature' }
+  const neuriVersionToUI = { null: 'Auto', 'enfant': 'Enfant', 'ado': 'Ado', 'adulte': 'Adulte', 'mature': 'Mature' }
 
   // ─── Charger les settings depuis Supabase ────────────────────
   useEffect(() => {
@@ -307,6 +310,7 @@ export default function Settings() {
       setFrequenceNeuri(data.frequence_neuri || 'Normal')
       setTypeFeedback(data.type_feedback || 'Motivant')
       setAnimationsNeuri(data.animations_neuri ?? true)
+      setNeuriVersion(neuriVersionToUI[data.neuri_version] || 'Auto')
       setRappelQuotidien(data.rappel_quotidien ?? true)
       setHeureRappel(data.heure_rappel || '19:00')
       setStreakReminder(data.streak_reminder ?? true)
@@ -349,6 +353,7 @@ export default function Settings() {
   const setFrequenceNeuriSync = (v) => { setFrequenceNeuri(v); sauvegarder('frequence_neuri', v) }
   const setTypeFeedbackSync = (v) => { setTypeFeedback(v); sauvegarder('type_feedback', v) }
   const setAnimationsNeuriSync = (v) => { setAnimationsNeuri(v); sauvegarder('animations_neuri', v) }
+  const setNeuriVersionSync = (v) => { setNeuriVersion(v); sauvegarder('neuri_version', neuriVersionToDB[v]) }
   const setRappelQuotidienSync = (v) => { setRappelQuotidien(v); sauvegarder('rappel_quotidien', v) }
   const setHeureRappelSync = (v) => { setHeureRappel(v); sauvegarder('heure_rappel', v) }
   const setStreakReminderSync = (v) => { setStreakReminder(v); sauvegarder('streak_reminder', v) }
@@ -367,7 +372,6 @@ export default function Settings() {
 
   const handleDeleteAccount = async () => {
     if (!user || !profilId) return
-    // Supprimer le profil (les données auth nécessitent un Edge Function pour être supprimées)
     await supabase.from('progression').delete().eq('user_id', user.id)
     await supabase.from('profils').delete().eq('id', profilId)
     await supabase.auth.signOut()
@@ -437,7 +441,33 @@ export default function Settings() {
         return <>
           <SelectorRow label="Fréquence d'apparition" options={['Faible', 'Normal', 'Élevée']} value={frequenceNeuri} onChange={setFrequenceNeuriSync} color={color} />
           <SelectorRow label="Type de feedback" options={['Doux', 'Motivant', 'Minimal']} value={typeFeedback} onChange={setTypeFeedbackSync} color={color} />
-          <DetailRow label="Animations de Neuri" last><Toggle value={animationsNeuri} onChange={setAnimationsNeuriSync} color={color} /></DetailRow>
+          <DetailRow label="Animations de Neuri"><Toggle value={animationsNeuri} onChange={setAnimationsNeuriSync} color={color} /></DetailRow>
+
+          {/* ─── APPARENCE NEURI (NOUVEAU) ──────────────────── */}
+          <div style={{ padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <span style={{ fontSize: 14, fontWeight: 500, color: '#FFFFFF' }}>Apparence de Neuri</span>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>
+                {neuriVersion === 'Auto' ? 'Selon mon âge' : 'Manuel'}
+              </span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
+              {['Auto', 'Enfant', 'Ado', 'Adulte', 'Mature'].map(opt => (
+                <button
+                  key={opt}
+                  onClick={(e) => { e.stopPropagation(); setNeuriVersionSync(opt) }}
+                  style={{
+                    padding: '10px 4px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                    fontSize: 11, fontWeight: 700,
+                    background: neuriVersion === opt ? color : 'rgba(255,255,255,0.08)',
+                    color: neuriVersion === opt ? '#FFFFFF' : 'rgba(255,255,255,0.5)',
+                    transition: 'all 0.2s ease'
+                  }}
+                >{opt}</button>
+              ))}
+            </div>
+          </div>
+
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: '14px 0 0', lineHeight: 1.5, fontStyle: 'italic' }}>
             Neuri t'encourage sans te mettre la pression.
           </p>
