@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
-import Neuri3D from '../components/Neuri3D'
+import Neuri2D from '../components/Neuri2D'
+import { getVersionNeuri } from '../utils/neuriUtils'
 import BottomNav from '../components/BottomNav'
 
 function PopupReset({ onConfirm, onCancel }) {
@@ -19,8 +20,9 @@ function PopupReset({ onConfirm, onCancel }) {
   )
 }
 
-function EcranToutComplete({ profil, leconsCompletes, navigate, onReset, onContinuer }) {
+function EcranToutComplete({ profil, equipes, navigate, onReset, onContinuer }) {
   const [popup, setPopup] = useState(false)
+  const versionNeuri = profil?.neuri_version || getVersionNeuri(profil?.age)
 
   const handleConfirmReset = async () => {
     setPopup(false)
@@ -48,8 +50,13 @@ function EcranToutComplete({ profil, leconsCompletes, navigate, onReset, onConti
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 0' }}>
-          <div style={{ width: '160px', height: '160px', marginBottom: '16px' }}>
-            <Neuri3D color="#58CC02" />
+          <div style={{ marginBottom: '16px' }}>
+            <Neuri2D
+              version={versionNeuri}
+              angle="face"
+              equipes={equipes}
+              size={160}
+            />
           </div>
           <div style={{ background: 'rgba(88,204,2,0.15)', border: '1px solid rgba(88,204,2,0.3)', borderRadius: '20px', padding: '6px 16px', marginBottom: '16px' }}>
             <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', fontWeight: '700', color: '#86EFAC', margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>🎉 Bravo !</p>
@@ -88,6 +95,12 @@ export default function Dashboard() {
   const [leconSuivante, setLeconSuivante] = useState(null)
   const [toutComplete, setToutComplete] = useState(false)
   const [chargement, setChargement] = useState(true)
+  const [equipes, setEquipes] = useState({
+    chapeau: null,
+    haut: null,
+    lunettes: null,
+    compagnonObjet: null
+  })
 
   const charger = async () => {
     setChargement(true)
@@ -140,10 +153,10 @@ export default function Dashboard() {
   }
 
   if (toutComplete) {
-    return <EcranToutComplete profil={profil} navigate={navigate} onReset={handleReset} onContinuer={handleContinuer} />
+    return <EcranToutComplete profil={profil} equipes={equipes} navigate={navigate} onReset={handleReset} onContinuer={handleContinuer} />
   }
 
-  const couleurNeuri = profil?.profil_type === 'dyslexie' ? '#3B82F6' : '#8B5CF6'
+  const versionNeuri = profil?.neuri_version || getVersionNeuri(profil?.age)
   const xpObjectif = (profil?.objectif_minutes || 10) * 6
   const xpAujourdhui = Math.min(profil?.xp || 0, xpObjectif)
   const xpRestant = Math.max(xpObjectif - xpAujourdhui, 0)
@@ -173,9 +186,12 @@ export default function Dashboard() {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
-          <div style={{ width: '180px', height: '180px' }}>
-            <Neuri3D color={couleurNeuri} />
-          </div>
+          <Neuri2D
+            version={versionNeuri}
+            angle="face"
+            equipes={equipes}
+            size={180}
+          />
         </div>
 
         <h2 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '26px', fontWeight: '900', color: '#FFFFFF', textAlign: 'center', margin: '0 0 4px' }}>{leconSuivante?.duree_minutes || 6} min pour progresser</h2>

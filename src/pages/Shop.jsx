@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
-import Neuri3D from '../components/Neuri3D'
+import Neuri2D from '../components/Neuri2D'
+import { getVersionNeuri } from '../utils/neuriUtils'
 import BottomNav from '../components/BottomNav'
 
 // ═══════════════════════════════════════════════════════════════════
@@ -180,6 +181,7 @@ export default function Shop() {
   }, [])
 
   const xpTotal = profil?.xp || 0
+  const versionNeuri = profil?.neuri_version || getVersionNeuri(profil?.age)
 
   const getLockReason = (item) => {
     if (item.requiredChapter) {
@@ -316,9 +318,12 @@ export default function Shop() {
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           minHeight: 250
         }}>
-          <div style={{ width: '100%', height: 250 }}>
-            <Neuri3D color="#8B5CF6" />
-          </div>
+          <Neuri2D
+            version={versionNeuri}
+            angle="3-4"
+            equipes={inventaire.equipes}
+            size={200}
+          />
         </div>
 
         {/* COLONNE DROITE : BONUS */}

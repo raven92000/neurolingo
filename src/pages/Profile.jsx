@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Neuri3D from '../components/Neuri3D'
+import Neuri2D from '../components/Neuri2D'
+import { getVersionNeuri } from '../utils/neuriUtils'
 import { supabase } from '../supabase'
 import { applyProfileClass } from '../profileSettings'
 import BottomNav from '../components/BottomNav'
@@ -11,6 +12,12 @@ export default function Profile() {
   const [chargement, setChargement] = useState(true)
   const [changementEnCours, setChangementEnCours] = useState(false)
   const [messageConfirmation, setMessageConfirmation] = useState(null)
+  const [equipes, setEquipes] = useState({
+    chapeau: null,
+    haut: null,
+    lunettes: null,
+    compagnonObjet: null
+  })
 
   useEffect(() => {
     async function chargerProfil() {
@@ -50,8 +57,8 @@ export default function Profile() {
     )
   }
 
-  const neurColor = profil?.profil_type === 'dyslexie' ? '#3B82F6' : '#8B5CF6'
   const estTDAH = profil?.profil_type === 'tdah'
+  const versionNeuri = profil?.neuri_version || getVersionNeuri(profil?.age)
 
   return (
     <div style={{ minHeight: '100vh', background: '#090E1A', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
@@ -75,9 +82,16 @@ export default function Profile() {
             <path d="M19.4 15A1.65 1.65 0 0 0 19.7 16.8L19.8 16.9C20.1 17.2 20.3 17.6 20.3 18C20.3 18.4 20.1 18.8 19.8 19.1C19.5 19.4 19.1 19.6 18.7 19.6C18.3 19.6 17.9 19.4 17.6 19.1L17.5 19A1.65 1.65 0 0 0 15.7 18.7A1.65 1.65 0 0 0 14.7 20.2V20.5C14.7 21.3 14 22 13.2 22H10.8C10 22 9.3 21.3 9.3 20.5V20.4A1.65 1.65 0 0 0 8.2 18.9A1.65 1.65 0 0 0 6.4 19.2L6.3 19.3C6 19.6 5.6 19.8 5.2 19.8C4.8 19.8 4.4 19.6 4.1 19.3C3.8 19 3.6 18.6 3.6 18.2C3.6 17.8 3.8 17.4 4.1 17.1L4.2 17A1.65 1.65 0 0 0 4.5 15.2A1.65 1.65 0 0 0 3 14.2H2.7C1.9 14.2 1.2 13.5 1.2 12.7V10.3C1.2 9.5 1.9 8.8 2.7 8.8H2.8A1.65 1.65 0 0 0 4.3 7.7A1.65 1.65 0 0 0 4 5.9L3.9 5.8C3.6 5.5 3.4 5.1 3.4 4.7C3.4 4.3 3.6 3.9 3.9 3.6C4.2 3.3 4.6 3.1 5 3.1C5.4 3.1 5.8 3.3 6.1 3.6L6.2 3.7A1.65 1.65 0 0 0 8 4A1.65 1.65 0 0 0 9 2.5V2.2C9 1.4 9.7 0.7 10.5 0.7H12.9C13.7 0.7 14.4 1.4 14.4 2.2V2.3A1.65 1.65 0 0 0 15.5 3.8A1.65 1.65 0 0 0 17.3 3.5L17.4 3.4C17.7 3.1 18.1 2.9 18.5 2.9C18.9 2.9 19.3 3.1 19.6 3.4C19.9 3.7 20.1 4.1 20.1 4.5C20.1 4.9 19.9 5.3 19.6 5.6L19.5 5.7A1.65 1.65 0 0 0 19.2 7.5A1.65 1.65 0 0 0 20.7 8.5H21C21.8 8.5 22.5 9.2 22.5 10V12.4C22.5 13.2 21.8 13.9 21 13.9H20.9A1.65 1.65 0 0 0 19.4 15Z" stroke="rgba(255,255,255,0.85)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
-        <div style={{ width: '130px', height: '130px', marginBottom: '16px' }}>
-          <Neuri3D color={neurColor} />
+
+        <div style={{ marginBottom: '16px' }}>
+          <Neuri2D
+            version={versionNeuri}
+            angle="face"
+            equipes={equipes}
+            size={160}
+          />
         </div>
+
         <h1 style={{ fontSize: '26px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 8px', textAlign: 'center' }}>
           {profil?.nom || 'Mon profil'}
         </h1>
