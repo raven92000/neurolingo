@@ -371,7 +371,7 @@ function EcranLangue({ langue, setLangue, onNext, onBack }) {
 
 // ─── ÉCRAN 5 — OBJECTIF (TDAH) ────────────────────────────────
 function EcranObjectifTDAH({ objectif, setObjectif, onFinish, onBack, sauvegarde }) {
-  cconst objectifs = [
+  const objectifs = [
   { min: 5, label: 'Tranquille', desc: '5 mots par session', emoji: '🌱' },
   { min: 10, label: 'Intense', desc: '10 mots par session', emoji: '🔥' },
 ]
