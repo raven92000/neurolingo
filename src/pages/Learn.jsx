@@ -20,6 +20,22 @@ const EMOJI_LECON = {
   'Le Travail': '💼',
   'La Nature': '🌿',
   'Les Sports': '⚽',
+  "L'Alphabet": '🔤',
+  'El Alfabeto': '🔤',
+  'Les Pronoms': '🙋',
+  'Les Verbes essentiels': '⚙️',
+  'Les Adjectifs': '✨',
+  'Les Lieux de la ville': '🏙️',
+  'Les Objets du quotidien': '📱',
+  'Les Boissons': '🥤',
+  'Le Petit-déjeuner': '🥐',
+  'Les Mois': '📆',
+  'Les Heures': '⏰',
+  'Direction & Position': '📍',
+  'Les Questions': '❓',
+  "Les Verbes d'action": '🏃',
+  'Les Quantités': '🔢',
+  'La Politesse': '🤝',
 }
 
 function ModalLangues({ codeActif, onChoisir, onFermer }) {
@@ -77,8 +93,7 @@ export default function Learn() {
       setChargement(true)
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { navigate('/login'); return }
-      
-      // Charger l'objectif (5 ou 10 min) du profil utilisateur
+
       const { data: profil } = await supabase
         .from('profils')
         .select('objectif_minutes')
@@ -122,6 +137,14 @@ export default function Learn() {
     setLangueActive(code)
     setCodeLangue(code)
     setModalOuverte(false)
+  }
+
+  const handleClickLecon = (lecon) => {
+    if (lecon.type === 'alphabet') {
+      navigate('/alphabet')
+    } else {
+      navigate(`/lesson?lecon=${lecon.id}`)
+    }
   }
 
   if (chargement) {
@@ -194,11 +217,13 @@ export default function Learn() {
                     const emoji = EMOJI_LECON[lecon.titre] || '📖'
 
                     return (
-                      <div key={lecon.id} onClick={() => navigate(`/lesson?lecon=${lecon.id}`)} style={{ background: complete ? 'rgba(88,204,2,0.06)' : 'rgba(255,255,255,0.04)', border: complete ? '1px solid rgba(88,204,2,0.2)' : '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '14px', transition: 'all 0.2s ease' }}>
+                      <div key={lecon.id} onClick={() => handleClickLecon(lecon)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', cursor: 'pointer', transition: 'all 0.2s ease' }}>
                         <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: complete ? 'rgba(88,204,2,0.12)' : 'rgba(139,92,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', flexShrink: 0 }}>{emoji}</div>
                         <div style={{ flex: 1 }}>
                           <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '15px', fontWeight: '800', color: '#FFFFFF', margin: '0 0 3px' }}>{lecon.titre}</p>
-                          <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: 0 }}>{lecon.nombre_mots} mots · ~{lecon.duree_minutes} min</p>
+                          <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+                            {lecon.type === 'alphabet' ? `${lecon.nombre_mots} lettres` : `${objectifMinutes} mots · ~${objectifMinutes} min`}
+                          </p>
                         </div>
                         <div style={{ flexShrink: 0 }}>
                           {complete ? (

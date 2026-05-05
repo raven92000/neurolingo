@@ -10,6 +10,7 @@ import Learn from './pages/Learn'
 import Settings from './pages/Settings'
 import Pricing from './pages/Pricing'
 import Shop from './pages/Shop'
+import Alphabet from './pages/Alphabet'
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/pricing" element={<Pricing />} />``
         <Route path="/shop" element={<Shop />} />
+        <Route path="/alphabet" element={<Alphabet />} />
       </Routes>
     </BrowserRouter>
   )
