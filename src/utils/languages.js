@@ -32,7 +32,7 @@ export const LANGUES = [
     code: 'de',
     nom: 'Allemand',
     drapeau: '🇩🇪',
-    disponible: false,
+    disponible: true,
     bulle: {
       texte: "Los geht's! Deine Lektion wartet!",
       fond: '#1F2937',           // Noir profond
