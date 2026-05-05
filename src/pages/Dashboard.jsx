@@ -22,62 +22,74 @@ function PopupReset({ onConfirm, onCancel }) {
 }
 
 // ─── BLOC NEURI + BULLE (style maquette) ─────────────────────
-// Affiche : drapeau + nom de la langue, Neuri à gauche, bulle à droite
-// La bulle a un fond sombre transparent et un contour glow de la couleur de la langue.
 function NeuriAvecBulle({ langue, versionNeuri, equipes }) {
+  // Découpe le texte en 2 lignes au "! " (commun aux 3 langues)
+  const lignes = langue.bulle.texte
+    .split(/!\s+/)
+    .map((l, i, arr) => (i < arr.length - 1 ? l + '!' : l))
+    .filter(Boolean)
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '20px 0' }}>
-      {/* Drapeau + nom de la langue */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', alignSelf: 'flex-end', marginRight: '20px' }}>
-        <span style={{ fontSize: '22px' }}>{langue.drapeau}</span>
-        <span style={{
-          fontFamily: 'Nunito, sans-serif',
-          fontSize: '17px',
-          fontWeight: '800',
-          color: langue.bulle.fond,
-        }}>
-          {langue.nom}
-        </span>
-      </div>
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '0px',
+      margin: '20px 0',
+    }}>
+      {/* Neuri à gauche */}
+      <Neuri2D version={versionNeuri} angle="face" equipes={equipes} size={150} />
 
-      {/* Ligne Neuri + Bulle */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', width: '100%' }}>
-        <Neuri2D version={versionNeuri} angle="face" equipes={equipes} size={170} />
-
-        <div style={{
-          position: 'relative',
-          background: 'rgba(15, 22, 38, 0.85)',
-          border: `1.5px solid ${langue.bulle.fond}`,
-          borderRadius: '20px',
-          padding: '16px 20px',
-          maxWidth: '180px',
-          boxShadow: `0 0 24px ${langue.bulle.ombre}, inset 0 0 12px ${langue.bulle.ombre}`,
-          animation: 'bulleApparait 0.5s ease-out',
-        }}>
-          <p style={{
+      {/* Colonne droite : drapeau + nom au-dessus, bulle en dessous */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px', marginLeft: '-8px' }}>
+        {/* Drapeau + nom de la langue (couleur violette comme "LEÇON SUIVANTE") */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingLeft: '10px' }}>
+          <span style={{ fontSize: '18px' }}>{langue.drapeau}</span>
+          <span style={{
             fontFamily: 'Nunito, sans-serif',
             fontSize: '15px',
-            fontWeight: '700',
-            color: '#FFFFFF',
-            margin: 0,
-            lineHeight: 1.4,
-            textAlign: 'center',
+            fontWeight: '800',
+            color: '#A78BFA',
           }}>
-            {langue.bulle.texte}
-          </p>
+            {langue.nom}
+          </span>
+        </div>
 
-          {/* Queue de bulle qui pointe vers Neuri (à gauche) */}
+        {/* Bulle compacte sans glow */}
+        <div style={{
+          position: 'relative',
+          background: 'rgba(20, 28, 48, 0.9)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '20px',
+          padding: '10px 16px',
+          animation: 'bulleApparait 0.5s ease-out',
+        }}>
+          {lignes.map((ligne, i) => (
+            <p key={i} style={{
+              fontFamily: 'Nunito, sans-serif',
+              fontSize: '13px',
+              fontWeight: '700',
+              color: '#FFFFFF',
+              margin: 0,
+              lineHeight: 1.35,
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+            }}>
+              {ligne}
+            </p>
+          ))}
+
+          {/* Queue de bulle pointant vers Neuri (à gauche) */}
           <div style={{
             position: 'absolute',
-            left: '-9px',
+            left: '-6px',
             top: '50%',
             transform: 'translateY(-50%) rotate(45deg)',
-            width: '14px',
-            height: '14px',
-            background: 'rgba(15, 22, 38, 0.85)',
-            borderLeft: `1.5px solid ${langue.bulle.fond}`,
-            borderBottom: `1.5px solid ${langue.bulle.fond}`,
-            borderRadius: '2px',
+            width: '11px',
+            height: '11px',
+            background: 'rgba(20, 28, 48, 0.9)',
+            borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           }}/>
         </div>
       </div>
