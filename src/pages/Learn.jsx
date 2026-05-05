@@ -147,6 +147,16 @@ export default function Learn() {
       }
     }
   }
+  
+const handleClickLecon = (lecon) => {
+    if (lecon.type === 'alphabet') {
+      navigate('/alphabet')
+    } else if (lecon.type === 'sentence') {
+      navigate(`/lesson-sentence?lecon=${lecon.id}`)
+    } else {
+      navigate(`/lesson?lecon=${lecon.id}`)
+    }
+  }
 
   if (chargement) {
     return (

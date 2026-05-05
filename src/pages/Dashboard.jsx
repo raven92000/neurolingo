@@ -181,14 +181,17 @@ export default function Dashboard() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { navigate('/login'); return }
 
-    const { data: p } = await supabase.from('profils').select('*, langues(code)').eq('user_id', user.id).single()
+    const { data: p } = await supabase.from('profils').select('*').eq('user_id', user.id).single()
 setProfil(p)
 
 // Synchroniser la langue active avec celle du profil
-if (p?.langues?.code && p.langues.code !== getLangueActive()) {
-  setLangueActive(p.langues.code)
-  window.location.reload()
-  return
+if (p?.langue_id) {
+  const { data: langueUser } = await supabase.from('langues').select('code').eq('id', p.langue_id).single()
+  if (langueUser?.code && langueUser.code !== getLangueActive()) {
+    setLangueActive(langueUser.code)
+    window.location.reload()
+    return
+  }
 }
 
     // Récupérer la langue active

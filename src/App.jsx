@@ -11,6 +11,8 @@ import Settings from './pages/Settings'
 import Pricing from './pages/Pricing'
 import Shop from './pages/Shop'
 import Alphabet from './pages/Alphabet'
+import TestSentence from './pages/TestSentence'
+import LessonSentence from './pages/LessonSentence'
 
 function App() {
   return (
@@ -28,6 +30,8 @@ function App() {
         <Route path="/pricing" element={<Pricing />} />``
         <Route path="/shop" element={<Shop />} />
         <Route path="/alphabet" element={<Alphabet />} />
+        <Route path="/test-sentence" element={<TestSentence />} />
+        <Route path="/lesson-sentence" element={<LessonSentence />} />
       </Routes>
     </BrowserRouter>
   )
