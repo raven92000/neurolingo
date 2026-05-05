@@ -40,7 +40,7 @@ export const LANGUES = [
       ombre: 'rgba(31,41,55,0.6)',
     },
   },
-  { code: 'pt', nom: 'Portugais', drapeau: '🇵🇹', disponible: false, bulle: { texte: 'Olá!', fond: 'rgba(20,28,48,0.9)', texteCouleur: '#FFFFFF', ombre: 'rgba(0,0,0,0.3)' } },
+  { code: 'pt', nom: 'Portugais', drapeau: '🇵🇹', disponible: true, bulle: { texte: 'Olá!', fond: 'rgba(20,28,48,0.9)', texteCouleur: '#FFFFFF', ombre: 'rgba(0,0,0,0.3)' } },
   { code: 'it', nom: 'Italien', drapeau: '🇮🇹', disponible: false, bulle: { texte: 'Ciao!', fond: 'rgba(20,28,48,0.9)', texteCouleur: '#FFFFFF', ombre: 'rgba(0,0,0,0.3)' } },
 ]
 

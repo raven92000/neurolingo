@@ -25,7 +25,7 @@ function playWord(word, rate = 0.85) {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel()
     const u = new SpeechSynthesisUtterance(word)
-    const ttsMap = { en: 'en-US', es: 'es-ES', de: 'de-DE' }
+    const ttsMap = { en: 'en-US', es: 'es-ES', de: 'de-DE', pt: 'pt-PT', it: 'it-IT' }
     u.lang = ttsMap[getLangueActive()] || 'en-US'
     u.rate = rate; u.pitch = 1
     window.speechSynthesis.speak(u)
