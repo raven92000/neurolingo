@@ -133,17 +133,18 @@ export default function Learn() {
     charger()
   }, [codeLangue])
 
-  const handleChoisirLangue = (code) => {
+  const handleChoisirLangue = async (code) => {
     setLangueActive(code)
     setCodeLangue(code)
     setModalOuverte(false)
-  }
-
-  const handleClickLecon = (lecon) => {
-    if (lecon.type === 'alphabet') {
-      navigate('/alphabet')
-    } else {
-      navigate(`/lesson?lecon=${lecon.id}`)
+    
+    // Sauvegarder dans le profil Supabase
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: langue } = await supabase.from('langues').select('id').eq('code', code).single()
+      if (langue) {
+        await supabase.from('profils').update({ langue_id: langue.id }).eq('user_id', user.id)
+      }
     }
   }
 

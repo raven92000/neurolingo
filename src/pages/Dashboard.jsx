@@ -4,7 +4,7 @@ import { supabase } from '../supabase'
 import Neuri2D from '../components/Neuri2D'
 import { getVersionFromDate } from '../utils/neuriUtils'
 import BottomNav from '../components/BottomNav'
-import { getLangueActive, getLangueByCode } from '../utils/languages'
+import { getLangueActive, setLangueActive, getLangueByCode } from '../utils/languages'
 
 function PopupReset({ onConfirm, onCancel }) {
   return (
@@ -181,8 +181,15 @@ export default function Dashboard() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { navigate('/login'); return }
 
-    const { data: p } = await supabase.from('profils').select('*').eq('user_id', user.id).single()
-    setProfil(p)
+    const { data: p } = await supabase.from('profils').select('*, langues(code)').eq('user_id', user.id).single()
+setProfil(p)
+
+// Synchroniser la langue active avec celle du profil
+if (p?.langues?.code && p.langues.code !== getLangueActive()) {
+  setLangueActive(p.langues.code)
+  window.location.reload()
+  return
+}
 
     // Récupérer la langue active
     const codeLangue = getLangueActive()
