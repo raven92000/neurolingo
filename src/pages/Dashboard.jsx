@@ -21,36 +21,66 @@ function PopupReset({ onConfirm, onCancel }) {
   )
 }
 
-// ─── BULLE NEURI ─────────────────────────────────────────────
-function BulleNeuri({ langue }) {
+// ─── BLOC NEURI + BULLE (style maquette) ─────────────────────
+// Affiche : drapeau + nom de la langue, Neuri à gauche, bulle à droite
+// La bulle a un fond sombre transparent et un contour glow de la couleur de la langue.
+function NeuriAvecBulle({ langue, versionNeuri, equipes }) {
   return (
-    <div style={{
-      background: langue.bulle.fond,
-      color: langue.bulle.texteCouleur,
-      padding: '12px 18px',
-      borderRadius: '20px',
-      fontFamily: 'Nunito, sans-serif',
-      fontSize: '15px',
-      fontWeight: '700',
-      marginBottom: '14px',
-      boxShadow: `0 6px 24px ${langue.bulle.ombre}`,
-      position: 'relative',
-      maxWidth: '85%',
-      textAlign: 'center',
-      lineHeight: 1.3,
-      animation: 'bulleApparait 0.5s ease-out',
-    }}>
-      {langue.bulle.texte}
-      <div style={{
-        position: 'absolute',
-        bottom: '-6px',
-        left: '50%',
-        transform: 'translateX(-50%) rotate(45deg)',
-        width: '14px',
-        height: '14px',
-        background: langue.bulle.fond,
-        borderRadius: '2px',
-      }}/>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '20px 0' }}>
+      {/* Drapeau + nom de la langue */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', alignSelf: 'flex-end', marginRight: '20px' }}>
+        <span style={{ fontSize: '22px' }}>{langue.drapeau}</span>
+        <span style={{
+          fontFamily: 'Nunito, sans-serif',
+          fontSize: '17px',
+          fontWeight: '800',
+          color: langue.bulle.fond,
+        }}>
+          {langue.nom}
+        </span>
+      </div>
+
+      {/* Ligne Neuri + Bulle */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', width: '100%' }}>
+        <Neuri2D version={versionNeuri} angle="face" equipes={equipes} size={170} />
+
+        <div style={{
+          position: 'relative',
+          background: 'rgba(15, 22, 38, 0.85)',
+          border: `1.5px solid ${langue.bulle.fond}`,
+          borderRadius: '20px',
+          padding: '16px 20px',
+          maxWidth: '180px',
+          boxShadow: `0 0 24px ${langue.bulle.ombre}, inset 0 0 12px ${langue.bulle.ombre}`,
+          animation: 'bulleApparait 0.5s ease-out',
+        }}>
+          <p style={{
+            fontFamily: 'Nunito, sans-serif',
+            fontSize: '15px',
+            fontWeight: '700',
+            color: '#FFFFFF',
+            margin: 0,
+            lineHeight: 1.4,
+            textAlign: 'center',
+          }}>
+            {langue.bulle.texte}
+          </p>
+
+          {/* Queue de bulle qui pointe vers Neuri (à gauche) */}
+          <div style={{
+            position: 'absolute',
+            left: '-9px',
+            top: '50%',
+            transform: 'translateY(-50%) rotate(45deg)',
+            width: '14px',
+            height: '14px',
+            background: 'rgba(15, 22, 38, 0.85)',
+            borderLeft: `1.5px solid ${langue.bulle.fond}`,
+            borderBottom: `1.5px solid ${langue.bulle.fond}`,
+            borderRadius: '2px',
+          }}/>
+        </div>
+      </div>
     </div>
   )
 }
@@ -73,7 +103,7 @@ function EcranToutComplete({ profil, equipes, navigate, onReset, onContinuer }) 
             <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '24px', fontWeight: '900', color: '#FFFFFF', margin: 0 }}>{profil?.nom || 'toi'}</h1>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ fontSize: '14px' }}>💧</span>
               <span style={{ fontFamily: 'Nunito, sans-serif', fontSize: '14px', fontWeight: '900', color: '#F59E0B' }}>{profil?.streak || 0}</span>
             </div>
@@ -198,8 +228,8 @@ export default function Dashboard() {
     <div style={{ minHeight: '100vh', background: '#090E1A', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
       <style>{`
         @keyframes bulleApparait {
-          0% { opacity: 0; transform: translateY(8px) scale(0.95); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
+          0% { opacity: 0; transform: translateX(-8px) scale(0.95); }
+          100% { opacity: 1; transform: translateX(0) scale(1); }
         }
       `}</style>
 
@@ -210,7 +240,8 @@ export default function Dashboard() {
             <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '24px', fontWeight: '900', color: '#FFFFFF', margin: 0 }}>{profil?.nom || 'toi'}</h1>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {/* Streak avec bordure orange (cohérent avec l'icône 💧) */}
+            <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ fontSize: '14px' }}>💧</span>
               <div style={{ textAlign: 'center' }}>
                 <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '14px', fontWeight: '900', color: '#F59E0B', margin: 0 }}>{profil?.streak || 0}</p>
@@ -224,10 +255,8 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '20px 0' }}>
-          <BulleNeuri langue={langueActuelle} />
-          <Neuri2D version={versionNeuri} angle="face" equipes={equipes} size={180} />
-        </div>
+        {/* Neuri + bulle au style maquette */}
+        <NeuriAvecBulle langue={langueActuelle} versionNeuri={versionNeuri} equipes={equipes} />
 
         <h2 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '26px', fontWeight: '900', color: '#FFFFFF', textAlign: 'center', margin: '0 0 4px' }}>{leconSuivante?.duree_minutes || 6} min pour progresser</h2>
         <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '15px', color: '#A78BFA', textAlign: 'center', margin: '0 0 24px' }}>Ta leçon t'attend</p>
