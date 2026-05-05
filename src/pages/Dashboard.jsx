@@ -184,11 +184,21 @@ export default function Dashboard() {
     const { data: p } = await supabase.from('profils').select('*').eq('user_id', user.id).single()
     setProfil(p)
 
-    const { data: lecons } = await supabase.from('lecons').select('id, titre, duree_minutes, nombre_mots, ordre').order('ordre')
+    // Récupérer la langue active
+    const codeLangue = getLangueActive()
+    const { data: langue } = await supabase.from('langues').select('id').eq('code', codeLangue).single()
+    if (!langue) { setToutComplete(true); setLeconSuivante(null); setChargement(false); return }
+
+    // Récupérer les chapitres de cette langue
+    const { data: chapitres } = await supabase.from('chapitres').select('id').eq('langue_id', langue.id)
+    const chapitreIds = (chapitres || []).map(c => c.id)
+
+    // Récupérer uniquement les leçons de cette langue
+    const { data: lecons } = await supabase.from('lecons').select('id, titre, duree_minutes, nombre_mots, ordre, type').in('chapitre_id', chapitreIds).order('ordre')
     const { data: progressions } = await supabase.from('progression').select('lecon_id').eq('user_id', user.id)
 
     const idsCompletes = new Set((progressions || []).map(pr => pr.lecon_id))
-    const prochaine = lecons.find(l => !idsCompletes.has(l.id))
+    const prochaine = (lecons || []).find(l => !idsCompletes.has(l.id))
 
     if (!prochaine) {
       setToutComplete(true)
@@ -211,7 +221,12 @@ export default function Dashboard() {
   }
 
   const handleContinuer = async () => {
-    const { data: lecons } = await supabase.from('lecons').select('id').order('ordre')
+    const codeLangue = getLangueActive()
+    const { data: langue } = await supabase.from('langues').select('id').eq('code', codeLangue).single()
+    if (!langue) return
+    const { data: chapitres } = await supabase.from('chapitres').select('id').eq('langue_id', langue.id)
+    const chapitreIds = (chapitres || []).map(c => c.id)
+    const { data: lecons } = await supabase.from('lecons').select('id').in('chapitre_id', chapitreIds)
     if (!lecons || lecons.length === 0) return
     const aleatoire = lecons[Math.floor(Math.random() * lecons.length)]
     navigate(`/lesson?lecon=${aleatoire.id}`)
@@ -273,7 +288,7 @@ export default function Dashboard() {
         <h2 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '26px', fontWeight: '900', color: '#FFFFFF', textAlign: 'center', margin: '0 0 4px' }}>{profil?.objectif_minutes || 5} min pour progresser</h2>
         <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '15px', color: '#A78BFA', textAlign: 'center', margin: '0 0 24px' }}>Ta leçon t'attend</p>
 
-        <div onClick={() => navigate(`/lesson?lecon=${leconSuivante.id}`)} style={{ background: 'rgba(139,92,246,0.08)', border: '1.5px solid rgba(139,92,246,0.4)', borderRadius: '20px', padding: '20px 22px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 0 28px rgba(139,92,246,0.18)', marginBottom: '20px' }}>
+        <div onClick={() => navigate(leconSuivante.type === 'alphabet' ? '/alphabet' : `/lesson?lecon=${leconSuivante.id}`)} style={{ background: 'rgba(139,92,246,0.08)', border: '1.5px solid rgba(139,92,246,0.4)', borderRadius: '20px', padding: '20px 22px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 0 28px rgba(139,92,246,0.18)', marginBottom: '20px' }}>
           <div style={{ fontSize: '40px' }}>📚</div>
           <div style={{ flex: 1 }}>
             <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', fontWeight: '700', color: '#A78BFA', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 4px' }}>Leçon suivante</p>
