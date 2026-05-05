@@ -124,7 +124,7 @@ function CardNiveau({ niveau, etat, progression, isSelected, onClick }) {
         cursor: verrouille ? 'not-allowed' : 'pointer',
         opacity,
         filter,
-        boxShadow: actif && isSelected ? '0 0 30px rgba(139,92,246,0.35)' : 'none',
+        boxShadow: actif && isSelected ? '0 0 12px rgba(139,92,246,0.25)' : 'none',
         transition: 'all 0.3s ease',
         scrollSnapAlign: 'start',
         position: 'relative',
@@ -161,7 +161,7 @@ function CardNiveau({ niveau, etat, progression, isSelected, onClick }) {
       )}
 
       {/* Emoji environnement */}
-      <div style={{ height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '90px', filter: verrouille ? 'grayscale(0.5)' : 'none', marginTop: '20px' }}>
+      <div style={{ height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '46px', filter: verrouille ? 'grayscale(0.5)' : 'none', marginTop: '12px' }}>
         {niveau.emoji}
       </div>
 
@@ -173,9 +173,34 @@ function CardNiveau({ niveau, etat, progression, isSelected, onClick }) {
       <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '99px', marginBottom: '6px' }}>
         <div style={{ height: '100%', width: progression.total > 0 ? `${(progression.fait / progression.total) * 100}%` : '0%', background: termine ? '#58CC02' : 'linear-gradient(90deg, #8B5CF6, #A78BFA)', borderRadius: '99px', transition: 'width 0.6s ease' }} />
       </div>
-      <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: 0, textAlign: 'right', fontWeight: '600' }}>
+      <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: '0 0 12px', textAlign: 'right', fontWeight: '600' }}>
         {progression.fait}/{progression.total}
       </p>
+
+      {/* Bouton action */}
+      {verrouille ? (
+        <div style={{ width: '100%', height: '38px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+            <rect x="3" y="7" width="10" height="7" rx="1.5" fill="rgba(255,255,255,0.4)"/>
+            <path d="M5 7 V5 a3 3 0 0 1 6 0 V7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" fill="none"/>
+          </svg>
+          <span style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(255,255,255,0.5)', fontFamily: 'Nunito' }}>Verrouillé</span>
+        </div>
+      ) : termine ? (
+        <div style={{ width: '100%', height: '38px', background: 'rgba(88,204,2,0.12)', border: '1px solid rgba(88,204,2,0.4)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2.5 7 L6 10.5 L11.5 4" stroke="#86EFAC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span style={{ fontSize: '12px', fontWeight: '800', color: '#86EFAC', fontFamily: 'Nunito' }}>Terminé</span>
+        </div>
+      ) : (
+        <div style={{ width: '100%', height: '38px', background: 'linear-gradient(135deg, #7C3AED, #6D28D9)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 0 20px rgba(124,58,237,0.4)' }}>
+          <span style={{ fontSize: '13px', fontWeight: '800', color: '#FFFFFF', fontFamily: 'Nunito' }}>{progression.fait === 0 ? 'Commencer' : 'Continuer'}</span>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M3 6 L8 6 M6 3 L8 6 L6 9" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      )}
     </div>
   )
 }
@@ -326,7 +351,7 @@ export default function Learn() {
       </div>
 
       {/* Carousel des niveaux */}
-      <div ref={carouselRef} className="carousel-niveaux" style={{ display: 'flex', gap: '12px', padding: '0 24px 16px', overflowX: 'auto', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
+      <div ref={carouselRef} className="carousel-niveaux" style={{ display: 'flex', gap: '12px', padding: '4px 24px 16px', overflowX: 'auto', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
         {NIVEAUX.map(n => {
           const etat = getEtatLib(n.numero)
           const progN = getEtatNiveau(n)

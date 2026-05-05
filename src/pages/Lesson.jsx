@@ -305,15 +305,28 @@ function EcranFin({ xp, total, leconId, navigate, mots, partieCompletee, objecti
       try {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) { setSauvegarde('erreur'); return }
+
+        // Vérifier si la leçon était déjà complétée (pour ne pas re-donner d'XP)
+        const { data: progressionExistante } = await supabase
+          .from('progression')
+          .select('partie_completee')
+          .eq('user_id', user.id)
+          .eq('lecon_id', leconId)
+          .maybeSingle()
+        const dejaTerminee = progressionExistante?.partie_completee === 2
+
         await supabase.from('progression').upsert({ user_id: user.id, lecon_id: leconId, partie_completee: partieCompletee, completee_le: new Date().toISOString() }, { onConflict: 'user_id,lecon_id' })
-        const { data: profil } = await supabase.from('profils').select('xp, mots_appris, lecons_completees').eq('user_id', user.id).single()
-        if (profil) {
-          const update = { xp: profil.xp + xp, mots_appris: profil.mots_appris + total }
-          // Ne compter la leçon comme complétée que si tous les mots sont vus (partie 2 ou mode 10 min)
-          if (partieCompletee === 2) {
-            update.lecons_completees = profil.lecons_completees + 1
+
+        // Donner les XP UNIQUEMENT si la leçon n'était pas déjà terminée
+        if (!dejaTerminee) {
+          const { data: profil } = await supabase.from('profils').select('xp, mots_appris, lecons_completees').eq('user_id', user.id).single()
+          if (profil) {
+            const update = { xp: profil.xp + xp, mots_appris: profil.mots_appris + total }
+            if (partieCompletee === 2) {
+              update.lecons_completees = profil.lecons_completees + 1
+            }
+            await supabase.from('profils').update(update).eq('user_id', user.id)
           }
-          await supabase.from('profils').update(update).eq('user_id', user.id)
         }
         setSauvegarde('ok')
       } catch { setSauvegarde('erreur') }

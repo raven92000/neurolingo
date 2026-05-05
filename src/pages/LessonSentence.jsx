@@ -81,12 +81,19 @@ export default function LessonSentence() {
       return
     }
 
-    // Toutes les phrases de la session terminées
     const { data: { user } } = await supabase.auth.getUser()
     if (user && leconId) {
-      // Calculer la partie complétée
       const partieCompleteeFinale = objectifMinutes === 10 ? 2 : (partieCourante === 1 ? 1 : 2)
-      
+
+      // Vérifier si la leçon était déjà complétée
+      const { data: progressionExistante } = await supabase
+        .from('progression')
+        .select('partie_completee')
+        .eq('user_id', user.id)
+        .eq('lecon_id', leconId)
+        .maybeSingle()
+      const dejaTerminee = progressionExistante?.partie_completee === 2
+
       await supabase.from('progression').upsert({
         user_id: user.id,
         lecon_id: leconId,
@@ -94,22 +101,24 @@ export default function LessonSentence() {
         completee_le: new Date().toISOString(),
       }, { onConflict: 'user_id,lecon_id' })
 
-      // Mettre à jour les XP du profil
-      const { data: profilActuel } = await supabase
-        .from('profils')
-        .select('xp, mots_appris, lecons_completees')
-        .eq('user_id', user.id)
-        .single()
-      
-      if (profilActuel) {
-        const update = {
-          xp: (profilActuel.xp || 0) + (phrases.length * 10),
-          mots_appris: (profilActuel.mots_appris || 0) + phrases.length,
+      // Donner les XP UNIQUEMENT si pas déjà terminée
+      if (!dejaTerminee) {
+        const { data: profilActuel } = await supabase
+          .from('profils')
+          .select('xp, mots_appris, lecons_completees')
+          .eq('user_id', user.id)
+          .single()
+
+        if (profilActuel) {
+          const update = {
+            xp: (profilActuel.xp || 0) + (phrases.length * 10),
+            mots_appris: (profilActuel.mots_appris || 0) + phrases.length,
+          }
+          if (partieCompleteeFinale === 2) {
+            update.lecons_completees = (profilActuel.lecons_completees || 0) + 1
+          }
+          await supabase.from('profils').update(update).eq('user_id', user.id)
         }
-        if (partieCompleteeFinale === 2) {
-          update.lecons_completees = (profilActuel.lecons_completees || 0) + 1
-        }
-        await supabase.from('profils').update(update).eq('user_id', user.id)
       }
     }
     navigate('/dashboard')
