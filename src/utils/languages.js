@@ -40,10 +40,10 @@ export const LANGUES = [
       ombre: 'rgba(31,41,55,0.6)',
     },
   },
-  { code: 'pt', nom: 'Portugais', drapeau: '🇵🇹', disponible: true, bulle: { texte: 'Olá!', fond: 'rgba(20,28,48,0.9)', texteCouleur: '#FFFFFF', ombre: 'rgba(0,0,0,0.3)' } },
-  { code: 'it', nom: 'Italien', drapeau: '🇮🇹', disponible: false, bulle: { texte: 'Ciao!', fond: 'rgba(20,28,48,0.9)', texteCouleur: '#FFFFFF', ombre: 'rgba(0,0,0,0.3)' } },
-  { code: 'ja', nom: 'Japonais', drapeau: '🇯🇵', disponible: false, bulle: { texte: 'こんにちは!', fond: 'rgba(20,28,48,0.9)', texteCouleur: '#FFFFFF', ombre: 'rgba(0,0,0,0.3)' } },
-  { code: 'zh', nom: 'Chinois', drapeau: '🇨🇳', disponible: false, bulle: { texte: '你好!', fond: 'rgba(20,28,48,0.9)', texteCouleur: '#FFFFFF', ombre: 'rgba(0,0,0,0.3)' } },
+  { code: 'pt', nom: 'Portugais', drapeau: '🇵🇹', disponible: true, bulle: { texte: 'Vamos lá! Hora de aprender!', fond: 'rgba(20,28,48,0.9)', texteCouleur: '#FFFFFF', ombre: 'rgba(0,0,0,0.3)' } },
+  { code: 'it', nom: 'Italien', drapeau: '🇮🇹', disponible: false, bulle: { texte: 'Andiamo! È ora di imparare!', fond: 'rgba(20,28,48,0.9)', texteCouleur: '#FFFFFF', ombre: 'rgba(0,0,0,0.3)' } },
+  { code: 'ja', nom: 'Japonais', drapeau: '🇯🇵', disponible: false, bulle: { texte: 'さあ! 学ぶ時間です!', fond: 'rgba(20,28,48,0.9)', texteCouleur: '#FFFFFF', ombre: 'rgba(0,0,0,0.3)' } },
+  { code: 'zh', nom: 'Chinois', drapeau: '🇨🇳', disponible: false, bulle: { texte: '走吧! 该学习了!', fond: 'rgba(20,28,48,0.9)', texteCouleur: '#FFFFFF', ombre: 'rgba(0,0,0,0.3)' } },
 ]
 
 const STORAGE_KEY = 'neurolingo_langue'
