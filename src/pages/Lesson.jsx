@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import Neuri3D from '../components/Neuri3D'
 import { supabase } from '../supabase'
 import { getProfileSettings, applyProfileClass } from '../profileSettings'
+import { getLangueActive } from '../utils/languages'
 
 function EmojiGeant({ emoji }) {
   if (!emoji) {
@@ -24,7 +25,9 @@ function playWord(word, rate = 0.85) {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel()
     const u = new SpeechSynthesisUtterance(word)
-    u.lang = 'en-US'; u.rate = rate; u.pitch = 1
+    const ttsMap = { en: 'en-US', es: 'es-ES', de: 'de-DE' }
+    u.lang = ttsMap[getLangueActive()] || 'en-US'
+    u.rate = rate; u.pitch = 1
     window.speechSynthesis.speak(u)
   }
 }

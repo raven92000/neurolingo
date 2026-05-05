@@ -20,7 +20,7 @@ export const LANGUES = [
     code: 'es',
     nom: 'Espagnol',
     drapeau: '🇪🇸',
-    disponible: false,
+    disponible: true,
     bulle: {
       texte: '¡Vamos! Tu lección te espera',
       fond: '#F59E0B',           // Orange
