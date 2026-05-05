@@ -46,8 +46,6 @@ const STORAGE_KEY = 'neurolingo_langue'
 const LANGUE_PAR_DEFAUT = 'en'
 
 // Récupère le code de la langue active depuis localStorage
-// Sécurité : si la langue stockée n'existe plus ou n'est plus dispo,
-// on retombe sur la langue par défaut.
 export function getLangueActive() {
   if (typeof window === 'undefined') return LANGUE_PAR_DEFAUT
   const code = localStorage.getItem(STORAGE_KEY) || LANGUE_PAR_DEFAUT

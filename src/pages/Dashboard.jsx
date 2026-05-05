@@ -4,6 +4,7 @@ import { supabase } from '../supabase'
 import Neuri2D from '../components/Neuri2D'
 import { getVersionFromDate } from '../utils/neuriUtils'
 import BottomNav from '../components/BottomNav'
+import { getLangueActive, getLangueByCode } from '../utils/languages'
 
 function PopupReset({ onConfirm, onCancel }) {
   return (
@@ -16,6 +17,40 @@ function PopupReset({ onConfirm, onCancel }) {
           <button onClick={onConfirm} style={{ flex: 1, height: '50px', background: 'linear-gradient(135deg, #7C3AED, #6D28D9)', border: 'none', color: '#FFFFFF', borderRadius: '14px', fontSize: '15px', fontFamily: 'Nunito, sans-serif', fontWeight: '700', cursor: 'pointer' }}>Oui, recommencer</button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ─── BULLE NEURI ─────────────────────────────────────────────
+function BulleNeuri({ langue }) {
+  return (
+    <div style={{
+      background: langue.bulle.fond,
+      color: langue.bulle.texteCouleur,
+      padding: '12px 18px',
+      borderRadius: '20px',
+      fontFamily: 'Nunito, sans-serif',
+      fontSize: '15px',
+      fontWeight: '700',
+      marginBottom: '14px',
+      boxShadow: `0 6px 24px ${langue.bulle.ombre}`,
+      position: 'relative',
+      maxWidth: '85%',
+      textAlign: 'center',
+      lineHeight: 1.3,
+      animation: 'bulleApparait 0.5s ease-out',
+    }}>
+      {langue.bulle.texte}
+      <div style={{
+        position: 'absolute',
+        bottom: '-6px',
+        left: '50%',
+        transform: 'translateX(-50%) rotate(45deg)',
+        width: '14px',
+        height: '14px',
+        background: langue.bulle.fond,
+        borderRadius: '2px',
+      }}/>
     </div>
   )
 }
@@ -51,12 +86,7 @@ function EcranToutComplete({ profil, equipes, navigate, onReset, onContinuer }) 
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 0' }}>
           <div style={{ marginBottom: '16px' }}>
-            <Neuri2D
-              version={versionNeuri}
-              angle="face"
-              equipes={equipes}
-              size={160}
-            />
+            <Neuri2D version={versionNeuri} angle="face" equipes={equipes} size={160} />
           </div>
           <div style={{ background: 'rgba(88,204,2,0.15)', border: '1px solid rgba(88,204,2,0.3)', borderRadius: '20px', padding: '6px 16px', marginBottom: '16px' }}>
             <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', fontWeight: '700', color: '#86EFAC', margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>🎉 Bravo !</p>
@@ -101,6 +131,8 @@ export default function Dashboard() {
     lunettes: null,
     compagnonObjet: null
   })
+
+  const langueActuelle = getLangueByCode(getLangueActive())
 
   const charger = async () => {
     setChargement(true)
@@ -164,6 +196,13 @@ export default function Dashboard() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#090E1A', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
+      <style>{`
+        @keyframes bulleApparait {
+          0% { opacity: 0; transform: translateY(8px) scale(0.95); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
+
       <div style={{ padding: '52px 24px 0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
           <div>
@@ -185,13 +224,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
-          <Neuri2D
-            version={versionNeuri}
-            angle="face"
-            equipes={equipes}
-            size={180}
-          />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '20px 0' }}>
+          <BulleNeuri langue={langueActuelle} />
+          <Neuri2D version={versionNeuri} angle="face" equipes={equipes} size={180} />
         </div>
 
         <h2 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '26px', fontWeight: '900', color: '#FFFFFF', textAlign: 'center', margin: '0 0 4px' }}>{leconSuivante?.duree_minutes || 6} min pour progresser</h2>
