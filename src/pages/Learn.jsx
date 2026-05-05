@@ -41,11 +41,11 @@ const EMOJI_LECON = {
 function ModalLangues({ codeActif, onChoisir, onFermer }) {
   return (
     <div onClick={onFermer} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '24px', animation: 'modalFadeIn 0.2s ease-out' }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: '#0F1626', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px', padding: '24px', maxWidth: '380px', width: '100%', animation: 'modalSlideUp 0.3s ease-out' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: '#0F1626', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px', padding: '24px', maxWidth: '380px', width: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column', animation: 'modalSlideUp 0.3s ease-out' }}>
         <h2 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '22px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 6px', textAlign: 'center' }}>Choisis ta langue</h2>
         <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: '0 0 22px' }}>La langue que tu veux apprendre</p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', overflowY: 'auto', flex: 1, paddingRight: '4px', WebkitOverflowScrolling: 'touch' }}>
           {LANGUES.map((langue) => {
             const estActive = langue.code === codeActif
             const verrouillee = !langue.disponible
