@@ -371,12 +371,10 @@ function EcranLangue({ langue, setLangue, onNext, onBack }) {
 
 // ─── ÉCRAN 5 — OBJECTIF (TDAH) ────────────────────────────────
 function EcranObjectifTDAH({ objectif, setObjectif, onFinish, onBack, sauvegarde }) {
-  const objectifs = [
-    { min: 5, label: 'Tranquille', desc: 'Quelques mots', emoji: '🌱' },
-    { min: 10, label: 'Régulier', desc: 'Bon rythme' },
-    { min: 15, label: 'Sérieux', desc: 'Motivé' },
-    { min: 20, label: 'Intense', desc: 'Rapide', emoji: '🔥' },
-  ]
+  cconst objectifs = [
+  { min: 5, label: 'Tranquille', desc: '5 mots par session', emoji: '🌱' },
+  { min: 10, label: 'Intense', desc: '10 mots par session', emoji: '🔥' },
+]
 
   return (
     <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.18) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', position: 'relative' }}>
@@ -426,10 +424,9 @@ function EcranObjectifTDAH({ objectif, setObjectif, onFinish, onBack, sauvegarde
 // ─── ÉCRAN 5 — OBJECTIF (DYSLEXIE) ────────────────────────────
 function EcranObjectifDyslexie({ objectif, setObjectif, onFinish, onBack, sauvegarde }) {
   const objectifs = [
-    { min: 5, label: 'Tranquille' },
-    { min: 10, label: 'Régulier' },
-    { min: 15, label: 'Soutenu' },
-  ]
+  { min: 5, label: '5 mots par session' },
+  { min: 10, label: '10 mots par session' },
+]
 
   const fontDyslexie = { fontFamily: 'Atkinson Hyperlegible, sans-serif', letterSpacing: '0.05em', lineHeight: 1.7 }
 

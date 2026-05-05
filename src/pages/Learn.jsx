@@ -68,6 +68,7 @@ export default function Learn() {
   const [chargement, setChargement] = useState(true)
   const [codeLangue, setCodeLangue] = useState(getLangueActive())
   const [modalOuverte, setModalOuverte] = useState(false)
+  const [objectifMinutes, setObjectifMinutes] = useState(5)
 
   const langueActuelle = getLangueByCode(codeLangue)
 
@@ -76,6 +77,17 @@ export default function Learn() {
       setChargement(true)
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { navigate('/login'); return }
+      
+      // Charger l'objectif (5 ou 10 min) du profil utilisateur
+      const { data: profil } = await supabase
+        .from('profils')
+        .select('objectif_minutes')
+        .eq('user_id', user.id)
+        .single()
+      
+      if (profil?.objectif_minutes) {
+        setObjectifMinutes(profil.objectif_minutes)
+      }
 
       const { data: langue } = await supabase.from('langues').select('id').eq('code', codeLangue).single()
 

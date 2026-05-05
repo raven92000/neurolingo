@@ -270,7 +270,7 @@ export default function Dashboard() {
         {/* Neuri + bulle au style maquette */}
         <NeuriAvecBulle langue={langueActuelle} versionNeuri={versionNeuri} equipes={equipes} />
 
-        <h2 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '26px', fontWeight: '900', color: '#FFFFFF', textAlign: 'center', margin: '0 0 4px' }}>{leconSuivante?.duree_minutes || 6} min pour progresser</h2>
+        <h2 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '26px', fontWeight: '900', color: '#FFFFFF', textAlign: 'center', margin: '0 0 4px' }}>{profil?.objectif_minutes || 5} min pour progresser</h2>
         <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '15px', color: '#A78BFA', textAlign: 'center', margin: '0 0 24px' }}>Ta leçon t'attend</p>
 
         <div onClick={() => navigate(`/lesson?lecon=${leconSuivante.id}`)} style={{ background: 'rgba(139,92,246,0.08)', border: '1.5px solid rgba(139,92,246,0.4)', borderRadius: '20px', padding: '20px 22px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 0 28px rgba(139,92,246,0.18)', marginBottom: '20px' }}>
@@ -278,7 +278,7 @@ export default function Dashboard() {
           <div style={{ flex: 1 }}>
             <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', fontWeight: '700', color: '#A78BFA', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 4px' }}>Leçon suivante</p>
             <h3 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '20px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 4px' }}>{leconSuivante?.titre}</h3>
-            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>{leconSuivante?.nombre_mots} mots · ~{leconSuivante?.duree_minutes} min</p>
+            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>{profil?.objectif_minutes || 5} mots · ~{profil?.objectif_minutes || 5} min</p>
           </div>
         </div>
 

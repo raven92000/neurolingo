@@ -408,8 +408,7 @@ export default function Settings() {
       case 'apprentissage':
         return <>
           <SelectorRow label="Type de profil" options={['TDAH', 'Dyslexie', 'Standard']} value={profil} onChange={setProfilSync} color={color} />
-          <SelectorRow label="Durée des sessions" options={['3 min', '5 min', '10 min']} value={dureeSession} onChange={setDureeSessionSync} color={color} />
-          <DetailRow label="Mode focus"><Toggle value={modeFocus} onChange={setModeFocusSync} color={color} /></DetailRow>
+          <SelectorRow label="Durée des sessions" options={['5 min', '10 min']} value={dureeSession} onChange={setDureeSessionSync} color={color} />
           <DetailRow label="Répétition espacée" last><Toggle value={repetitionEspacee} onChange={setRepetitionEspaceeSync} color={color} /></DetailRow>
         </>
       case 'accessibilite':
