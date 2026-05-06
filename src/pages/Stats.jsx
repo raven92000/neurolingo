@@ -1,8 +1,39 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Neuri3D from '../components/Neuri3D'
+import Neuri2D from '../components/Neuri2D'
 import { supabase } from '../supabase'
 import BottomNav from '../components/BottomNav'
+import { getVersionFromDate } from '../utils/neuriUtils'
+import './Stats.css'
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+const NIVEAUX_CONFIG = [
+  { numero: 1, nom: 'Découverte', chapitresNumeros: [0, 1, 2, 3, 4, 5, 6, 7, 8] },
+  { numero: 2, nom: 'Les Bases', chapitresNumeros: [9] },
+  { numero: 3, nom: 'Le Quotidien', chapitresNumeros: [10] },
+  { numero: 4, nom: "L'Autonomie", chapitresNumeros: [11] },
+]
+
+function calculerNiveauActuel(chapitres, lecons, progressions) {
+  const idsCompletes = new Set((progressions || []).filter(p => p.partie_completee === 2).map(p => p.lecon_id))
+  let niveauActuel = NIVEAUX_CONFIG[0]
+  let progressionCourante = { fait: 0, total: 0 }
+
+  for (const niv of NIVEAUX_CONFIG) {
+    const chapsIds = (chapitres || []).filter(c => niv.chapitresNumeros.includes(c.numero)).map(c => c.id)
+    const lecsLevel = (lecons || []).filter(l => chapsIds.includes(l.chapitre_id))
+    if (lecsLevel.length === 0) continue
+    const fait = lecsLevel.filter(l => idsCompletes.has(l.id)).length
+    const total = lecsLevel.length
+    niveauActuel = niv
+    progressionCourante = { fait, total }
+    if (fait < total) break
+  }
+  return { niveau: niveauActuel, progression: progressionCourante }
+}
 
 function calculerXPParJour(progressions, motsParLecon) {
   const aujourdhui = new Date()
@@ -13,6 +44,7 @@ function calculerXPParJour(progressions, motsParLecon) {
     date.setHours(0, 0, 0, 0)
     const dateStr = date.toISOString().split('T')[0]
     const xpJour = (progressions || []).reduce((acc, p) => {
+      if (!p.completee_le) return acc
       const datePr = new Date(p.completee_le).toISOString().split('T')[0]
       if (datePr === dateStr) {
         const nbMots = motsParLecon[p.lecon_id] || 5
@@ -31,7 +63,7 @@ function calculerXPParJour(progressions, motsParLecon) {
 
 function calculerStreak(progressions) {
   if (!progressions || progressions.length === 0) return 0
-  const datesUniques = [...new Set(progressions.map(p => new Date(p.completee_le).toISOString().split('T')[0]))].sort().reverse()
+  const datesUniques = [...new Set(progressions.filter(p => p.completee_le).map(p => new Date(p.completee_le).toISOString().split('T')[0]))].sort().reverse()
   if (datesUniques.length === 0) return 0
 
   const aujourdhui = new Date().toISOString().split('T')[0]
@@ -52,11 +84,15 @@ function calculerStreak(progressions) {
   return streak
 }
 
+// ═══════════════════════════════════════════════════════════════
+// COMPOSANT PRINCIPAL
+// ═══════════════════════════════════════════════════════════════
 export default function Stats() {
   const navigate = useNavigate()
   const [profil, setProfil] = useState(null)
   const [xpParJour, setXpParJour] = useState([])
   const [streak, setStreak] = useState(0)
+  const [niveauData, setNiveauData] = useState({ niveau: NIVEAUX_CONFIG[0], progression: { fait: 0, total: 0 } })
   const [chargement, setChargement] = useState(true)
 
   useEffect(() => {
@@ -67,16 +103,23 @@ export default function Stats() {
       const { data: p } = await supabase.from('profils').select('*').eq('user_id', user.id).single()
       setProfil(p)
 
-      const { data: progressions } = await supabase.from('progression').select('lecon_id, completee_le').eq('user_id', user.id)
-      const { data: lecons } = await supabase.from('lecons').select('id, nombre_mots')
+      const { data: progressions } = await supabase.from('progression').select('lecon_id, completee_le, partie_completee').eq('user_id', user.id)
+      const { data: lecons } = await supabase.from('lecons').select('id, nombre_mots, chapitre_id')
       const motsParLecon = (lecons || []).reduce((acc, l) => ({ ...acc, [l.id]: l.nombre_mots }), {})
+
+      let chapitres = []
+      if (p?.langue_id) {
+        const res = await supabase.from('chapitres').select('id, numero').eq('langue_id', p.langue_id)
+        chapitres = res.data || []
+      }
 
       setXpParJour(calculerXPParJour(progressions, motsParLecon))
       setStreak(calculerStreak(progressions))
+      setNiveauData(calculerNiveauActuel(chapitres, lecons, progressions))
       setChargement(false)
     }
     charger()
-  }, [])
+  }, [navigate])
 
   if (chargement) {
     return (
@@ -90,13 +133,83 @@ export default function Stats() {
   const xpMax = Math.max(...xpParJour.map(j => j.xp), 60)
   const objectifXP = (profil?.objectif_minutes || 10) * 6
 
+  // Calcul XP du niveau actuel (300 XP par niveau)
+  const xpParNiveau = 300
+  const xpActuel = (profil?.xp || 0) % xpParNiveau
+  const xpRestant = xpParNiveau - xpActuel
+  const pourcentageNiveau = (xpActuel / xpParNiveau) * 100
+
+  // Message motivant adapté
+  const messageMotivant =
+    xpActuel === 0
+      ? `C'est parti ! Atteins ${xpParNiveau} XP pour passer au Niveau ${niveauData.niveau.numero + 1}.`
+      : pourcentageNiveau < 30
+      ? "Bon démarrage ! Continue comme ça."
+      : pourcentageNiveau < 70
+      ? "Super ! Chaque jour te rapproche de tes objectifs."
+      : `Bientôt le Niveau ${niveauData.niveau.numero + 1} ! Encore un effort 🔥`
+
   return (
     <div style={{ minHeight: '100vh', background: '#090E1A', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
 
       <div style={{ padding: '52px 24px 16px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 4px' }}>Progression</h1>
-        <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', margin: 0 }}>Ta progression cette semaine</p>
+        <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '28px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 4px' }}>Progression</h1>
+        <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.5)', margin: 0 }}>Ta progression cette semaine</p>
       </div>
+
+      {/* HERO PROGRESSION - Premium Card */}
+      <section className="hero-progress">
+        {/* Glow violet derrière Neuri */}
+        <div className="hero-progress__glow" aria-hidden="true" />
+
+        {/* Particules lumineuses */}
+        <span className="hero-progress__sparkle hero-progress__sparkle--1" aria-hidden="true">✦</span>
+        <span className="hero-progress__sparkle hero-progress__sparkle--2" aria-hidden="true">✦</span>
+        <span className="hero-progress__sparkle hero-progress__sparkle--3" aria-hidden="true">✦</span>
+
+        {/* Overlay de fondu */}
+        <div className="hero-progress__overlay" aria-hidden="true" />
+
+        <div className="hero-progress__content">
+          {/* TEXTE */}
+          <div className="hero-progress__text">
+            <p className="hero-progress__label">Niveau actuel</p>
+            <h2 className="hero-progress__title">Niveau {niveauData.niveau.numero}</h2>
+            <p className="hero-progress__subtitle">{niveauData.niveau.nom}</p>
+
+            <div className="hero-progress__xp-info">
+              <span className="hero-progress__xp-text">
+                ✨ <strong>{xpRestant} XP</strong> avant le Niveau {niveauData.niveau.numero + 1}
+              </span>
+            </div>
+
+            {/* Barre de progression avec shimmer */}
+            <div className="hero-progress__bar">
+              <div
+                className="hero-progress__bar-fill"
+                style={{ width: `${pourcentageNiveau}%` }}
+              />
+            </div>
+            <p className="hero-progress__bar-label">{xpActuel} / {xpParNiveau} XP</p>
+
+            {/* Carte motivation */}
+            <div className="hero-progress__motivation">
+              <p className="hero-progress__motivation-text">{messageMotivant}</p>
+              <span className="hero-progress__heart" aria-hidden="true">💜</span>
+            </div>
+          </div>
+
+          {/* NEURI à droite */}
+          <div className="hero-progress__neuri">
+            <Neuri2D
+              version={profil?.neuri_version || getVersionFromDate(profil?.date_naissance)}
+              angle="face"
+              equipes={{ chapeau: null, haut: null, lunettes: null, compagnonObjet: null }}
+              size={170}
+            />
+          </div>
+        </div>
+      </section>
 
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
