@@ -23,13 +23,14 @@ export default function LessonSentence() {
       // Charger profil (type + objectif)
       const { data: profil } = await supabase
         .from('profils')
-        .select('profil_type, objectif_minutes')
+        .select('profil_type, objectif_minutes, nom')
         .eq('user_id', user.id)
         .single()
       
       if (profil?.profil_type) setProfilType(profil.profil_type)
       const dureeUser = profil?.objectif_minutes || 5
       setObjectifMinutes(dureeUser)
+      const prenomUser = profil?.nom || 'Sam' // fallback si pas de prénom
 
       if (!leconId) { setChargement(false); return }
 
@@ -63,8 +64,8 @@ export default function LessonSentence() {
         }
 
         setPhrases(phrasesFiltrees.map(p => ({
-          en: p.phrase_cible,
-          fr: p.phrase_fr,
+          en: (p.phrase_cible || '').replaceAll('{prenom}', prenomUser),
+          fr: (p.phrase_fr || '').replaceAll('{prenom}', prenomUser),
           distracteursPhrase: p.distracteurs_phrase || [],
           distracteursMot: p.distracteurs_mot || [],
           indexCache: p.index_cache ?? 1,
