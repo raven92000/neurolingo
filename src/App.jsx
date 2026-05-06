@@ -13,6 +13,7 @@ import Shop from './pages/Shop'
 import Alphabet from './pages/Alphabet'
 import TestSentence from './pages/TestSentence'
 import LessonSentence from './pages/LessonSentence'
+import ParentCreateChild from './pages/ParentCreateChild'
 
 function App() {
   return (
@@ -27,11 +28,13 @@ function App() {
         <Route path="/stats" element={<Stats />} />
         <Route path="/learn" element={<Learn />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/pricing" element={<Pricing />} />``
+        <Route path="/pricing" element={<Pricing />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/alphabet" element={<Alphabet />} />
         <Route path="/test-sentence" element={<TestSentence />} />
         <Route path="/lesson-sentence" element={<LessonSentence />} />
+        <Route path="/parent-create-child" element={<ParentCreateChild />} />
+        <Route path="/parent-dashboard" element={<ParentCreateChild />} />
       </Routes>
     </BrowserRouter>
   )

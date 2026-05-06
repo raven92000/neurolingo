@@ -32,13 +32,11 @@ function PasswordInput({ value, onChange, placeholder, style }) {
         }}
       >
         {visible ? (
-          // Œil ouvert
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M2 12 C5 6 8 5 12 5 C16 5 19 6 22 12 C19 18 16 19 12 19 C8 19 5 18 2 12 Z" stroke="rgba(255,255,255,0.6)" strokeWidth="1.6" strokeLinejoin="round"/>
             <circle cx="12" cy="12" r="3" stroke="rgba(255,255,255,0.6)" strokeWidth="1.6"/>
           </svg>
         ) : (
-          // Œil barré
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M2 12 C5 6 8 5 12 5 C16 5 19 6 22 12 C19 18 16 19 12 19 C8 19 5 18 2 12 Z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.6" strokeLinejoin="round"/>
             <circle cx="12" cy="12" r="3" stroke="rgba(255,255,255,0.4)" strokeWidth="1.6"/>
@@ -62,7 +60,6 @@ function PopupForgotPassword({ onClose }) {
   const handleSubmit = async () => {
     if (!email) return
     setLoading(true)
-    // On appelle Supabase mais on ne se soucie pas du résultat (pour ne pas révéler si l'email existe)
     await supabase.auth.resetPasswordForEmail(email)
     setLoading(false)
     setSuccess(true)
@@ -127,6 +124,7 @@ export default function Login() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [mode, setMode] = useState(searchParams.get('mode') || 'inscription')
+  const [role, setRole] = useState('child') // 👈 NOUVEAU : par défaut enfant
   const [email, setEmail] = useState('')
   const [motDePasse, setMotDePasse] = useState('')
   const [confirmMotDePasse, setConfirmMotDePasse] = useState('')
@@ -156,6 +154,7 @@ export default function Login() {
       })
       if (error) { setErreur(error.message); setChargement(false); return }
 
+      // Création du profil avec le rôle choisi
       await supabase.from('profils').insert({
         user_id: signUpData.user?.id,
         nom: `${prenom} ${nom}`,
@@ -165,12 +164,27 @@ export default function Login() {
         mots_appris: 0,
         temps_total_minutes: 0,
         profil_type: 'tdah',
+        role: role, // 👈 NOUVEAU
       })
-      navigate('/onboarding')
+
+      // Redirection selon le rôle
+      if (role === 'parent') {
+        navigate('/parent-create-child') // 👈 NOUVEAU : parent crée le compte de son enfant
+      } else {
+        navigate('/onboarding') // Enfant continue normalement
+      }
     } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password: motDePasse })
+      // CONNEXION : récupérer le rôle pour rediriger correctement
+      const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password: motDePasse })
       if (error) { setErreur('Email ou mot de passe incorrect'); setChargement(false); return }
-      navigate('/dashboard')
+
+      const { data: profil } = await supabase.from('profils').select('role').eq('user_id', signInData.user.id).single()
+
+      if (profil?.role === 'parent') {
+        navigate('/parent-dashboard') // 👈 NOUVEAU
+      } else {
+        navigate('/dashboard')
+      }
     }
     setChargement(false)
   }
@@ -202,6 +216,49 @@ export default function Login() {
       <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.45)', margin: '0 0 28px', textAlign: 'center' }}>
         {mode === 'inscription' ? 'Commence à apprendre gratuitement' : 'Connecte-toi pour continuer'}
       </p>
+
+      {/* 👈 NOUVEAU : SÉLECTEUR DE RÔLE (uniquement en inscription) */}
+      {mode === 'inscription' && (
+        <div style={{ width: '100%', marginBottom: '14px' }}>
+          <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: '0 0 10px 4px', fontWeight: '600' }}>Je suis :</p>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <div
+              onClick={() => setRole('child')}
+              style={{
+                flex: 1, padding: '14px 12px', borderRadius: '14px', cursor: 'pointer',
+                background: role === 'child' ? 'rgba(139,92,246,0.14)' : 'rgba(255,255,255,0.04)',
+                border: role === 'child' ? '1.5px solid rgba(139,92,246,0.55)' : '1px solid rgba(255,255,255,0.08)',
+                boxShadow: role === 'child' ? '0 0 20px rgba(139,92,246,0.18)' : 'none',
+                transition: 'all 0.2s ease',
+                display: 'flex', alignItems: 'center', gap: '10px',
+              }}
+            >
+              <div style={{ fontSize: '22px' }}>🧒</div>
+              <div>
+                <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '15px', fontWeight: '700', color: '#FFFFFF', margin: 0 }}>Enfant</p>
+                <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.5)', margin: '2px 0 0' }}>J'apprends une langue</p>
+              </div>
+            </div>
+            <div
+              onClick={() => setRole('parent')}
+              style={{
+                flex: 1, padding: '14px 12px', borderRadius: '14px', cursor: 'pointer',
+                background: role === 'parent' ? 'rgba(139,92,246,0.14)' : 'rgba(255,255,255,0.04)',
+                border: role === 'parent' ? '1.5px solid rgba(139,92,246,0.55)' : '1px solid rgba(255,255,255,0.08)',
+                boxShadow: role === 'parent' ? '0 0 20px rgba(139,92,246,0.18)' : 'none',
+                transition: 'all 0.2s ease',
+                display: 'flex', alignItems: 'center', gap: '10px',
+              }}
+            >
+              <div style={{ fontSize: '22px' }}>👨‍👩‍👧</div>
+              <div>
+                <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '15px', fontWeight: '700', color: '#FFFFFF', margin: 0 }}>Parent</p>
+                <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.5)', margin: '2px 0 0' }}>J'accompagne mon enfant</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
 
@@ -244,7 +301,6 @@ export default function Login() {
         )}
       </div>
 
-      {/* ─── LIEN MOT DE PASSE OUBLIÉ (uniquement en mode connexion) ──── */}
       {mode === 'connexion' && (
         <p
           onClick={() => setPopupForgot(true)}
@@ -279,7 +335,6 @@ export default function Login() {
         </span>
       </p>
 
-      {/* MODALE MOT DE PASSE OUBLIÉ */}
       {popupForgot && <PopupForgotPassword onClose={() => setPopupForgot(false)} />}
 
     </div>
