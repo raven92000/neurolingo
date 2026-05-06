@@ -5,6 +5,41 @@ import BottomNav from '../components/BottomNav'
 import { LANGUES, getLangueActive, setLangueActive, getLangueByCode } from '../utils/languages'
 
 // ═══════════════════════════════════════════════════════════════
+// HELPER : tranche d'âge depuis une date de naissance
+// ═══════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://mpdobvqulzbtvtdfeahf.supabase.co'
+const CACHE_BUST = Date.now() // force le rechargement des images à chaque session
+
+function getTrancheAge(neuriVersion, dateNaissance) {
+  // 1. Priorité : si l'utilisateur a forcé une apparence Neuri (Réglages → Neuri)
+  if (neuriVersion && neuriVersion !== 'auto') {
+    const map = {
+      'enfant': '5-10',
+      'ado': '11-17',
+      'adulte': '18-35',
+      'mature': '36-plus',
+    }
+    const tranche = map[neuriVersion.toLowerCase()]
+    if (tranche) return tranche
+  }
+  // 2. Sinon fallback sur la date de naissance
+  if (!dateNaissance) return '18-35'
+  const naissance = new Date(dateNaissance)
+  const aujourdhui = new Date()
+  let age = aujourdhui.getFullYear() - naissance.getFullYear()
+  const m = aujourdhui.getMonth() - naissance.getMonth()
+  if (m < 0 || (m === 0 && aujourdhui.getDate() < naissance.getDate())) age--
+  if (age <= 10) return '5-10'
+  if (age <= 17) return '11-17'
+  if (age <= 35) return '18-35'
+  return '36-plus'
+}
+
+function getImageNiveau(numeroNiveau, tranche) {
+  return `${SUPABASE_URL}/storage/v1/object/public/niveaux/${tranche}/niveau-${numeroNiveau}.png?t=${CACHE_BUST}`
+}
+
+// ═══════════════════════════════════════════════════════════════
 // CONFIG DES 4 NIVEAUX (mondes)
 // ═══════════════════════════════════════════════════════════════
 const NIVEAUX = [
@@ -13,8 +48,8 @@ const NIVEAUX = [
     nom: 'Découverte',
     description: 'Apprends les bases du vocabulaire',
     chapitresNumeros: [0, 1, 2, 3, 4, 5, 6, 7, 8],
-    chapitresRequis: [1, 2, 3, 4, 5, 6, 7, 8], // chapitres qui comptent pour le déverrouillage du niveau suivant
-    seuilDeblocage: 6, // 6/8 chapitres pour débloquer N+1
+    chapitresRequis: [1, 2, 3, 4, 5, 6, 7, 8],
+    seuilDeblocage: 6,
     emoji: '🏜️',
     gradient: 'linear-gradient(180deg, rgba(245,158,11,0.18), rgba(180,83,9,0.05))',
   },
@@ -101,9 +136,9 @@ function ModalLangues({ codeActif, onChoisir, onFermer }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CARD NIVEAU (dans le carousel)
+// CARD NIVEAU (image plein cadre + overlays)
 // ═══════════════════════════════════════════════════════════════
-function CardNiveau({ niveau, etat, progression, isSelected, onClick }) {
+function CardNiveau({ niveau, etat, progression, isSelected, onClick, trancheAge }) {
   const verrouille = etat === 'locked'
   const termine = etat === 'completed'
   const actif = etat === 'active'
@@ -117,10 +152,8 @@ function CardNiveau({ niveau, etat, progression, isSelected, onClick }) {
       style={{
         flexShrink: 0,
         width: '180px',
-        background: niveau.gradient,
-        border: isSelected ? '2px solid rgba(139,92,246,0.7)' : '1px solid rgba(255,255,255,0.08)',
+        height: '290px',
         borderRadius: '20px',
-        padding: '14px',
         cursor: verrouille ? 'not-allowed' : 'pointer',
         opacity,
         filter,
@@ -128,79 +161,120 @@ function CardNiveau({ niveau, etat, progression, isSelected, onClick }) {
         transition: 'all 0.3s ease',
         scrollSnapAlign: 'start',
         position: 'relative',
+        overflow: 'hidden',
+        border: isSelected ? '2px solid rgba(139,92,246,0.7)' : '1px solid rgba(255,255,255,0.08)',
+        background: '#0F1626',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      {/* Numéro en haut à gauche */}
-      <div style={{ position: 'absolute', top: '12px', left: '12px', width: '32px', height: '32px', borderRadius: '50%', background: actif ? 'linear-gradient(135deg, #8B5CF6, #6D28D9)' : termine ? 'linear-gradient(135deg, #58CC02, #3DAD00)' : 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
-        <span style={{ fontFamily: 'Nunito, sans-serif', fontSize: '14px', fontWeight: '900', color: '#FFFFFF' }}>{niveau.numero}</span>
+      {/* ZONE HAUTE : IMAGE */}
+      <div style={{ position: 'relative', width: '100%', height: '170px', background: niveau.gradient, overflow: 'hidden' }}>
+        {/* Dégradé bas pour fondre l'image avec la zone sombre */}
+        <div style={{
+          position: 'absolute',
+          bottom: -1,
+          left: 0,
+          right: 0,
+          height: '30px',
+          background: 'linear-gradient(180deg, transparent 0%, rgba(15,22,38,0.5) 60%, #0F1626 100%)',
+          zIndex: 2,
+          pointerEvents: 'none',
+        }}/>
+        <img
+          src={getImageNiveau(niveau.numero, trancheAge)}
+          alt={niveau.nom}
+          onError={(e) => {
+            e.target.style.display = 'none'
+            e.target.nextSibling.style.display = 'flex'
+          }}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center top',
+          }}
+        />
+        {/* Fallback emoji */}
+        <div style={{
+          display: 'none',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '70px',
+        }}>
+          {niveau.emoji}
+        </div>
+
+        {/* Numéro en haut à gauche */}
+        <div style={{ position: 'absolute', top: '10px', left: '10px', width: '32px', height: '32px', borderRadius: '50%', background: actif ? 'linear-gradient(135deg, #8B5CF6, #6D28D9)' : termine ? 'linear-gradient(135deg, #58CC02, #3DAD00)' : 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
+          <span style={{ fontFamily: 'Nunito, sans-serif', fontSize: '14px', fontWeight: '900', color: '#FFFFFF' }}>{niveau.numero}</span>
+        </div>
+
+        {/* Badge en haut à droite */}
+        {verrouille && (
+          <div style={{ position: 'absolute', top: '12px', right: '12px' }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <rect x="3" y="7" width="10" height="7" rx="1.5" fill="rgba(255,255,255,0.7)"/>
+              <path d="M5 7 V5 a3 3 0 0 1 6 0 V7" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" fill="none"/>
+            </svg>
+          </div>
+        )}
+        {termine && (
+          <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(88,204,2,0.95)', borderRadius: '8px', padding: '2px 8px' }}>
+            <span style={{ fontSize: '10px', fontWeight: '800', color: '#FFFFFF', fontFamily: 'Nunito' }}>✓ Terminé</span>
+          </div>
+        )}
+        {actif && progression.fait === 0 && (
+          <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(168,85,247,0.95)', borderRadius: '8px', padding: '2px 8px' }}>
+            <span style={{ fontSize: '10px', fontWeight: '800', color: '#FFFFFF', fontFamily: 'Nunito' }}>NOUVEAU</span>
+          </div>
+        )}
       </div>
 
-      {/* Badge en haut à droite */}
-      {verrouille && (
-        <div style={{ position: 'absolute', top: '14px', right: '14px', zIndex: 2 }}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <rect x="3" y="7" width="10" height="7" rx="1.5" fill="rgba(255,255,255,0.3)"/>
-            <path d="M5 7 V5 a3 3 0 0 1 6 0 V7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" fill="none"/>
-          </svg>
-        </div>
-      )}
-      {termine && (
-        <div style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(88,204,2,0.2)', border: '1px solid rgba(88,204,2,0.4)', borderRadius: '8px', padding: '2px 8px', zIndex: 2 }}>
-          <span style={{ fontSize: '10px', fontWeight: '800', color: '#86EFAC', fontFamily: 'Nunito' }}>✓ Terminé</span>
-        </div>
-      )}
-      {actif && progression.fait > 0 && progression.fait < progression.total && (
-        <div style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(245,158,11,0.2)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: '8px', padding: '2px 8px', zIndex: 2 }}>
-          <span style={{ fontSize: '10px', fontWeight: '800', color: '#FCD34D', fontFamily: 'Nunito' }}>EN COURS</span>
-        </div>
-      )}
-      {actif && progression.fait === 0 && (
-        <div style={{ position: 'absolute', top: '12px', right: '12px', background: 'rgba(168,85,247,0.25)', border: '1px solid rgba(168,85,247,0.5)', borderRadius: '8px', padding: '2px 8px', zIndex: 2 }}>
-          <span style={{ fontSize: '10px', fontWeight: '800', color: '#C4B5FD', fontFamily: 'Nunito' }}>NOUVEAU</span>
-        </div>
-      )}
+      {/* ZONE BASSE : INFOS + BOUTON */}
+      <div style={{ flex: 1, padding: '12px 14px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <div>
+          <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.85)', margin: '0 0 2px', fontWeight: '700' }}>Niveau {niveau.numero}</p>
+          <h3 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '17px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 8px' }}>{niveau.nom}</h3>
 
-      {/* Emoji environnement */}
-      <div style={{ height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '46px', filter: verrouille ? 'grayscale(0.5)' : 'none', marginTop: '12px' }}>
-        {niveau.emoji}
+          <div style={{ width: '100%', height: '5px', background: 'rgba(255,255,255,0.08)', borderRadius: '99px', marginBottom: '4px' }}>
+            <div style={{ height: '100%', width: progression.total > 0 ? `${(progression.fait / progression.total) * 100}%` : '0%', background: termine ? '#58CC02' : 'linear-gradient(90deg, #8B5CF6, #A78BFA)', borderRadius: '99px', transition: 'width 0.6s ease' }} />
+          </div>
+          <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.5)', margin: 0, textAlign: 'right', fontWeight: '600' }}>
+            {progression.fait}/{progression.total}
+          </p>
+        </div>
+
+        {/* Bouton */}
+        {verrouille ? (
+          <div style={{ width: '100%', height: '34px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '8px' }}>
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+              <rect x="3" y="7" width="10" height="7" rx="1.5" fill="rgba(255,255,255,0.5)"/>
+              <path d="M5 7 V5 a3 3 0 0 1 6 0 V7" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" fill="none"/>
+            </svg>
+            <span style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(255,255,255,0.6)', fontFamily: 'Nunito' }}>Verrouillé</span>
+          </div>
+        ) : termine ? (
+          <div style={{ width: '100%', height: '34px', background: 'rgba(88,204,2,0.15)', border: '1px solid rgba(88,204,2,0.4)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '8px' }}>
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M2.5 7 L6 10.5 L11.5 4" stroke="#86EFAC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#86EFAC', fontFamily: 'Nunito' }}>Terminé</span>
+          </div>
+        ) : (
+          <div style={{ width: '100%', height: '34px', background: 'linear-gradient(135deg, #7C3AED, #6D28D9)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '8px', boxShadow: '0 4px 12px rgba(124,58,237,0.3)' }}>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#FFFFFF', fontFamily: 'Nunito' }}>{progression.fait === 0 ? 'Commencer' : 'Continuer'}</span>
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+              <path d="M3 6 L8 6 M6 3 L8 6 L6 9" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+        )}
       </div>
-
-      {/* Infos */}
-      <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.5)', margin: '12px 0 2px', fontWeight: '600' }}>Niveau {niveau.numero}</p>
-      <h3 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '17px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 10px' }}>{niveau.nom}</h3>
-
-      {/* Barre de progression */}
-      <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '99px', marginBottom: '6px' }}>
-        <div style={{ height: '100%', width: progression.total > 0 ? `${(progression.fait / progression.total) * 100}%` : '0%', background: termine ? '#58CC02' : 'linear-gradient(90deg, #8B5CF6, #A78BFA)', borderRadius: '99px', transition: 'width 0.6s ease' }} />
-      </div>
-      <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: '0 0 12px', textAlign: 'right', fontWeight: '600' }}>
-        {progression.fait}/{progression.total}
-      </p>
-
-      {/* Bouton action */}
-      {verrouille ? (
-        <div style={{ width: '100%', height: '38px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-            <rect x="3" y="7" width="10" height="7" rx="1.5" fill="rgba(255,255,255,0.4)"/>
-            <path d="M5 7 V5 a3 3 0 0 1 6 0 V7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" fill="none"/>
-          </svg>
-          <span style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(255,255,255,0.5)', fontFamily: 'Nunito' }}>Verrouillé</span>
-        </div>
-      ) : termine ? (
-        <div style={{ width: '100%', height: '38px', background: 'rgba(88,204,2,0.12)', border: '1px solid rgba(88,204,2,0.4)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M2.5 7 L6 10.5 L11.5 4" stroke="#86EFAC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span style={{ fontSize: '12px', fontWeight: '800', color: '#86EFAC', fontFamily: 'Nunito' }}>Terminé</span>
-        </div>
-      ) : (
-        <div style={{ width: '100%', height: '38px', background: 'linear-gradient(135deg, #7C3AED, #6D28D9)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 0 20px rgba(124,58,237,0.4)' }}>
-          <span style={{ fontSize: '13px', fontWeight: '800', color: '#FFFFFF', fontFamily: 'Nunito' }}>{progression.fait === 0 ? 'Commencer' : 'Continuer'}</span>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M3 6 L8 6 M6 3 L8 6 L6 9" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </div>
-      )}
     </div>
   )
 }
@@ -212,21 +286,30 @@ export default function Learn() {
   const navigate = useNavigate()
   const [chapitres, setChapitres] = useState([])
   const [lecons, setLecons] = useState([])
-  const [progressions, setProgressions] = useState([]) // tableau des { lecon_id, partie_completee }
+  const [progressions, setProgressions] = useState([])
   const [niveauSelectionne, setNiveauSelectionne] = useState(1)
   const [chargement, setChargement] = useState(true)
   const [codeLangue, setCodeLangue] = useState(getLangueActive())
   const [modalOuverte, setModalOuverte] = useState(false)
+  const [objectifMinutes, setObjectifMinutes] = useState(5)
+  const [trancheAge, setTrancheAge] = useState('18-35')
   const carouselRef = useRef(null)
 
   const langueActuelle = getLangueByCode(codeLangue)
 
-  // Chargement des données
   useEffect(() => {
     async function charger() {
       setChargement(true)
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { navigate('/login'); return }
+
+      const { data: profil } = await supabase
+        .from('profils')
+        .select('objectif_minutes, date_naissance, neuri_version')
+        .eq('user_id', user.id)
+        .single()
+      if (profil?.objectif_minutes) setObjectifMinutes(profil.objectif_minutes)
+      setTrancheAge(getTrancheAge(profil?.neuri_version, profil?.date_naissance))
 
       const { data: langue } = await supabase.from('langues').select('id').eq('code', codeLangue).single()
       if (!langue) { setChargement(false); return }
@@ -267,7 +350,6 @@ export default function Learn() {
     else navigate(`/lesson?lecon=${lecon.id}`)
   }
 
-  // Helpers : calculer l'état d'un niveau
   const idsCompletes = new Set(progressions.filter(p => p.partie_completee === 2).map(p => p.lecon_id))
 
   const getEtatChapitre = (chapitreNumero) => {
@@ -303,7 +385,6 @@ export default function Learn() {
     return 'active'
   }
 
-  // Niveau actuellement sélectionné
   const niveauActuel = NIVEAUX.find(n => n.numero === niveauSelectionne)
   const chapitresNiveau = chapitres.filter(c => niveauActuel?.chapitresNumeros.includes(c.numero))
   const etatNiveauActuel = niveauActuel ? getEtatNiveau(niveauActuel) : { fait: 0, total: 0 }
@@ -325,13 +406,11 @@ export default function Learn() {
         .carousel-niveaux::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* Header */}
       <div style={{ padding: '52px 24px 16px' }}>
         <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '28px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 4px' }}>Apprendre</h1>
         <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.5)', margin: 0 }}>Choisis ta leçon du jour</p>
       </div>
 
-      {/* Card langue */}
       <div style={{ padding: '0 24px 20px' }}>
         <button onClick={() => setModalOuverte(true)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 18px', background: 'rgba(139,92,246,0.08)', border: '1.5px solid rgba(139,92,246,0.4)', borderRadius: '16px', cursor: 'pointer', boxShadow: '0 0 20px rgba(139,92,246,0.12)' }}>
           <span style={{ fontSize: '24px' }}>{langueActuelle.drapeau}</span>
@@ -345,12 +424,10 @@ export default function Learn() {
         </button>
       </div>
 
-      {/* Section TES NIVEAUX */}
       <div style={{ padding: '0 24px 12px' }}>
         <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', fontWeight: '700', color: '#A78BFA', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>Tes niveaux</p>
       </div>
 
-      {/* Carousel des niveaux */}
       <div ref={carouselRef} className="carousel-niveaux" style={{ display: 'flex', gap: '12px', padding: '4px 24px 16px', overflowX: 'auto', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
         {NIVEAUX.map(n => {
           const etat = getEtatLib(n.numero)
@@ -363,12 +440,12 @@ export default function Learn() {
               progression={progN}
               isSelected={niveauSelectionne === n.numero}
               onClick={() => setNiveauSelectionne(n.numero)}
+              trancheAge={trancheAge}
             />
           )
         })}
       </div>
 
-      {/* Indicateurs (dots) */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '24px' }}>
         {NIVEAUX.map(n => (
           <div key={n.numero} style={{
@@ -381,9 +458,7 @@ export default function Learn() {
         ))}
       </div>
 
-      {/* Section du niveau sélectionné */}
       <div style={{ padding: '0 20px' }}>
-        {/* Header de section */}
         <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '16px 18px', marginBottom: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -413,7 +488,6 @@ export default function Learn() {
           })()}
         </div>
 
-        {/* Liste des leçons */}
         {chapitresNiveau.length === 0 ? (
           <div style={{ padding: '40px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '16px' }}>
             <div style={{ fontSize: '36px', marginBottom: '12px' }}>{niveauActuel?.emoji}</div>
@@ -428,13 +502,11 @@ export default function Learn() {
 
               return (
                 <div key={chapitre.id}>
-                  {/* Sous-titre du chapitre */}
                   <div style={{ marginBottom: '10px' }}>
                     <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '10px', fontWeight: '700', color: 'rgba(167,139,250,0.7)', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 2px' }}>Chapitre {chapitre.numero}</p>
                     <h3 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '15px', fontWeight: '900', color: '#FFFFFF', margin: 0 }}>{chapitre.titre}</h3>
                   </div>
 
-                  {/* Leçons */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {leconsChap.map(lecon => {
                       const complete = idsCompletes.has(lecon.id)
@@ -458,19 +530,45 @@ export default function Learn() {
                           <div style={{ flex: 1 }}>
                             <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '15px', fontWeight: '800', color: '#FFFFFF', margin: '0 0 3px' }}>{lecon.titre}</p>
                             <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-                              {lecon.type === 'alphabet' ? `${lecon.nombre_mots} lettres` : lecon.type === 'sentence' ? `${lecon.nombre_mots} phrases · ~${lecon.duree_minutes} min` : `${lecon.nombre_mots} mots · ~${lecon.duree_minutes} min`}
+                              {lecon.type === 'alphabet' ? `${lecon.nombre_mots} lettres` : `${lecon.nombre_mots} ${lecon.type === 'sentence' ? 'phrases' : 'mots'} · ~${lecon.duree_minutes} min`}
                             </p>
                           </div>
                           <div style={{ flexShrink: 0 }}>
-                            {complete ? (
-                              <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg, #58CC02, #3DAD00)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7 L6 10.5 L11.5 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                              </div>
-                            ) : (
-                              <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(139,92,246,0.15)', border: '1.5px solid rgba(139,92,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3.5 2 L7.5 5 L3.5 8" stroke="#A78BFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                              </div>
-                            )}
+                            {(() => {
+                              const progLecon = progressions.find(p => p.lecon_id === lecon.id)
+                              const partie = progLecon?.partie_completee || 0
+                              const enMode5min = objectifMinutes === 5 && lecon.type !== 'alphabet'
+
+                              if (complete) {
+                                return (
+                                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg, #58CC02, #3DAD00)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7 L6 10.5 L11.5 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                  </div>
+                                )
+                              }
+
+                              if (enMode5min && partie === 1) {
+                                return (
+                                  <div style={{ minWidth: '36px', height: '28px', borderRadius: '14px', background: 'rgba(245,158,11,0.15)', border: '1.5px solid rgba(245,158,11,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 8px' }}>
+                                    <span style={{ fontSize: '12px', fontWeight: '800', color: '#FCD34D', fontFamily: 'Nunito' }}>1/2</span>
+                                  </div>
+                                )
+                              }
+
+                              if (enMode5min && partie === 0) {
+                                return (
+                                  <div style={{ minWidth: '36px', height: '28px', borderRadius: '14px', background: 'rgba(139,92,246,0.15)', border: '1.5px solid rgba(139,92,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 8px' }}>
+                                    <span style={{ fontSize: '12px', fontWeight: '800', color: '#A78BFA', fontFamily: 'Nunito' }}>0/2</span>
+                                  </div>
+                                )
+                              }
+
+                              return (
+                                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(139,92,246,0.15)', border: '1.5px solid rgba(139,92,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3.5 2 L7.5 5 L3.5 8" stroke="#A78BFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                </div>
+                              )
+                            })()}
                           </div>
                         </div>
                       )
