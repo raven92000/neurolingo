@@ -14,6 +14,10 @@ import Alphabet from './pages/Alphabet'
 import TestSentence from './pages/TestSentence'
 import LessonSentence from './pages/LessonSentence'
 import ParentCreateChild from './pages/ParentCreateChild'
+import ParentLinkChild from './pages/ParentLinkChild'
+import ParentDashboard from './pages/ParentDashboard'
+import ChildrenPage from './pages/ChildrenPage'
+import ParentSettings from './pages/ParentSettings'
 
 function App() {
   return (
@@ -34,7 +38,10 @@ function App() {
         <Route path="/test-sentence" element={<TestSentence />} />
         <Route path="/lesson-sentence" element={<LessonSentence />} />
         <Route path="/parent-create-child" element={<ParentCreateChild />} />
-        <Route path="/parent-dashboard" element={<ParentCreateChild />} />
+        <Route path="/parent-link-child" element={<ParentLinkChild />} />
+        <Route path="/parent-dashboard" element={<ParentDashboard />} />
+        <Route path="/parent-children" element={<ChildrenPage />} />
+        <Route path="/parent-settings" element={<ParentSettings />} />
       </Routes>
     </BrowserRouter>
   )
