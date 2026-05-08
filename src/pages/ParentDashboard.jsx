@@ -47,6 +47,30 @@ export default function ParentDashboard() {
   const [stats, setStats] = useState({ niveau: NIVEAUX_CONFIG[0], xp: 0, lecons: 0, mots: 0, streak: 0 })
   const [chargement, setChargement] = useState(true)
 
+  async function chargerStatsEnfant(enfant) {
+    if (!enfant?.langue_id) {
+      setStats({ niveau: NIVEAUX_CONFIG[0], xp: enfant?.xp || 0, lecons: enfant?.lecons_completees || 0, mots: enfant?.mots_appris || 0, streak: enfant?.streak || 0 })
+      return
+    }
+
+    const { data: chapitres } = await supabase
+      .from('chapitres').select('id, numero').eq('langue_id', enfant.langue_id)
+    const chapIds = (chapitres || []).map(c => c.id)
+    const { data: lecons } = await supabase
+      .from('lecons').select('id, chapitre_id').in('chapitre_id', chapIds)
+    const { data: progressions } = await supabase
+      .from('progression').select('lecon_id, partie_completee').eq('user_id', enfant.user_id)
+
+    const niveau = calculerNiveauActuel(chapitres, lecons, progressions)
+    setStats({
+      niveau,
+      xp: enfant.xp || 0,
+      lecons: enfant.lecons_completees || 0,
+      mots: enfant.mots_appris || 0,
+      streak: enfant.streak || 0,
+    })
+  }
+
   useEffect(() => {
     async function charger() {
       const { data: { user } } = await supabase.auth.getUser()
@@ -87,30 +111,6 @@ export default function ParentDashboard() {
     }
     charger()
   }, [navigate])
-
-  async function chargerStatsEnfant(enfant) {
-    if (!enfant?.langue_id) {
-      setStats({ niveau: NIVEAUX_CONFIG[0], xp: enfant?.xp || 0, lecons: enfant?.lecons_completees || 0, mots: enfant?.mots_appris || 0, streak: enfant?.streak || 0 })
-      return
-    }
-
-    const { data: chapitres } = await supabase
-      .from('chapitres').select('id, numero').eq('langue_id', enfant.langue_id)
-    const chapIds = (chapitres || []).map(c => c.id)
-    const { data: lecons } = await supabase
-      .from('lecons').select('id, chapitre_id').in('chapitre_id', chapIds)
-    const { data: progressions } = await supabase
-      .from('progression').select('lecon_id, partie_completee').eq('user_id', enfant.user_id)
-
-    const niveau = calculerNiveauActuel(chapitres, lecons, progressions)
-    setStats({
-      niveau,
-      xp: enfant.xp || 0,
-      lecons: enfant.lecons_completees || 0,
-      mots: enfant.mots_appris || 0,
-      streak: enfant.streak || 0,
-    })
-  }
 
   if (chargement) {
     return (
@@ -167,7 +167,6 @@ export default function ParentDashboard() {
   // ─── DASHBOARD PRINCIPAL ──────────────────────────────────
   const versionNeuri = enfantActif?.neuri_version || getVersionFromDate(enfantActif?.date_naissance)
   const ageEnfant = calculerAge(enfantActif?.date_naissance)
-  const codeLangue = enfantActif?.langue_id ? null : null // on récupère le code langue plus bas
   const drapeau = '🌍'
   const fonctionnalites = [
     { icon: '📊', titre: 'Progression', desc: 'Voir les niveaux, leçons et compétences', color: '#A78BFA' },

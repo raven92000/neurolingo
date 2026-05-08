@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabase'
+import { normalizeLogin, buildChildFakeEmail, buildChildPassword } from '../utils/childAuth'
 import Neuri3D from '../components/Neuri3D'
 
 // ═══════════════════════════════════════════════════════════════════
 // COMPOSANT INPUT MOT DE PASSE AVEC ŒIL
 // ═══════════════════════════════════════════════════════════════════
 
-function PasswordInput({ value, onChange, placeholder, style }) {
+function PasswordInput({ value, onChange, placeholder, style, inputMode, maxLength }) {
   const [visible, setVisible] = useState(false)
 
   return (
@@ -17,6 +18,8 @@ function PasswordInput({ value, onChange, placeholder, style }) {
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        inputMode={inputMode}
+        maxLength={maxLength}
         style={{ ...style, paddingRight: '48px' }}
       />
       <button
@@ -124,8 +127,9 @@ export default function Login() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [mode, setMode] = useState(searchParams.get('mode') || 'inscription')
-  const [role, setRole] = useState('child') // 👈 NOUVEAU : par défaut enfant
+  const [isParent, setIsParent] = useState(false)
   const [email, setEmail] = useState('')
+  const isChildMode = !email.includes('@')
   const [motDePasse, setMotDePasse] = useState('')
   const [confirmMotDePasse, setConfirmMotDePasse] = useState('')
   const [prenom, setPrenom] = useState('')
@@ -154,7 +158,8 @@ export default function Login() {
       })
       if (error) { setErreur(error.message); setChargement(false); return }
 
-      // Création du profil avec le rôle choisi
+      const role = isParent ? 'parent' : 'child'
+
       await supabase.from('profils').insert({
         user_id: signUpData.user?.id,
         nom: `${prenom} ${nom}`,
@@ -164,24 +169,29 @@ export default function Login() {
         mots_appris: 0,
         temps_total_minutes: 0,
         profil_type: 'tdah',
-        role: role, // 👈 NOUVEAU
+        role: role,
       })
 
-      // Redirection selon le rôle
       if (role === 'parent') {
-        navigate('/parent-create-child') // 👈 NOUVEAU : parent crée le compte de son enfant
+        navigate('/parent-create-child')
       } else {
-        navigate('/onboarding') // Enfant continue normalement
+        navigate('/onboarding')
       }
     } else {
-      // CONNEXION : récupérer le rôle pour rediriger correctement
-      const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password: motDePasse })
+      const signInPayload = isChildMode
+        ? {
+            email: buildChildFakeEmail(normalizeLogin(email)),
+            password: buildChildPassword(normalizeLogin(email), motDePasse),
+          }
+        : { email, password: motDePasse }
+
+      const { data: signInData, error } = await supabase.auth.signInWithPassword(signInPayload)
       if (error) { setErreur('Email ou mot de passe incorrect'); setChargement(false); return }
 
       const { data: profil } = await supabase.from('profils').select('role').eq('user_id', signInData.user.id).single()
 
       if (profil?.role === 'parent') {
-        navigate('/parent-dashboard') // 👈 NOUVEAU
+        navigate('/parent-dashboard')
       } else {
         navigate('/dashboard')
       }
@@ -217,49 +227,6 @@ export default function Login() {
         {mode === 'inscription' ? 'Commence à apprendre gratuitement' : 'Connecte-toi pour continuer'}
       </p>
 
-      {/* 👈 NOUVEAU : SÉLECTEUR DE RÔLE (uniquement en inscription) */}
-      {mode === 'inscription' && (
-        <div style={{ width: '100%', marginBottom: '14px' }}>
-          <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: '0 0 10px 4px', fontWeight: '600' }}>Je suis :</p>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <div
-              onClick={() => setRole('child')}
-              style={{
-                flex: 1, padding: '14px 12px', borderRadius: '14px', cursor: 'pointer',
-                background: role === 'child' ? 'rgba(139,92,246,0.14)' : 'rgba(255,255,255,0.04)',
-                border: role === 'child' ? '1.5px solid rgba(139,92,246,0.55)' : '1px solid rgba(255,255,255,0.08)',
-                boxShadow: role === 'child' ? '0 0 20px rgba(139,92,246,0.18)' : 'none',
-                transition: 'all 0.2s ease',
-                display: 'flex', alignItems: 'center', gap: '10px',
-              }}
-            >
-              <div style={{ fontSize: '22px' }}>🧒</div>
-              <div>
-                <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '15px', fontWeight: '700', color: '#FFFFFF', margin: 0 }}>Enfant</p>
-                <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.5)', margin: '2px 0 0' }}>J'apprends une langue</p>
-              </div>
-            </div>
-            <div
-              onClick={() => setRole('parent')}
-              style={{
-                flex: 1, padding: '14px 12px', borderRadius: '14px', cursor: 'pointer',
-                background: role === 'parent' ? 'rgba(139,92,246,0.14)' : 'rgba(255,255,255,0.04)',
-                border: role === 'parent' ? '1.5px solid rgba(139,92,246,0.55)' : '1px solid rgba(255,255,255,0.08)',
-                boxShadow: role === 'parent' ? '0 0 20px rgba(139,92,246,0.18)' : 'none',
-                transition: 'all 0.2s ease',
-                display: 'flex', alignItems: 'center', gap: '10px',
-              }}
-            >
-              <div style={{ fontSize: '22px' }}>👨‍👩‍👧</div>
-              <div>
-                <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '15px', fontWeight: '700', color: '#FFFFFF', margin: 0 }}>Parent</p>
-                <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.5)', margin: '2px 0 0' }}>J'accompagne mon enfant</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
 
         {mode === 'inscription' && (
@@ -269,13 +236,15 @@ export default function Login() {
           </div>
         )}
 
-        <input type="email" placeholder="Adresse email" value={email} onChange={e => setEmail(e.target.value)} style={inputStyle}/>
+        <input type="text" placeholder="Email ou identifiant" value={email} onChange={e => setEmail(e.target.value)} style={inputStyle}/>
 
         <PasswordInput
-          placeholder="Mot de passe"
+          placeholder={isChildMode ? 'PIN (4 chiffres)' : 'Mot de passe'}
           value={motDePasse}
-          onChange={e => setMotDePasse(e.target.value)}
+          onChange={e => setMotDePasse(isChildMode ? e.target.value.replace(/[^0-9]/g, '') : e.target.value)}
           style={inputStyle}
+          inputMode={isChildMode ? 'numeric' : undefined}
+          maxLength={isChildMode ? 4 : undefined}
         />
 
         {mode === 'inscription' && (
@@ -300,6 +269,61 @@ export default function Login() {
           </p>
         )}
       </div>
+
+      {mode === 'inscription' && (
+        <div
+          onClick={() => setIsParent(!isParent)}
+          style={{
+            width: '100%',
+            padding: '10px 14px',
+            marginBottom: '20px',
+            background: isParent ? 'rgba(139,92,246,0.12)' : 'rgba(255,255,255,0.04)',
+            border: isParent ? '1.5px solid rgba(139,92,246,0.55)' : '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '14px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            transition: 'all 0.2s ease',
+            boxShadow: isParent ? '0 0 20px rgba(139,92,246,0.18)' : 'none',
+          }}
+        >
+          <div style={{
+            width: '22px',
+            height: '22px',
+            borderRadius: '6px',
+            border: isParent ? '2px solid #8B5CF6' : '2px solid rgba(139,92,246,0.5)',
+            background: isParent ? '#8B5CF6' : 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            transition: 'all 0.2s ease',
+          }}>
+            {isParent && (
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                <path d="M2 7 L6 11 L12 3" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </div>
+
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+            <circle cx="9" cy="8" r="3" stroke="#A78BFA" strokeWidth="1.8" fill="rgba(167,139,250,0.15)"/>
+            <circle cx="16" cy="9" r="2.5" stroke="#A78BFA" strokeWidth="1.6" fill="rgba(167,139,250,0.15)"/>
+            <path d="M3 19 C3 16 5 14 9 14 C13 14 15 16 15 19" stroke="#A78BFA" strokeWidth="1.8" strokeLinecap="round"/>
+            <path d="M14 19 C14 17 15.5 15.5 18 15.5 C20 15.5 21 17 21 19" stroke="#A78BFA" strokeWidth="1.6" strokeLinecap="round"/>
+          </svg>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '13px', fontWeight: '700', color: '#FFFFFF', margin: 0, lineHeight: 1.25, whiteSpace: 'nowrap' }}>
+              Je crée un compte pour mon enfant
+            </p>
+            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '10px', color: 'rgba(255,255,255,0.55)', margin: '2px 0 0', lineHeight: 1.3, whiteSpace: 'nowrap' }}>
+              Je pourrai suivre sa progression dans l'espace parent.
+            </p>
+          </div>
+        </div>
+      )}
 
       {mode === 'connexion' && (
         <p
