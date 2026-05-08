@@ -250,6 +250,7 @@ export default function Settings() {
 
   // États synchronisés avec Supabase
   const [profil, setProfil] = useState('TDAH')
+  const [profilUtilisateur, setProfilUtilisateur] = useState(null)
   const [dureeSession, setDureeSession] = useState('5 min')
   const [modeFocus, setModeFocus] = useState(false)
   const [repetitionEspacee, setRepetitionEspacee] = useState(true)
@@ -293,6 +294,7 @@ export default function Settings() {
       const { data, error } = await supabase.from('profils').select('*').eq('user_id', u.id).single()
       if (error || !data) { setChargement(false); return }
 
+      setProfilUtilisateur(data)
       setProfilId(data.id)
       setProfil(profilToUI[data.profil_type] || 'TDAH')
       setDureeSession(dureeToUI[data.objectif_minutes] || '5 min')
@@ -495,7 +497,11 @@ export default function Settings() {
         </>
       case 'compte':
         return <>
-          <DetailRow label="Adresse email" value={user?.email || ''} />
+          {profilUtilisateur?.role === 'child' ? (
+            <DetailRow label="Identifiant" value={profilUtilisateur?.identifiant_login || 'Non défini'} />
+          ) : (
+            <DetailRow label="Adresse email" value={user?.email || ''} />
+          )}
           <DetailRow label="Modifier le mot de passe" onClick={() => setPopupChangePwd(true)} />
           <DetailRow label="Déconnexion" onClick={handleLogout} />
           <DetailRow label="Supprimer le compte" onClick={() => setPopupDelete(true)} danger last />
