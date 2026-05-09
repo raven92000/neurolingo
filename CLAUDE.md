@@ -197,3 +197,84 @@ Je suis **débutante en développement web**. Donc, dans tes réponses :
 - Pour la 3D et Three.js, c'est un domaine que je connais peu : explique avec encore plus de pédagogie
 - **Avant toute modification importante**, propose un plan en mode "dry-run" que je validerai
 - N'hésite pas à demander si la structure de la BDD a évolué, plutôt que de deviner
+
+## 🌍 Langue de communication
+
+**Toutes les réponses doivent être en français.** Code, commentaires, messages d'erreur, explications : tout en français. Sauf cas où l'anglais est techniquement requis (noms de fonctions React standard, mots-clés JS, etc.).
+
+## 🔐 Variables d'environnement
+
+Le projet utilise un fichier `.env.local` à la racine pour les clés Supabase :
+
+- `VITE_SUPABASE_URL` — URL du projet Supabase
+- `VITE_SUPABASE_ANON_KEY` — clé publique anonyme
+
+**Règles strictes :**
+- Ne JAMAIS lire, afficher ou modifier le contenu de `.env.local`
+- Ne JAMAIS écrire ces clés en dur dans le code
+- Si une nouvelle variable d'env est nécessaire, me prévenir et m'expliquer comment l'ajouter — je le ferai moi-même
+- `.env.local` est dans `.gitignore`, ne pas le retirer
+
+## 🗄️ Modifications de la base de données
+
+**Toute modification de la BDD Supabase nécessite mon accord explicite avant action.**
+
+Cela inclut : créer/supprimer/renommer une table, ajouter/modifier/supprimer une colonne, modifier une politique RLS, créer un trigger, modifier un type enum.
+
+Workflow attendu :
+1. M'expliquer ce qui doit changer et pourquoi
+2. Me proposer le SQL ou les étapes dans le dashboard Supabase
+3. Attendre ma validation
+4. Une fois que J'AI appliqué le changement côté Supabase, mettre à jour le code en conséquence
+
+Ne jamais supposer que la structure de la BDD a changé — me demander en cas de doute.
+
+## 🤖 Niveau d'autonomie
+
+- **Tâches simples** (fix typo, ajustement CSS, renommage de variable, ajout d'un petit composant isolé) → tu peux y aller en mode auto-accept
+- **Tâches importantes ou risquées** → mode Plan obligatoire : tu présentes ton plan d'action complet, j'approuve, puis tu exécutes
+
+Sont considérés comme **importants/risqués** :
+- Toute modification touchant plusieurs fichiers
+- Refactor d'un composant existant
+- Modifications dans `supabase.js`, `App.jsx`, `main.jsx`
+- Ajout d'une nouvelle dépendance npm
+- Changements affectant le routing
+- Modifications de la logique parent/enfant ou des permissions
+- Toute action qui crée ou supprime des fichiers
+
+En cas de doute : passer en mode Plan plutôt qu'auto-accept.
+
+## ✂️ Découpage des fichiers longs
+
+**Quand un composant dépasse 200 lignes, le splitter automatiquement en sous-composants.**
+
+Règles de split :
+- Extraire les sous-blocs JSX cohérents en composants nommés (ex: `<HeaderCard />`, `<ProgressList />`)
+- Placer les sous-composants dans `src/components/` s'ils sont réutilisables, ou dans un sous-dossier dédié à la page si ils sont spécifiques (ex: `src/pages/Dashboard/components/`)
+- Les nouveaux sous-composants doivent rester courts et avoir une responsabilité unique
+- Garder le fichier principal comme orchestrateur (state, effets, logique)
+- Préserver le style premium et la DA (#090E1A, glow violet, cartes arrondies)
+
+Toujours m'expliquer brièvement la nouvelle structure après un split.
+
+## ✅ Définition de "tâche terminée"
+
+Avant de me dire qu'une tâche est finie, vérifier dans cet ordre :
+
+1. Le code fait bien ce qui était demandé
+2. `npm run lint` passe sans nouveau warning/erreur
+3. L'application se lance toujours avec `npm run dev` (pas de crash au démarrage)
+4. Les imports sont propres (pas d'imports inutilisés)
+5. Pas de `console.log` oubliés (sauf si demandés explicitement)
+6. Le style premium (DA NeuroLingo) est respecté pour tout nouveau visuel
+
+Si un de ces points pose problème : le signaler clairement plutôt que de prétendre que c'est fini.
+
+## 🚫 Ce que Claude Code ne fait pas
+
+- **Pas de commits Git** — Wells push elle-même sur GitHub
+- **Pas de `git push`, `git commit`, `git add`** — laisser le contrôle de version à Wells
+- **Pas de bilans de session** — Wells gère ce suivi autrement
+- **Pas d'installation de dépendances** sans demander d'abord
+- **Pas de modification de `.env.local`**, `package-lock.json`, `vite.config.js` sans prévenir

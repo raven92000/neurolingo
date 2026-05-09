@@ -119,6 +119,27 @@ function PopupForgotPassword({ onClose }) {
   )
 }
 
+function PopupForgotPasswordChild({ onClose }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 24 }}>
+      <div style={{ background: '#0F1626', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: 28, maxWidth: 360, width: '100%' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+          <span style={{ fontSize: 28 }}>🤝</span>
+        </div>
+        <h2 style={{ fontSize: 20, fontWeight: 900, color: '#FFFFFF', margin: '0 0 8px', textAlign: 'center', fontFamily: 'Nunito, sans-serif' }}>
+          Demande à ton parent
+        </h2>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: '0 0 24px', lineHeight: 1.5, fontFamily: 'DM Sans, sans-serif' }}>
+          Tu utilises un identifiant. Demande à ton parent de t'aider à réinitialiser ton code PIN dans son espace parent.
+        </p>
+        <button onClick={onClose} style={{ width: '100%', height: 48, background: '#8B5CF6', border: 'none', color: '#FFFFFF', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+          J'ai compris
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════
@@ -359,7 +380,11 @@ export default function Login() {
         </span>
       </p>
 
-      {popupForgot && <PopupForgotPassword onClose={() => setPopupForgot(false)} />}
+      {popupForgot && (
+        isChildMode
+          ? <PopupForgotPasswordChild onClose={() => setPopupForgot(false)} />
+          : <PopupForgotPassword onClose={() => setPopupForgot(false)} />
+      )}
 
     </div>
   )
