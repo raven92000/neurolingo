@@ -278,3 +278,15 @@ Si un de ces points pose problème : le signaler clairement plutôt que de prét
 - **Pas de bilans de session** — Wells gère ce suivi autrement
 - **Pas d'installation de dépendances** sans demander d'abord
 - **Pas de modification de `.env.local`**, `package-lock.json`, `vite.config.js` sans prévenir
+
+## 📝 Sorties partageables
+
+Quand Wells demande **"résume ta proposition dans un fichier markdown que je puisse partager"** (ou une formulation similaire : "écris-moi dans un fichier", "fais-moi un résumé partageable", etc.), créer un fichier markdown dans le dossier `notes/` à la racine du projet.
+
+**Règles :**
+- Créer le dossier `notes/` s'il n'existe pas
+- Nom de fichier descriptif en kebab-case : `notes/plan-livraison-4.md`, `notes/refacto-dashboard.md`, `notes/bug-codelangue.md`
+- Format **markdown propre** (titres, listes, blocs de code si nécessaire)
+- Contenu **autonome** : compréhensible sans contexte de la session en cours
+- Inclure : le contexte du problème, la proposition/le plan, les fichiers concernés, les questions ouvertes s'il y en a
+- Confirmer à Wells le chemin du fichier créé après l'écriture
