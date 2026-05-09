@@ -45,30 +45,47 @@ export default function ParentDashboard() {
   const [enfants, setEnfants] = useState([])
   const [enfantActif, setEnfantActif] = useState(null)
   const [stats, setStats] = useState({ niveau: NIVEAUX_CONFIG[0], xp: 0, lecons: 0, mots: 0, streak: 0 })
+  const [erreurStats, setErreurStats] = useState(null)
   const [chargement, setChargement] = useState(true)
 
   async function chargerStatsEnfant(enfant) {
-    if (!enfant?.langue_id) {
-      setStats({ niveau: NIVEAUX_CONFIG[0], xp: enfant?.xp || 0, lecons: enfant?.lecons_completees || 0, mots: enfant?.mots_appris || 0, streak: enfant?.streak || 0 })
+    if (!enfant) {
       return
     }
 
-    const { data: chapitres } = await supabase
-      .from('chapitres').select('id, numero').eq('langue_id', enfant.langue_id)
-    const chapIds = (chapitres || []).map(c => c.id)
-    const { data: lecons } = await supabase
-      .from('lecons').select('id, chapitre_id').in('chapitre_id', chapIds)
-    const { data: progressions } = await supabase
-      .from('progression').select('lecon_id, partie_completee').eq('user_id', enfant.user_id)
+    try {
+      setErreurStats(null)
 
-    const niveau = calculerNiveauActuel(chapitres, lecons, progressions)
-    setStats({
-      niveau,
-      xp: enfant.xp || 0,
-      lecons: enfant.lecons_completees || 0,
-      mots: enfant.mots_appris || 0,
-      streak: enfant.streak || 0,
-    })
+      if (!enfant?.langue_id) {
+        setStats({ niveau: NIVEAUX_CONFIG[0], xp: enfant?.xp || 0, lecons: enfant?.lecons_completees || 0, mots: enfant?.mots_appris || 0, streak: enfant?.streak || 0 })
+        return
+      }
+
+      const { data: chapitres, error: erreurChapitres } = await supabase
+        .from('chapitres').select('id, numero').eq('langue_id', enfant.langue_id)
+      if (erreurChapitres) throw erreurChapitres
+
+      const chapIds = (chapitres || []).map(c => c.id)
+      const { data: lecons, error: erreurLecons } = await supabase
+        .from('lecons').select('id, chapitre_id').in('chapitre_id', chapIds)
+      if (erreurLecons) throw erreurLecons
+
+      const { data: progressions, error: erreurProgression } = await supabase
+        .from('progression').select('lecon_id, partie_completee').eq('user_id', enfant.user_id)
+      if (erreurProgression) throw erreurProgression
+
+      const niveau = calculerNiveauActuel(chapitres, lecons, progressions)
+      setStats({
+        niveau,
+        xp: enfant.xp || 0,
+        lecons: enfant.lecons_completees || 0,
+        mots: enfant.mots_appris || 0,
+        streak: enfant.streak || 0,
+      })
+    } catch (error) {
+      console.error('Erreur chargement stats enfant', error)
+      setErreurStats('Impossible de charger les stats, réessaye plus tard')
+    }
   }
 
   useEffect(() => {
@@ -98,7 +115,9 @@ export default function ParentDashboard() {
       }
 
       const { data: profilsEnfants } = await supabase
-        .from('profils').select('*').in('user_id', childIds)
+        .from('profils')
+        .select('*')
+        .in('user_id', childIds)
       setEnfants(profilsEnfants || [])
 
       // Sélectionner le 1er enfant par défaut
@@ -167,7 +186,8 @@ export default function ParentDashboard() {
   // ─── DASHBOARD PRINCIPAL ──────────────────────────────────
   const versionNeuri = enfantActif?.neuri_version || getVersionFromDate(enfantActif?.date_naissance)
   const ageEnfant = calculerAge(enfantActif?.date_naissance)
-  const drapeau = '🌍'
+  const nomLangue = enfantActif?.langues?.nom || 'Langue à définir'
+  const drapeau = enfantActif?.langues?.emoji || '🌍'
   const fonctionnalites = [
     { icon: '📊', titre: 'Progression', desc: 'Voir les niveaux, leçons et compétences', color: '#A78BFA' },
     { icon: '🌍', titre: 'Langues étudiées', desc: 'Consulter les langues en cours', color: '#60A5FA' },
@@ -219,7 +239,7 @@ export default function ParentDashboard() {
             </h2>
             {enfantActif?.langue_id && (
               <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.7)', margin: '0 0 4px' }}>
-                {drapeau} En apprentissage
+                {drapeau} {nomLangue || 'Langue'} en apprentissage
               </p>
             )}
             <div style={{ display: 'inline-block', background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: '8px', padding: '3px 8px' }}>
@@ -229,6 +249,12 @@ export default function ParentDashboard() {
             </div>
           </div>
         </div>
+
+        {erreurStats && (
+          <p style={{ color: '#FCA5A5', fontFamily: 'DM Sans, sans-serif', fontSize: '13px', margin: '0 0 10px' }}>
+            {erreurStats}
+          </p>
+        )}
 
         {/* GRILLE 2x2 STATS */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
