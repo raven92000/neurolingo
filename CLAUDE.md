@@ -34,7 +34,7 @@ L'application utilise 8 tables. Voici leur rôle :
 - `role` : `'parent'` ou `'child'`
 - `code_enfant` : identifiant unique enfant au format `NEURI-XXXX`
 - `identifiant_parent` : identifiant unique parent au format `PARENT-XXXX`
-- `langue_id` : UUID référence vers `langues.id`
+- `langue_id` : TEXT (pas UUID !) qui stocke le **code** d'une langue (`'en'`, `'es'`, `'pt'`, `'de'`). Cette colonne est liée à `langues.code` via une foreign key (`profils_langue_id_fkey`) avec `ON UPDATE CASCADE` et `ON DELETE SET NULL`. Le nom `langue_id` est trompeur (dette technique connue, voir plus bas).
 - + champs profil classiques (nom, prénom, âge, etc.)
 
 **`parent_child_links`** — Liaisons parent ↔ enfant
@@ -61,7 +61,7 @@ L'application utilise 8 tables. Voici leur rôle :
 
 ### Comment requêter la langue d'un enfant
 
-Pour récupérer le code/nom/emoji de la langue d'un enfant, faire un join avec `langues` :
+Pour récupérer le code/nom/emoji de la langue d'un enfant, faire un join Supabase grâce à la FK active :
 
 ```javascript
 const { data } = await supabase
@@ -71,6 +71,43 @@ const { data } = await supabase
   .single()
 // Puis utiliser data.langues?.code, data.langues?.nom, data.langues?.emoji
 ```
+
+⚠️ **Toujours prévoir un fallback** : pour un enfant sans `langue_id` rempli (NULL), `data.langues` sera `null`. Un système de fallback à 3 niveaux est en place dans `ParentDashboard.jsx` et `ChildrenPage.jsx` :
+- Niveau 1 : `data.langues.emoji` / `data.langues.nom` (BDD)
+- Niveau 2 : constantes locales `DRAPEAUX[code]` / `NOMS_LANGUES[code]`
+- Niveau 3 : valeurs par défaut (`'🌍'` / `'Langue à définir'`)
+
+## ⚠️ Dette technique connue — colonne `langue_id`
+
+Il y a une **incohérence historique de types** entre 2 tables qui partagent le nom `langue_id` :
+
+| Table | Colonne | Type | Référence |
+|-------|---------|------|-----------|
+| `profils` | `langue_id` | TEXT | → `langues.code` (via FK) |
+| `chapitres` | `langue_id` | UUID | → `langues.id` |
+
+**Conséquence pratique** : on ne peut **jamais** comparer directement `profils.langue_id` avec `chapitres.langue_id`. Pour filtrer des chapitres à partir de la langue d'un enfant, il faut d'abord résoudre le code → uuid via la table `langues` :
+
+```javascript
+// 1. Résoudre le code en uuid
+const { data: langue } = await supabase
+  .from('langues')
+  .select('id')
+  .eq('code', enfant.langue_id)
+  .maybeSingle()
+
+// 2. Filtrer les chapitres avec l'uuid
+const { data: chapitres } = await supabase
+  .from('chapitres')
+  .select('id, numero')
+  .eq('langue_id', langue.id)
+```
+
+⚠️ **Ce pattern doit être appliqué partout où on filtre `chapitres.langue_id` à partir d'une donnée venant de `profils`** (Stats.jsx, ParentDashboard.jsx, etc.).
+
+**Bug latent connu** : `Onboarding.jsx:492` écrit le code (`'en'`) dans `langue_id`. Ce n'est pas un bug aujourd'hui car la colonne accepte du text, mais c'est un témoin de l'incohérence.
+
+**Sprint Migration prévu** : un futur sprint dédié va renommer `profils.langue_id` en `profils.langue_code` (text) pour clarifier le naming. Voir `notes/audit-usages-langue-id.md` pour le détail.
 
 ## 🎨 Direction artistique
 
