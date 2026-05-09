@@ -46,6 +46,7 @@ export default function ParentDashboard() {
   const [enfantActif, setEnfantActif] = useState(null)
   const [stats, setStats] = useState({ niveau: NIVEAUX_CONFIG[0], xp: 0, lecons: 0, mots: 0, streak: 0 })
   const [erreurStats, setErreurStats] = useState(null)
+  const [erreurChargement, setErreurChargement] = useState(null)
   const [chargement, setChargement] = useState(true)
 
   async function chargerStatsEnfant(enfant) {
@@ -61,8 +62,20 @@ export default function ParentDashboard() {
         return
       }
 
+      // Résoudre le code langue (text dans profils.langue_id) en uuid (langues.id)
+      const { data: langue, error: erreurLangue } = await supabase
+        .from('langues')
+        .select('id')
+        .eq('code', enfant.langue_id)
+        .maybeSingle()
+      if (erreurLangue) throw erreurLangue
+      if (!langue) {
+        setStats({ niveau: NIVEAUX_CONFIG[0], xp: enfant?.xp || 0, lecons: enfant?.lecons_completees || 0, mots: enfant?.mots_appris || 0, streak: enfant?.streak || 0 })
+        return
+      }
+
       const { data: chapitres, error: erreurChapitres } = await supabase
-        .from('chapitres').select('id, numero').eq('langue_id', enfant.langue_id)
+        .from('chapitres').select('id, numero').eq('langue_id', langue.id)
       if (erreurChapitres) throw erreurChapitres
 
       const chapIds = (chapitres || []).map(c => c.id)
@@ -90,43 +103,54 @@ export default function ParentDashboard() {
 
   useEffect(() => {
     async function charger() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { navigate('/login'); return }
+      try {
+        setErreurChargement(null)
 
-      const { data: profilParent } = await supabase
-        .from('profils').select('*').eq('user_id', user.id).single()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { navigate('/login'); return }
 
-      if (profilParent?.role !== 'parent') {
-        navigate('/dashboard')
-        return
-      }
-      setParent(profilParent)
+        const { data: profilParent, error: erreurProfilParent } = await supabase
+          .from('profils').select('*').eq('user_id', user.id).single()
+        if (erreurProfilParent) throw erreurProfilParent
 
-      // Récupérer les enfants liés
-      const { data: liens } = await supabase
-        .from('parent_child_links')
-        .select('child_id')
-        .eq('parent_id', user.id)
+        if (profilParent?.role !== 'parent') {
+          navigate('/dashboard')
+          return
+        }
+        setParent(profilParent)
 
-      const childIds = (liens || []).map(l => l.child_id)
-      if (childIds.length === 0) {
+        // Récupérer les enfants liés
+        const { data: liens, error: erreurLiens } = await supabase
+          .from('parent_child_links')
+          .select('child_id')
+          .eq('parent_id', user.id)
+        if (erreurLiens) throw erreurLiens
+
+        const childIds = (liens || []).map(l => l.child_id)
+        if (childIds.length === 0) {
+          return
+        }
+
+        const { data: profilsEnfants, error: erreurEnfants } = await supabase
+          .from('profils')
+          .select('*, langues(code, nom, emoji)')
+          .in('user_id', childIds)
+        if (erreurEnfants) throw erreurEnfants
+
+        setEnfants(profilsEnfants || [])
+
+        // Sélectionner le 1er enfant par défaut
+        const premier = profilsEnfants?.[0]
+        if (premier) {
+          setEnfantActif(premier)
+          await chargerStatsEnfant(premier)
+        }
+      } catch (error) {
+        console.error('Erreur chargement Dashboard Parent', error)
+        setErreurChargement('Impossible de charger tes données, réessaye plus tard')
+      } finally {
         setChargement(false)
-        return
       }
-
-      const { data: profilsEnfants } = await supabase
-        .from('profils')
-        .select('*')
-        .in('user_id', childIds)
-      setEnfants(profilsEnfants || [])
-
-      // Sélectionner le 1er enfant par défaut
-      const premier = profilsEnfants?.[0]
-      if (premier) {
-        setEnfantActif(premier)
-        await chargerStatsEnfant(premier)
-      }
-      setChargement(false)
     }
     charger()
   }, [navigate])
@@ -155,6 +179,11 @@ export default function ParentDashboard() {
         </div>
 
         <div style={{ padding: '0 20px' }}>
+          {erreurChargement && (
+            <p style={{ color: '#FCA5A5', fontFamily: 'DM Sans, sans-serif', fontSize: '13px', margin: '0 0 12px' }}>
+              {erreurChargement}
+            </p>
+          )}
           <div style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(124,58,237,0.08) 100%)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '24px', padding: '32px 24px', textAlign: 'center', boxShadow: '0 0 40px rgba(138,92,255,0.12)' }}>
             <div style={{ width: '120px', height: '120px', margin: '0 auto 16px' }}>
               <Neuri2D version="adulte" angle="face" equipes={{ chapeau: null, haut: null, lunettes: null, compagnonObjet: null }} size={120} />
@@ -186,8 +215,9 @@ export default function ParentDashboard() {
   // ─── DASHBOARD PRINCIPAL ──────────────────────────────────
   const versionNeuri = enfantActif?.neuri_version || getVersionFromDate(enfantActif?.date_naissance)
   const ageEnfant = calculerAge(enfantActif?.date_naissance)
-  const nomLangue = enfantActif?.langues?.nom || 'Langue à définir'
-  const drapeau = enfantActif?.langues?.emoji || '🌍'
+  const codeLangue = enfantActif?.langues?.code
+  const nomLangue = enfantActif?.langues?.nom || NOMS_LANGUES[codeLangue] || 'Langue à définir'
+  const drapeau = enfantActif?.langues?.emoji || DRAPEAUX[codeLangue] || '🌍'
   const fonctionnalites = [
     { icon: '📊', titre: 'Progression', desc: 'Voir les niveaux, leçons et compétences', color: '#A78BFA' },
     { icon: '🌍', titre: 'Langues étudiées', desc: 'Consulter les langues en cours', color: '#60A5FA' },
@@ -218,6 +248,12 @@ export default function ParentDashboard() {
       </div>
 
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+
+        {erreurChargement && (
+          <p style={{ color: '#FCA5A5', fontFamily: 'DM Sans, sans-serif', fontSize: '13px', margin: 0 }}>
+            {erreurChargement}
+          </p>
+        )}
 
         {/* CARTE ENFANT */}
         <div style={{

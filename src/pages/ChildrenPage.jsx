@@ -5,6 +5,10 @@ import Neuri2D from '../components/Neuri2D'
 import BottomNavParent from '../components/BottomNavParent'
 import { getVersionFromDate } from '../utils/neuriUtils'
 
+// TODO: factoriser dans utils/languages.js (duplique aussi ParentDashboard.jsx)
+const DRAPEAUX = { en: '🇬🇧', es: '🇪🇸', de: '🇩🇪', pt: '🇵🇹' }
+const NOMS_LANGUES = { en: 'Anglais', es: 'Espagnol', de: 'Allemand', pt: 'Portugais' }
+
 const NIVEAUX_CONFIG = [
   { numero: 1, nom: 'Découverte', chapitresNumeros: [0, 1, 2, 3, 4, 5, 6, 7, 8] },
   { numero: 2, nom: 'Les Bases', chapitresNumeros: [9] },
@@ -25,28 +29,43 @@ function calculerAge(dateNaissance) {
 export default function ChildrenPage() {
   const navigate = useNavigate()
   const [enfants, setEnfants] = useState([])
+  const [erreurChargement, setErreurChargement] = useState(null)
   const [chargement, setChargement] = useState(true)
 
   useEffect(() => {
     async function charger() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { navigate('/login'); return }
+      try {
+        setErreurChargement(null)
 
-      const { data: profil } = await supabase.from('profils').select('role').eq('user_id', user.id).single()
-      if (profil?.role !== 'parent') { navigate('/dashboard'); return }
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { navigate('/login'); return }
 
-      const { data: liens } = await supabase
-        .from('parent_child_links')
-        .select('child_id')
-        .eq('parent_id', user.id)
+        const { data: profil, error: erreurProfil } = await supabase
+          .from('profils').select('role').eq('user_id', user.id).single()
+        if (erreurProfil) throw erreurProfil
+        if (profil?.role !== 'parent') { navigate('/dashboard'); return }
 
-      const childIds = (liens || []).map(l => l.child_id)
-      if (childIds.length > 0) {
-        const { data: profilsEnfants } = await supabase
-          .from('profils').select('*').in('user_id', childIds)
-        setEnfants(profilsEnfants || [])
+        const { data: liens, error: erreurLiens } = await supabase
+          .from('parent_child_links')
+          .select('child_id')
+          .eq('parent_id', user.id)
+        if (erreurLiens) throw erreurLiens
+
+        const childIds = (liens || []).map(l => l.child_id)
+        if (childIds.length > 0) {
+          const { data: profilsEnfants, error: erreurEnfants } = await supabase
+            .from('profils')
+            .select('*, langues(code, nom, emoji)')
+            .in('user_id', childIds)
+          if (erreurEnfants) throw erreurEnfants
+          setEnfants(profilsEnfants || [])
+        }
+      } catch (error) {
+        console.error('Erreur chargement Mes enfants', error)
+        setErreurChargement('Impossible de charger la liste des enfants, réessaye plus tard')
+      } finally {
+        setChargement(false)
       }
-      setChargement(false)
     }
     charger()
   }, [navigate])
@@ -77,6 +96,12 @@ export default function ChildrenPage() {
 
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
+        {erreurChargement && (
+          <p style={{ color: '#FCA5A5', fontFamily: 'DM Sans, sans-serif', fontSize: '13px', margin: 0 }}>
+            {erreurChargement}
+          </p>
+        )}
+
         {/* LISTE DES ENFANTS */}
         {enfants.length === 0 ? (
           <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '32px 24px', textAlign: 'center' }}>
@@ -88,6 +113,10 @@ export default function ChildrenPage() {
           enfants.map(enfant => {
             const age = calculerAge(enfant.date_naissance)
             const versionNeuri = enfant.neuri_version || getVersionFromDate(enfant.date_naissance)
+            const codeLangue = enfant.langues?.code
+            const drapeau = enfant.langues?.emoji || DRAPEAUX[codeLangue]
+            const nomLangue = enfant.langues?.nom || NOMS_LANGUES[codeLangue]
+            const afficherLangue = Boolean(codeLangue && (drapeau || nomLangue))
             return (
               <div
                 key={enfant.user_id}
@@ -103,6 +132,11 @@ export default function ChildrenPage() {
                   {age && (
                     <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.5)', margin: '0 0 6px' }}>
                       {age} ans
+                    </p>
+                  )}
+                  {afficherLangue && (
+                    <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.5)', margin: '0 0 6px' }}>
+                      {drapeau || '🌍'} {nomLangue || ''}
                     </p>
                   )}
                   {/* Mini barre de progression XP */}
