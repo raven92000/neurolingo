@@ -17,6 +17,7 @@ import ParentCreateChild from './pages/ParentCreateChild'
 import ParentLinkChild from './pages/ParentLinkChild'
 import ParentDashboard from './pages/ParentDashboard'
 import ChildrenPage from './pages/ChildrenPage'
+import ChildDetailPage from './pages/ChildDetailPage'
 import ParentSettings from './pages/ParentSettings'
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
         <Route path="/parent-link-child" element={<ParentLinkChild />} />
         <Route path="/parent-dashboard" element={<ParentDashboard />} />
         <Route path="/parent-children" element={<ChildrenPage />} />
+        <Route path="/parent/enfant/:userId" element={<ChildDetailPage />} />
         <Route path="/parent-settings" element={<ParentSettings />} />
       </Routes>
     </BrowserRouter>

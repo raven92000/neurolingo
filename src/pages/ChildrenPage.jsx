@@ -120,6 +120,7 @@ export default function ChildrenPage() {
             return (
               <div
                 key={enfant.user_id}
+                onClick={() => navigate('/parent/enfant/' + enfant.user_id)}
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '16px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer', transition: 'all 0.2s ease' }}
               >
                 <div style={{ flexShrink: 0 }}>

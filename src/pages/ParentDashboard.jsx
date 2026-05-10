@@ -256,7 +256,9 @@ export default function ParentDashboard() {
         )}
 
         {/* CARTE ENFANT */}
-        <div style={{
+        <div
+          onClick={() => enfantActif?.user_id && navigate('/parent/enfant/' + enfantActif.user_id)}
+          style={{
           background: 'linear-gradient(135deg, rgba(88, 49, 196, 0.35), rgba(16, 18, 40, 0.95))',
           border: '1px solid rgba(138, 92, 255, 0.25)',
           borderRadius: '24px',
@@ -265,6 +267,17 @@ export default function ParentDashboard() {
           overflow: 'hidden',
           boxShadow: '0 0 40px rgba(138,92,255,0.12)',
           display: 'flex', alignItems: 'center', gap: '14px',
+          cursor: enfantActif?.user_id ? 'pointer' : 'default',
+          transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+        }}
+        onMouseEnter={(e) => {
+          if (!enfantActif?.user_id) return
+          e.currentTarget.style.transform = 'translateY(-1px)'
+          e.currentTarget.style.boxShadow = '0 0 50px rgba(138,92,255,0.22)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)'
+          e.currentTarget.style.boxShadow = '0 0 40px rgba(138,92,255,0.12)'
         }}>
           <div style={{ flexShrink: 0 }}>
             <Neuri2D version={versionNeuri} angle="face" equipes={{ chapeau: null, haut: null, lunettes: null, compagnonObjet: null }} size={90} />
