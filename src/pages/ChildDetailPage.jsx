@@ -4,6 +4,7 @@ import { supabase } from '../supabase'
 import BottomNavParent from '../components/BottomNavParent'
 import ChildDetailHero from './ChildDetail/ChildDetailHero'
 import ChildDetailStats from './ChildDetail/ChildDetailStats'
+import ChildDetailActivity from './ChildDetail/ChildDetailActivity'
 import ChildDetailActions from './ChildDetail/ChildDetailActions'
 import { genererMessageEmotionnel } from './ChildDetail/genererMessageEmotionnel'
 
@@ -12,6 +13,7 @@ export default function ChildDetailPage() {
   const { userId } = useParams()
   const [enfant, setEnfant] = useState(null)
   const [derniereActivite, setDerniereActivite] = useState(null)
+  const [activites, setActivites] = useState([])
   const [erreurChargement, setErreurChargement] = useState(null)
   const [chargement, setChargement] = useState(true)
 
@@ -54,17 +56,22 @@ export default function ChildDetailPage() {
         if (erreurEnfant) throw erreurEnfant
         setEnfant(profilEnfant)
 
-        // Récupérer la dernière activité (dégradation gracieuse en cas d'erreur RLS)
+        // Récupérer les 10 dernières activités (avec titre de leçon via join)
+        // Dégradation gracieuse : si RLS bloque, on garde activites=[] et derniereActivite=null
         try {
-          const { data: derniereProg } = await supabase
+          const { data: progs } = await supabase
             .from('progression')
-            .select('completee_le')
+            .select('id, completee_le, lecons(titre)')
             .eq('user_id', userId)
             .order('completee_le', { ascending: false })
-            .limit(1)
-            .maybeSingle()
-          if (derniereProg?.completee_le) {
-            setDerniereActivite(derniereProg.completee_le)
+            .limit(10)
+          if (progs && progs.length > 0) {
+            setActivites(progs.map((p) => ({
+              id: p.id,
+              completee_le: p.completee_le,
+              titre: p.lecons?.titre || 'Leçon',
+            })))
+            setDerniereActivite(progs[0].completee_le)
           }
         } catch (errProg) {
           console.warn('Lecture progression indisponible (probable RLS), fallback message émotionnel', errProg)
@@ -135,6 +142,7 @@ export default function ChildDetailPage() {
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
         <ChildDetailHero enfant={enfant} messageEmotionnel={messageEmotionnel} />
         <ChildDetailStats enfant={enfant} />
+        <ChildDetailActivity activites={activites} prenom={enfant.nom?.split(' ')[0]} />
         <ChildDetailActions enfant={enfant} />
       </div>
 
