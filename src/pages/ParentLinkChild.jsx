@@ -37,44 +37,33 @@ export default function ParentLinkChild() {
         return
       }
 
-      const { data: enfantTrouve, error: errEnfant } = await supabase
-        .from('profils')
-        .select('user_id, nom, role')
-        .eq('code_enfant', code)
-        .maybeSingle()
+      // Lookup via RPC SECURITY DEFINER : contourne la RLS de manière sécurisée.
+      // Sans ça, un parent ne peut pas lire un profil enfant tant qu'aucun lien n'existe
+      // (typiquement après un délier, ou pour un tout premier lien).
+      // La RPC fait déjà upper(trim()) et filtre role='child' côté serveur.
+      const { data: enfantTrouve, error: errLookup } = await supabase
+        .rpc('find_child_by_code', { p_code: code })
+        .single()
 
-      if (errEnfant || !enfantTrouve) {
+      if (errLookup || !enfantTrouve) {
         setErreur("Aucun enfant trouvé avec ce code. Vérifiez et réessayez.")
         setChargement(false)
         return
       }
 
-      if (enfantTrouve.role !== 'child') {
-        setErreur("Ce code ne correspond pas à un compte enfant.")
-        setChargement(false)
-        return
-      }
-
-      const { data: lienExistant } = await supabase
-        .from('parent_child_links')
-        .select('id')
-        .eq('parent_id', user.id)
-        .eq('child_id', enfantTrouve.user_id)
-        .maybeSingle()
-
-      if (lienExistant) {
-        setErreur("Cet enfant est déjà lié à votre compte.")
-        setChargement(false)
-        return
-      }
-
+      // La RPC renvoie child_user_id (et non user_id) — c'est l'identifiant auth de l'enfant
       const { error: errLien } = await supabase.from('parent_child_links').insert({
         parent_id: user.id,
-        child_id: enfantTrouve.user_id,
+        child_id: enfantTrouve.child_user_id,
       })
 
       if (errLien) {
-        setErreur("Erreur lors de la liaison. Réessayez.")
+        if (errLien.code === '23505') {
+          // 23505 = violation de contrainte unique : ce lien parent↔enfant existe déjà
+          setErreur("Cet enfant est déjà lié à votre compte.")
+        } else {
+          setErreur("Erreur lors de la liaison. Réessayez dans un instant.")
+        }
         setChargement(false)
         return
       }
