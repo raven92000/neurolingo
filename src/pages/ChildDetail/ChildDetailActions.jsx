@@ -35,7 +35,7 @@ export default function ChildDetailActions({ enfant, onProfileUpdated }) {
   }
 
   const code = enfant?.code_enfant
-  const prenom = enfant?.nom?.split(' ')[0] || 'Ton enfant'
+  const prenom = enfant?.nom || 'Ton enfant'
 
   function ouvrirModaleDeliement() {
     setErreurDeliement(null)

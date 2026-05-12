@@ -17,7 +17,7 @@ const COULEURS_PROFIL = {
 
 export default function ChildDetailHero({ enfant, messageEmotionnel }) {
   const versionNeuri = enfant?.neuri_version || getVersionFromDate(enfant?.date_naissance)
-  const prenom = enfant?.nom?.split(' ')[0] || 'Ton enfant'
+  const prenom = enfant?.nom || 'Ton enfant'
 
   const codeLangue = enfant?.langues?.code || enfant?.langue_id
   const drapeau = enfant?.langues?.emoji || DRAPEAUX[codeLangue] || '🌍'

@@ -139,7 +139,7 @@ export default function EditProfileModal({ isOpen, onClose, enfant, onSuccess })
     }
   }
 
-  const prenomAffiche = (valeursInitiales?.prenom || enfant?.nom || 'Ton enfant').split(' ')[0]
+  const prenomAffiche = valeursInitiales?.prenom || enfant?.nom || 'Ton enfant'
   const peutEnregistrer = aDesModifsNonSauvees() && !enregistrement
 
   return (

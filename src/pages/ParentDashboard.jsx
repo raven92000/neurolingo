@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../supabase'
 import Neuri2D from '../components/Neuri2D'
 import BottomNavParent from '../components/BottomNavParent'
@@ -41,6 +41,7 @@ function calculerAge(dateNaissance) {
 
 export default function ParentDashboard() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [parent, setParent] = useState(null)
   const [enfants, setEnfants] = useState([])
   const [enfantActif, setEnfantActif] = useState(null)
@@ -153,7 +154,10 @@ export default function ParentDashboard() {
       }
     }
     charger()
-  }, [navigate])
+    // location.key change à chaque navigation React Router (y compris bouton retour),
+    // ce qui force un refetch à chaque arrivée sur la page → données toujours à jour
+    // après une édition profil enfant ailleurs dans l'app.
+  }, [navigate, location.key])
 
   if (chargement) {
     return (
@@ -228,7 +232,7 @@ export default function ParentDashboard() {
   const conseils = [
     "Les sessions courtes fonctionnent bien cette semaine.",
     "Les exercices audio semblent améliorer la mémorisation.",
-    `${enfantActif?.nom?.split(' ')[0]} progresse davantage le matin.`,
+    `${enfantActif?.nom} progresse davantage le matin.`,
     "Encouragez la régularité plutôt que la durée.",
   ]
   const conseilDuJour = conseils[new Date().getDay() % conseils.length]
@@ -257,7 +261,7 @@ export default function ParentDashboard() {
 
         {/* CARTE ENFANT */}
         <div
-          onClick={() => enfantActif?.user_id && navigate('/parent/enfant/' + enfantActif.user_id)}
+          onClick={() => enfantActif?.user_id && navigate('/parent/enfant/' + enfantActif.user_id, { state: { from: '/parent-dashboard' } })}
           style={{
           background: 'linear-gradient(135deg, rgba(88, 49, 196, 0.35), rgba(16, 18, 40, 0.95))',
           border: '1px solid rgba(138, 92, 255, 0.25)',
@@ -284,7 +288,7 @@ export default function ParentDashboard() {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <h2 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '22px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 2px' }}>
-              {enfantActif?.nom?.split(' ')[0]}{ageEnfant && ` (${ageEnfant} ans)`}
+              {enfantActif?.nom}{ageEnfant && ` (${ageEnfant} ans)`}
             </h2>
             {enfantActif?.langue_id && (
               <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: 'rgba(255,255,255,0.7)', margin: '0 0 4px' }}>

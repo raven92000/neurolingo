@@ -79,7 +79,10 @@ export default function ChildrenPage() {
       }
     }
     charger()
-  }, [navigate])
+    // location.key change à chaque navigation React Router (y compris bouton retour),
+    // ce qui force un refetch à chaque arrivée sur la page → données toujours à jour
+    // après une édition profil enfant ailleurs dans l'app.
+  }, [navigate, location.key])
 
   if (chargement) {
     return (
@@ -153,7 +156,7 @@ export default function ChildrenPage() {
             return (
               <div
                 key={enfant.user_id}
-                onClick={() => navigate('/parent/enfant/' + enfant.user_id)}
+                onClick={() => navigate('/parent/enfant/' + enfant.user_id, { state: { from: '/parent-children' } })}
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '16px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer', transition: 'all 0.2s ease' }}
               >
                 <div style={{ flexShrink: 0 }}>
@@ -161,7 +164,7 @@ export default function ChildrenPage() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontFamily: 'Nunito, sans-serif', fontSize: '17px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 2px' }}>
-                    {enfant.nom?.split(' ')[0]}
+                    {enfant.nom}
                   </p>
                   {age && (
                     <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.5)', margin: '0 0 6px' }}>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { supabase } from '../supabase'
 import BottomNavParent from '../components/BottomNavParent'
 import ChildDetailHero from './ChildDetail/ChildDetailHero'
@@ -11,6 +11,7 @@ import { genererMessageEmotionnel } from './ChildDetail/genererMessageEmotionnel
 export default function ChildDetailPage() {
   const navigate = useNavigate()
   const { userId } = useParams()
+  const location = useLocation()
   const [enfant, setEnfant] = useState(null)
   const [derniereActivite, setDerniereActivite] = useState(null)
   const [activites, setActivites] = useState([])
@@ -22,7 +23,6 @@ export default function ChildDetailPage() {
   useEffect(() => {
     async function charger() {
       try {
-        console.log('[debug] charger() lancé, refreshKey =', refreshKey, 'userId =', userId)  // 🔬 LOG TEMPORAIRE — à retirer après diagnostic
         setErreurChargement(null)
 
         const { data: { user } } = await supabase.auth.getUser()
@@ -57,7 +57,6 @@ export default function ChildDetailPage() {
           .eq('user_id', userId)
           .single()
         if (erreurEnfant) throw erreurEnfant
-        console.log('[debug] profil enfant reçu :', { nom: profilEnfant?.nom, profil_type: profilEnfant?.profil_type, user_id: profilEnfant?.user_id })  // 🔬 LOG TEMPORAIRE — à retirer après diagnostic
         setEnfant(profilEnfant)
 
         // Récupérer les 10 dernières activités (avec titre de leçon via join)
@@ -103,6 +102,15 @@ export default function ChildDetailPage() {
     setToastProfil('Profil mis à jour ✓')
   }
 
+  // Bouton retour : utilise location.state.from posé par la page d'origine
+  // (ParentDashboard ou ChildrenPage) pour garantir un navigate avec nouvelle
+  // location.key, ce qui force le useEffect de la destination à refetch.
+  // Fallback sur /parent-dashboard si pas de from (deeplink direct, F5).
+  function retour() {
+    const from = location.state?.from
+    navigate(from || '/parent-dashboard')
+  }
+
   if (chargement) {
     return (
       <div style={{ minHeight: '100vh', background: '#090E1A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -117,7 +125,7 @@ export default function ChildDetailPage() {
       <div style={{ minHeight: '100vh', background: '#090E1A', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
         <div style={{ padding: '52px 24px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
-            onClick={() => navigate(-1)}
+            onClick={retour}
             style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', width: '40px', height: '40px', color: '#FFFFFF', fontSize: '18px', cursor: 'pointer' }}
             aria-label="Retour"
           >
@@ -136,7 +144,7 @@ export default function ChildDetailPage() {
   }
 
   const messageEmotionnel = genererMessageEmotionnel({
-    prenom: enfant.nom?.split(' ')[0],
+    prenom: enfant.nom,
     streak: enfant.streak || 0,
     lecons_completees: enfant.lecons_completees || 0,
     derniereActivite,
@@ -148,7 +156,7 @@ export default function ChildDetailPage() {
       {/* HEADER avec bouton retour */}
       <div style={{ padding: '52px 24px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
         <button
-          onClick={() => navigate(-1)}
+          onClick={retour}
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', width: '40px', height: '40px', color: '#FFFFFF', fontSize: '18px', cursor: 'pointer' }}
           aria-label="Retour"
         >
@@ -180,7 +188,7 @@ export default function ChildDetailPage() {
         )}
         <ChildDetailHero key={refreshKey} enfant={enfant} messageEmotionnel={messageEmotionnel} />
         <ChildDetailStats enfant={enfant} />
-        <ChildDetailActivity activites={activites} prenom={enfant.nom?.split(' ')[0]} />
+        <ChildDetailActivity activites={activites} prenom={enfant.nom} />
         <ChildDetailActions enfant={enfant} onProfileUpdated={handleProfileUpdated} />
       </div>
 
