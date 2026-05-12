@@ -19,6 +19,7 @@ import ParentDashboard from './pages/ParentDashboard'
 import ChildrenPage from './pages/ChildrenPage'
 import ChildDetailPage from './pages/ChildDetailPage'
 import ParentChildProgression from './pages/ParentChildProgression'
+import ParentChildHistorique from './pages/ParentChildHistorique'
 import ParentSettings from './pages/ParentSettings'
 
 function App() {
@@ -45,6 +46,7 @@ function App() {
         <Route path="/parent-children" element={<ChildrenPage />} />
         <Route path="/parent/enfant/:userId" element={<ChildDetailPage />} />
         <Route path="/parent/enfant/:userId/progression" element={<ParentChildProgression />} />
+        <Route path="/parent/enfant/:userId/historique" element={<ParentChildHistorique />} />
         <Route path="/parent-settings" element={<ParentSettings />} />
       </Routes>
     </BrowserRouter>

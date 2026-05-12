@@ -226,7 +226,7 @@ export default function ParentDashboard() {
     { icon: '📊', titre: 'Progression', desc: 'Voir les niveaux, leçons et compétences', color: '#A78BFA' },
     { icon: '🌍', titre: 'Langues étudiées', desc: 'Consulter les langues en cours', color: '#60A5FA' },
     { icon: '⏱️', titre: 'Temps d\'apprentissage', desc: 'Voir le temps passé chaque jour', color: '#86EFAC' },
-    { icon: '📅', titre: 'Historique semaine', desc: 'Détail jour par jour des activités', color: '#FCA5A5' },
+    { icon: '📅', titre: 'Historique mensuel', desc: 'Calendrier des leçons faites', color: '#FCA5A5', route: 'historique' },
   ]
 
   const conseils = [
@@ -331,7 +331,15 @@ export default function ParentDashboard() {
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           {fonctionnalites.map((f, i) => (
-            <div key={i} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '18px', padding: '16px', cursor: 'pointer', transition: 'all 0.2s ease' }}>
+            <div
+              key={i}
+              onClick={() => {
+                if (f.route === 'historique' && enfantActif?.user_id) {
+                  navigate('/parent/enfant/' + enfantActif.user_id + '/historique', { state: { from: location.pathname } })
+                }
+              }}
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '18px', padding: '16px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+            >
               <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: `${f.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', marginBottom: '10px' }}>
                 {f.icon}
               </div>
