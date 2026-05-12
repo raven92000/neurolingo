@@ -16,10 +16,13 @@ export default function ChildDetailPage() {
   const [activites, setActivites] = useState([])
   const [erreurChargement, setErreurChargement] = useState(null)
   const [chargement, setChargement] = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [toastProfil, setToastProfil] = useState(null)
 
   useEffect(() => {
     async function charger() {
       try {
+        console.log('[debug] charger() lancé, refreshKey =', refreshKey, 'userId =', userId)  // 🔬 LOG TEMPORAIRE — à retirer après diagnostic
         setErreurChargement(null)
 
         const { data: { user } } = await supabase.auth.getUser()
@@ -54,6 +57,7 @@ export default function ChildDetailPage() {
           .eq('user_id', userId)
           .single()
         if (erreurEnfant) throw erreurEnfant
+        console.log('[debug] profil enfant reçu :', { nom: profilEnfant?.nom, profil_type: profilEnfant?.profil_type, user_id: profilEnfant?.user_id })  // 🔬 LOG TEMPORAIRE — à retirer après diagnostic
         setEnfant(profilEnfant)
 
         // Récupérer les 10 dernières activités (avec titre de leçon via join)
@@ -84,7 +88,20 @@ export default function ChildDetailPage() {
       }
     }
     charger()
-  }, [navigate, userId])
+  }, [navigate, userId, refreshKey])
+
+  // Auto-disparition du toast après 3s
+  useEffect(() => {
+    if (!toastProfil) return
+    const t = setTimeout(() => setToastProfil(null), 3000)
+    return () => clearTimeout(t)
+  }, [toastProfil])
+
+  // Appelé par EditProfileModal après UPDATE réussi : refresh + toast
+  function handleProfileUpdated() {
+    setRefreshKey(k => k + 1)
+    setToastProfil('Profil mis à jour ✓')
+  }
 
   if (chargement) {
     return (
@@ -140,10 +157,31 @@ export default function ChildDetailPage() {
       </div>
 
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
-        <ChildDetailHero enfant={enfant} messageEmotionnel={messageEmotionnel} />
+        {toastProfil && (
+          <div
+            role="status"
+            style={{
+              background: 'rgba(34,197,94,0.12)',
+              border: '1px solid rgba(34,197,94,0.35)',
+              borderRadius: '14px',
+              padding: '12px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              animation: 'toastFadeIn 0.25s ease-out',
+            }}
+          >
+            <span style={{ fontSize: '16px', color: '#86EFAC' }}>✓</span>
+            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: '#86EFAC', margin: 0, fontWeight: 600 }}>
+              {toastProfil}
+            </p>
+            <style>{`@keyframes toastFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+          </div>
+        )}
+        <ChildDetailHero key={refreshKey} enfant={enfant} messageEmotionnel={messageEmotionnel} />
         <ChildDetailStats enfant={enfant} />
         <ChildDetailActivity activites={activites} prenom={enfant.nom?.split(' ')[0]} />
-        <ChildDetailActions enfant={enfant} />
+        <ChildDetailActions enfant={enfant} onProfileUpdated={handleProfileUpdated} />
       </div>
 
       <BottomNavParent />

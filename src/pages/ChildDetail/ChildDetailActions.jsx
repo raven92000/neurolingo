@@ -1,13 +1,21 @@
 import { useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { supabase } from '../../supabase'
+import ConfirmUnlinkModal from './ConfirmUnlinkModal'
+import EditProfileModal from './EditProfileModal'
 
 const STUBS = [
-  { icon: '✏️', label: 'Modifier le profil' },
   { icon: '📊', label: 'Voir progression détaillée' },
   { icon: '🌍', label: 'Ajouter une langue' },
 ]
 
-export default function ChildDetailActions({ enfant }) {
+export default function ChildDetailActions({ enfant, onProfileUpdated }) {
+  const navigate = useNavigate()
+  const { userId } = useParams()
   const [copie, setCopie] = useState(false)
+  const [modalOuverte, setModalOuverte] = useState(false)
+  const [erreurDeliement, setErreurDeliement] = useState(null)
+  const [isEditOpen, setIsEditOpen] = useState(false)
 
   async function copierCode() {
     const code = enfant?.code_enfant
@@ -28,6 +36,38 @@ export default function ChildDetailActions({ enfant }) {
 
   const code = enfant?.code_enfant
   const prenom = enfant?.nom?.split(' ')[0] || 'Ton enfant'
+
+  function ouvrirModaleDeliement() {
+    setErreurDeliement(null)
+    setModalOuverte(true)
+  }
+
+  function fermerModaleDeliement() {
+    setModalOuverte(false)
+    setErreurDeliement(null)
+  }
+
+  async function confirmerDeliement() {
+    setErreurDeliement(null)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      setErreurDeliement('Session expirée, reconnecte-toi pour réessayer.')
+      return
+    }
+    const { error } = await supabase
+      .from('parent_child_links')
+      .delete()
+      .eq('parent_id', user.id)
+      .eq('child_id', userId)
+    if (error) {
+      console.error('Erreur déliement enfant', error)
+      setErreurDeliement('Impossible de délier pour le moment, réessaye.')
+      return
+    }
+    navigate('/parent-children', {
+      state: { toast: `${prenom} a été délié·e de ton compte` },
+    })
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -116,6 +156,38 @@ export default function ChildDetailActions({ enfant }) {
         </div>
       )}
 
+      {/* Action fonctionnelle : modifier le profil enfant (Sprint 2C-2) */}
+      <button
+        onClick={() => setIsEditOpen(true)}
+        style={{
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: '18px',
+          padding: '14px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          cursor: 'pointer',
+          textAlign: 'left',
+          color: '#FFFFFF',
+          transition: 'background 0.15s ease',
+        }}
+      >
+        <span style={{ fontSize: '20px' }}>✏️</span>
+        <span style={{ flex: 1 }}>
+          <span style={{
+            display: 'block',
+            fontFamily: 'Nunito, sans-serif',
+            fontSize: '14px',
+            fontWeight: '800',
+            color: '#FFFFFF',
+          }}>
+            Modifier le profil
+          </span>
+        </span>
+        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '18px' }}>›</span>
+      </button>
+
       {STUBS.map((s, i) => (
         <button
           key={i}
@@ -160,7 +232,7 @@ export default function ChildDetailActions({ enfant }) {
       ))}
 
       <button
-        onClick={actionStub}
+        onClick={ouvrirModaleDeliement}
         style={{
           background: 'transparent',
           border: '1px solid rgba(255,255,255,0.08)',
@@ -187,17 +259,23 @@ export default function ChildDetailActions({ enfant }) {
           }}>
             Délier l'enfant
           </span>
-          <span style={{
-            display: 'block',
-            fontFamily: 'DM Sans, sans-serif',
-            fontSize: '11px',
-            color: 'rgba(255,255,255,0.35)',
-            marginTop: '2px',
-          }}>
-            Bientôt disponible
-          </span>
         </span>
       </button>
+
+      <ConfirmUnlinkModal
+        isOpen={modalOuverte}
+        onClose={fermerModaleDeliement}
+        onConfirm={confirmerDeliement}
+        prenomEnfant={prenom}
+        erreur={erreurDeliement}
+      />
+
+      <EditProfileModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        enfant={enfant}
+        onSuccess={() => { setIsEditOpen(false); onProfileUpdated?.() }}
+      />
     </div>
   )
 }

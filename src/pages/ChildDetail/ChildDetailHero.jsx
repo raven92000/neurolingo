@@ -9,6 +9,12 @@ const LIBELLE_PROFIL = {
   dyslexie: 'Dyslexie',
 }
 
+// Couleurs claires (lisibles sur le fond violet sombre du Hero)
+const COULEURS_PROFIL = {
+  tdah: { color: '#A78BFA', bg: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.3)' },
+  dyslexie: { color: '#60A5FA', bg: 'rgba(96,165,250,0.15)', border: 'rgba(96,165,250,0.3)' },
+}
+
 export default function ChildDetailHero({ enfant, messageEmotionnel }) {
   const versionNeuri = enfant?.neuri_version || getVersionFromDate(enfant?.date_naissance)
   const prenom = enfant?.nom?.split(' ')[0] || 'Ton enfant'
@@ -19,6 +25,7 @@ export default function ChildDetailHero({ enfant, messageEmotionnel }) {
 
   const profilType = enfant?.profil_type
   const libelleProfil = profilType ? (LIBELLE_PROFIL[profilType] || profilType.toUpperCase()) : null
+  const couleurProfil = COULEURS_PROFIL[profilType] || COULEURS_PROFIL.tdah
 
   const streak = enfant?.streak || 0
 
@@ -58,8 +65,8 @@ export default function ChildDetailHero({ enfant, messageEmotionnel }) {
       {libelleProfil && (
         <div style={{
           display: 'inline-block',
-          background: 'rgba(167,139,250,0.15)',
-          border: '1px solid rgba(167,139,250,0.3)',
+          background: couleurProfil.bg,
+          border: `1px solid ${couleurProfil.border}`,
           borderRadius: '999px',
           padding: '4px 12px',
         }}>
@@ -67,7 +74,7 @@ export default function ChildDetailHero({ enfant, messageEmotionnel }) {
             fontFamily: 'Nunito, sans-serif',
             fontSize: '12px',
             fontWeight: '800',
-            color: '#A78BFA',
+            color: couleurProfil.color,
             letterSpacing: '0.04em',
           }}>
             {libelleProfil}

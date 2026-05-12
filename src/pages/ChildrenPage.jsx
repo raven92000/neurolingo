@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../supabase'
 import Neuri2D from '../components/Neuri2D'
 import BottomNavParent from '../components/BottomNavParent'
@@ -28,9 +28,20 @@ function calculerAge(dateNaissance) {
 
 export default function ChildrenPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [enfants, setEnfants] = useState([])
   const [erreurChargement, setErreurChargement] = useState(null)
   const [chargement, setChargement] = useState(true)
+  const [toastMessage, setToastMessage] = useState(() => location.state?.toast || null)
+
+  useEffect(() => {
+    if (!toastMessage) return
+    // Nettoyer le state pour éviter la réapparition au refresh
+    navigate(location.pathname, { replace: true, state: {} })
+    const timer = setTimeout(() => setToastMessage(null), 3000)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     async function charger() {
@@ -95,6 +106,28 @@ export default function ChildrenPage() {
       </div>
 
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+        {toastMessage && (
+          <div
+            role="status"
+            style={{
+              background: 'rgba(34,197,94,0.12)',
+              border: '1px solid rgba(34,197,94,0.35)',
+              borderRadius: '14px',
+              padding: '12px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              animation: 'toastFadeIn 0.25s ease-out',
+            }}
+          >
+            <span style={{ fontSize: '16px', color: '#86EFAC' }}>✓</span>
+            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '14px', color: '#86EFAC', margin: 0, fontWeight: 600 }}>
+              {toastMessage}
+            </p>
+            <style>{`@keyframes toastFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+          </div>
+        )}
 
         {erreurChargement && (
           <p style={{ color: '#FCA5A5', fontFamily: 'DM Sans, sans-serif', fontSize: '13px', margin: 0 }}>
