@@ -1,17 +1,17 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { supabase } from '../../supabase'
 import ConfirmUnlinkModal from './ConfirmUnlinkModal'
 import EditProfileModal from './EditProfileModal'
 
 const STUBS = [
-  { icon: '📊', label: 'Voir progression détaillée' },
   { icon: '🌍', label: 'Ajouter une langue' },
 ]
 
 export default function ChildDetailActions({ enfant, onProfileUpdated }) {
   const navigate = useNavigate()
   const { userId } = useParams()
+  const location = useLocation()
   const [copie, setCopie] = useState(false)
   const [modalOuverte, setModalOuverte] = useState(false)
   const [erreurDeliement, setErreurDeliement] = useState(null)
@@ -183,6 +183,38 @@ export default function ChildDetailActions({ enfant, onProfileUpdated }) {
             color: '#FFFFFF',
           }}>
             Modifier le profil
+          </span>
+        </span>
+        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '18px' }}>›</span>
+      </button>
+
+      {/* Action fonctionnelle : voir la progression détaillée (Sprint 3) */}
+      <button
+        onClick={() => navigate(`/parent/enfant/${userId}/progression`, { state: { from: location.pathname } })}
+        style={{
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: '18px',
+          padding: '14px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          cursor: 'pointer',
+          textAlign: 'left',
+          color: '#FFFFFF',
+          transition: 'background 0.15s ease',
+        }}
+      >
+        <span style={{ fontSize: '20px' }}>📊</span>
+        <span style={{ flex: 1 }}>
+          <span style={{
+            display: 'block',
+            fontFamily: 'Nunito, sans-serif',
+            fontSize: '14px',
+            fontWeight: '800',
+            color: '#FFFFFF',
+          }}>
+            Voir progression détaillée
           </span>
         </span>
         <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '18px' }}>›</span>
