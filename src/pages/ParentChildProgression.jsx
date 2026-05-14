@@ -94,7 +94,7 @@ export default function ParentChildProgression() {
         if (chapitresIds.length > 0) {
           const { data: leconsData } = await supabase
             .from('lecons')
-            .select('id, titre, chapitre_id, ordre')
+            .select('id, titre, chapitre_id, ordre, image_url')
             .in('chapitre_id', chapitresIds)
             .order('ordre', { ascending: true })
           lecons = leconsData || []
@@ -118,6 +118,7 @@ export default function ParentChildProgression() {
           const leconsAvecStatut = leconsDuChap.map(l => ({
             id: l.id,
             titre: l.titre,
+            imageUrl: l.image_url,
             statut: getStatutLecon(progressions, l.id),
           }))
           const nbTotal = leconsDuChap.length

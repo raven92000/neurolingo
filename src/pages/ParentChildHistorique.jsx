@@ -86,7 +86,7 @@ export default function ParentChildHistorique() {
         // avec jointure leçon → durée + chapitre.
         const { data: progs, error: erreurProgs } = await supabase
           .from('progression')
-          .select('id, completee_le, lecons(titre, duree_minutes, chapitres(titre))')
+          .select('id, completee_le, lecons(titre, duree_minutes, image_url, chapitres(titre))')
           .eq('user_id', userId)
           .not('completee_le', 'is', null)
           .order('completee_le', { ascending: true })
@@ -238,6 +238,7 @@ export default function ParentChildHistorique() {
                   heure={formatHeure(new Date(p.completee_le))}
                   duree={p.lecons?.duree_minutes}
                   chapitre={p.lecons?.chapitres?.titre || 'Chapitre inconnu'}
+                  imageUrl={p.lecons?.image_url}
                 />
               ))}
             </div>

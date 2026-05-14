@@ -14,6 +14,21 @@ function EmojiGeant({ emoji }) {
       </svg>
     )
   }
+  if (typeof emoji === 'string' && emoji.startsWith('http')) {
+    return (
+      <img
+        src={emoji}
+        alt=""
+        style={{
+          width: '120px',
+          height: '120px',
+          objectFit: 'cover',
+          borderRadius: '20px',
+          display: 'block',
+        }}
+      />
+    )
+  }
   return (
     <span style={{ fontSize: '72px', lineHeight: 1, display: 'inline-block' }}>
       {emoji}
@@ -97,7 +112,7 @@ function EcranIntro({ mots, titreLecon, onStart, settings }) {
       </div>
       <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', margin: '0 0 24px' }}>Mot {index + 1} sur {mots.length}</p>
       <div onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '24px', padding: '20px 0', minHeight: '380px' }}>
-        <div onClick={debloquerAudioEtJouer} style={{ width: '180px', height: '180px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 0 40px rgba(139,92,246,0.18)', transform: 'scale(1.1)' }}>
+        <div onClick={debloquerAudioEtJouer} style={{ width: '130px', height: '130px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 0 40px rgba(139,92,246,0.18)' }}>
           {motActuel.svg}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
@@ -146,7 +161,7 @@ function EcranExposition({ mot, etape, total, onNext, settings }) {
       </div>
       <p style={{ fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 48px' }}>Nouveau mot</p>
       <div style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0) scale(1)' : 'translateY(12px) scale(0.97)', transition: settings.animationsReduites ? 'opacity 0.6s ease' : 'all 0.4s ease', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px', width: '100%' }}>
-        <div onClick={() => playWord(mot.en, settings.audioRate)} style={{ width: '160px', height: '160px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>{mot.svg}</div>
+        <div onClick={() => playWord(mot.en, settings.audioRate)} style={{ width: '130px', height: '130px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>{mot.svg}</div>
         <div style={{ textAlign: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '12px' }}>
             <h2 style={{ fontSize: '44px', fontWeight: '900', color: '#FFFFFF', margin: 0 }}>{mot.en}</h2>
@@ -276,7 +291,7 @@ function EcranRepetition({ mot, etape, total, onNext, settings }) {
         <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', flexShrink: 0 }}>{etape}/{total}</span>
       </div>
       <p style={{ fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 32px' }}>Répète à voix haute</p>
-      <div style={{ marginBottom: '20px' }}>{mot.svg}</div>
+      <div style={{ width: '130px', height: '130px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>{mot.svg}</div>
       <h2 style={{ fontSize: '42px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 8px', textAlign: 'center' }}>{mot.en}</h2>
       <button onClick={() => playWord(mot.en, settings.audioRate)} style={{ background: 'none', border: 'none', cursor: 'pointer', marginBottom: '40px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#A78BFA' }}>
         <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M3 6H1V12H3L7 15V3L3 6Z" fill="#A78BFA"/><path d="M11 5.5C12.5 6.8 13.5 8.3 13.5 9C13.5 9.7 12.5 11.2 11 12.5" stroke="#A78BFA" strokeWidth="1.5" strokeLinecap="round"/></svg>

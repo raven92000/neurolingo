@@ -1,5 +1,7 @@
+import LeconThumbnail from '../../components/LeconThumbnail'
+
 export default function LeconRow({ lecon }) {
-  const { titre, statut } = lecon
+  const { titre, statut, imageUrl } = lecon
 
   const configStatut = {
     terminee: {
@@ -41,6 +43,8 @@ export default function LeconRow({ lecon }) {
       }}>
         {config.icone}
       </span>
+
+      <LeconThumbnail imageUrl={imageUrl} size={40} borderRadius={10} alt={titre} />
 
       <span style={{
         flex: 1,
