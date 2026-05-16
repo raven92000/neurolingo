@@ -33,6 +33,21 @@ function taillePoliceMot(mot) {
 function CarteRiche({ item, codeLangue, voix }) {
   const imageUrl = getAlphabetImageUrl(codeLangue, item.image)
 
+  // Gestion mouse + touch unifiée pour que l'animation au tap fonctionne
+  // aussi sur mobile (les events mouse ne se déclenchent pas toujours).
+  function appuyer(e) {
+    e.currentTarget.style.transform = 'scale(0.95)'
+    e.currentTarget.style.background = 'rgba(139,92,246,0.2)'
+    e.currentTarget.style.border = '1.5px solid rgba(139,92,246,0.6)'
+    e.currentTarget.style.boxShadow = '0 0 24px rgba(139,92,246,0.4)'
+  }
+  function relacher(e) {
+    e.currentTarget.style.transform = 'scale(1)'
+    e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
+    e.currentTarget.style.border = '1.5px solid rgba(139,92,246,0.25)'
+    e.currentTarget.style.boxShadow = '0 0 16px rgba(139,92,246,0.05)'
+  }
+
   return (
     <button
       aria-label={item.lettre}
@@ -54,21 +69,12 @@ function CarteRiche({ item, codeLangue, voix }) {
         justifyContent: 'space-between',
         gap: '4px',
       }}
-      onMouseDown={(e) => {
-        e.currentTarget.style.transform = 'scale(0.95)'
-        e.currentTarget.style.background = 'rgba(139,92,246,0.2)'
-        e.currentTarget.style.boxShadow = '0 0 24px rgba(139,92,246,0.3)'
-      }}
-      onMouseUp={(e) => {
-        e.currentTarget.style.transform = 'scale(1)'
-        e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
-        e.currentTarget.style.boxShadow = '0 0 16px rgba(139,92,246,0.05)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'scale(1)'
-        e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
-        e.currentTarget.style.boxShadow = '0 0 16px rgba(139,92,246,0.05)'
-      }}
+      onMouseDown={appuyer}
+      onMouseUp={relacher}
+      onMouseLeave={relacher}
+      onTouchStart={appuyer}
+      onTouchEnd={relacher}
+      onTouchCancel={relacher}
     >
       <span
         aria-hidden="true"
