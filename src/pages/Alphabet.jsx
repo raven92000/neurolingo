@@ -15,7 +15,7 @@ const TTS_MAP = { en: 'en-US', es: 'es-ES', de: 'de-DE', pt: 'pt-PT' }
 function playLetter(letter, lang, voix) {
   if (!('speechSynthesis' in window)) return
   window.speechSynthesis.cancel()
-  const u = new SpeechSynthesisUtterance(letter)
+  const u = new SpeechSynthesisUtterance(letter.toLowerCase())
   u.lang = TTS_MAP[lang] || 'en-US'
   if (voix) u.voice = voix
   u.rate = 0.9
