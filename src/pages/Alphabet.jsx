@@ -242,6 +242,26 @@ export default function Alphabet() {
         </div>
       )}
 
+      {/* Lien vers l'Exercice 2 */}
+      <button
+        onClick={() => navigate('/alphabet/ecoute')}
+        style={{
+          marginTop: '20px',
+          padding: '16px 20px',
+          background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+          border: 'none',
+          borderRadius: '16px',
+          color: '#FFFFFF',
+          fontFamily: 'Nunito, sans-serif',
+          fontSize: '15px',
+          fontWeight: '800',
+          cursor: 'pointer',
+          boxShadow: '0 4px 16px rgba(139,92,246,0.3)',
+        }}
+      >
+        🎧 Exercice 2 : Écoute et choisis
+      </button>
+
       {/* Footer info */}
       <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginTop: '16px' }}>
         {nombreLettres} lettres · {langue?.nom}
