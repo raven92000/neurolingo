@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { getLangueActive, getLangueByCode } from '../utils/languages'
+import { ALPHABET_DATA, getAlphabetImageUrl } from '../data/alphabetData'
+import LeconThumbnail from '../components/LeconThumbnail'
 
 const ALPHABETS = {
   en: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
@@ -7,7 +9,7 @@ const ALPHABETS = {
   de: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜß'.split(''),
 }
 
-const TTS_MAP = { en: 'en-US', es: 'es-ES', de: 'de-DE' }
+const TTS_MAP = { en: 'en-US', es: 'es-ES', de: 'de-DE', pt: 'pt-PT' }
 
 function playLetter(letter, lang) {
   if ('speechSynthesis' in window) {
@@ -20,15 +22,155 @@ function playLetter(letter, lang) {
   }
 }
 
+function taillePoliceMot(mot) {
+  const longueur = mot.length
+  if (longueur > 9) return '11px'
+  if (longueur > 7) return '12px'
+  return '13px'
+}
+
+function CarteRiche({ item, codeLangue }) {
+  const imageUrl = getAlphabetImageUrl(codeLangue, item.image)
+
+  return (
+    <button
+      onClick={() => playLetter(item.lettre, codeLangue)}
+      style={{
+        position: 'relative',
+        aspectRatio: '1',
+        background: 'rgba(255,255,255,0.04)',
+        border: '1.5px solid rgba(139,92,246,0.25)',
+        borderRadius: '18px',
+        padding: '12px',
+        paddingTop: '32px',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        boxShadow: '0 0 16px rgba(139,92,246,0.05)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '4px',
+      }}
+      onMouseDown={(e) => {
+        e.currentTarget.style.transform = 'scale(0.95)'
+        e.currentTarget.style.background = 'rgba(139,92,246,0.2)'
+        e.currentTarget.style.boxShadow = '0 0 24px rgba(139,92,246,0.3)'
+      }}
+      onMouseUp={(e) => {
+        e.currentTarget.style.transform = 'scale(1)'
+        e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
+        e.currentTarget.style.boxShadow = '0 0 16px rgba(139,92,246,0.05)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'scale(1)'
+        e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
+        e.currentTarget.style.boxShadow = '0 0 16px rgba(139,92,246,0.05)'
+      }}
+    >
+      <span
+        style={{
+          position: 'absolute',
+          top: '8px',
+          left: '12px',
+          fontFamily: 'Nunito, sans-serif',
+          fontSize: '28px',
+          fontWeight: '900',
+          color: '#A78BFA',
+          lineHeight: 1,
+          pointerEvents: 'none',
+        }}
+      >
+        {item.lettre}
+      </span>
+
+      <div
+        style={{
+          flex: 1,
+          width: '100%',
+          minHeight: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <LeconThumbnail
+          imageUrl={imageUrl}
+          alt={item.mot}
+          fill
+          objectFit="contain"
+          borderRadius={0}
+        />
+      </div>
+
+      <span
+        style={{
+          fontFamily: 'DM Sans, sans-serif',
+          fontSize: taillePoliceMot(item.mot),
+          fontWeight: '600',
+          color: 'rgba(255,255,255,0.85)',
+          textAlign: 'center',
+          whiteSpace: 'nowrap',
+          lineHeight: 1.2,
+        }}
+      >
+        {item.mot}
+      </span>
+    </button>
+  )
+}
+
+function CarteSimple({ lettre, codeLangue }) {
+  return (
+    <button
+      onClick={() => playLetter(lettre, codeLangue)}
+      style={{
+        aspectRatio: '1',
+        background: 'rgba(255,255,255,0.04)',
+        border: '1.5px solid rgba(139,92,246,0.25)',
+        borderRadius: '18px',
+        fontSize: '32px',
+        fontFamily: 'Nunito, sans-serif',
+        fontWeight: '900',
+        color: '#FFFFFF',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        boxShadow: '0 0 16px rgba(139,92,246,0.05)',
+      }}
+      onMouseDown={(e) => {
+        e.currentTarget.style.transform = 'scale(0.95)'
+        e.currentTarget.style.background = 'rgba(139,92,246,0.2)'
+        e.currentTarget.style.boxShadow = '0 0 24px rgba(139,92,246,0.3)'
+      }}
+      onMouseUp={(e) => {
+        e.currentTarget.style.transform = 'scale(1)'
+        e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
+        e.currentTarget.style.boxShadow = '0 0 16px rgba(139,92,246,0.05)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'scale(1)'
+        e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
+        e.currentTarget.style.boxShadow = '0 0 16px rgba(139,92,246,0.05)'
+      }}
+    >
+      {lettre}
+    </button>
+  )
+}
+
 export default function Alphabet() {
   const navigate = useNavigate()
   const codeLangue = getLangueActive()
   const langue = getLangueByCode(codeLangue)
-  const lettres = ALPHABETS[codeLangue] || ALPHABETS.en
+
+  const donneesRiches = ALPHABET_DATA[codeLangue] || []
+  const modeRiche = donneesRiches.length > 0
+  const lettresSimples = ALPHABETS[codeLangue] || ALPHABETS.en
+  const nombreLettres = modeRiche ? donneesRiches.length : lettresSimples.length
 
   return (
     <div style={{ minHeight: '100vh', background: '#090E1A', padding: '20px', maxWidth: '430px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
-      
+
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '32px 0 16px' }}>
         <button onClick={() => navigate('/learn')} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -54,49 +196,24 @@ export default function Alphabet() {
         </p>
       </div>
 
-      {/* Grille des lettres */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', flex: 1 }}>
-        {lettres.map((lettre, i) => (
-          <button
-            key={i}
-            onClick={() => playLetter(lettre, codeLangue)}
-            style={{
-              aspectRatio: '1',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1.5px solid rgba(139,92,246,0.25)',
-              borderRadius: '18px',
-              fontSize: '32px',
-              fontFamily: 'Nunito, sans-serif',
-              fontWeight: '900',
-              color: '#FFFFFF',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 0 16px rgba(139,92,246,0.05)',
-            }}
-            onMouseDown={(e) => {
-              e.currentTarget.style.transform = 'scale(0.95)'
-              e.currentTarget.style.background = 'rgba(139,92,246,0.2)'
-              e.currentTarget.style.boxShadow = '0 0 24px rgba(139,92,246,0.3)'
-            }}
-            onMouseUp={(e) => {
-              e.currentTarget.style.transform = 'scale(1)'
-              e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
-              e.currentTarget.style.boxShadow = '0 0 16px rgba(139,92,246,0.05)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)'
-              e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
-              e.currentTarget.style.boxShadow = '0 0 16px rgba(139,92,246,0.05)'
-            }}
-          >
-            {lettre}
-          </button>
-        ))}
-      </div>
+      {/* Grille — mode riche (image + mot) ou mode simple (lettres seules) */}
+      {modeRiche ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', flex: 1 }}>
+          {donneesRiches.map((item) => (
+            <CarteRiche key={item.lettre} item={item} codeLangue={codeLangue} />
+          ))}
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', flex: 1 }}>
+          {lettresSimples.map((lettre, i) => (
+            <CarteSimple key={i} lettre={lettre} codeLangue={codeLangue} />
+          ))}
+        </div>
+      )}
 
       {/* Footer info */}
       <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginTop: '16px' }}>
-        {lettres.length} lettres · {langue?.nom}
+        {nombreLettres} lettres · {langue?.nom}
       </p>
     </div>
   )
