@@ -163,14 +163,22 @@ export default function AlphabetEcoute() {
     const cible = partie[questionActuelle].lettre
     const correct = lettre === cible
 
+    // Joue la lettre tapée pour que l'enfant l'entende et la compare au
+    // son qu'il vient d'écouter. Renforce la mémorisation, même en cas
+    // d'erreur ("ah, c'était un L, pas un M").
+    playLetter(lettre, 'en', voix)
+
     setLettreChoisie(lettre)
     setFeedback(correct ? 'correct' : 'wrong')
     if (correct) {
       setScore((s) => s + 1)
-      jouerSonCorrect()
-    } else {
-      jouerSonWrong()
     }
+
+    // Beep décalé de 600ms pour ne pas chevaucher la lecture de la lettre.
+    setTimeout(() => {
+      if (correct) jouerSonCorrect()
+      else jouerSonWrong()
+    }, 600)
 
     setTimeout(() => setShowNeuri(true), 400)
 
