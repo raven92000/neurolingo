@@ -12,6 +12,7 @@ import Pricing from './pages/Pricing'
 import Shop from './pages/Shop'
 import Alphabet from './pages/Alphabet'
 import AlphabetEcoute from './pages/AlphabetEcoute'
+import AlphabetChanson from './pages/AlphabetChanson'
 import TestSentence from './pages/TestSentence'
 import LessonSentence from './pages/LessonSentence'
 import ParentCreateChild from './pages/ParentCreateChild'
@@ -40,6 +41,7 @@ function App() {
         <Route path="/shop" element={<Shop />} />
         <Route path="/alphabet" element={<Alphabet />} />
         <Route path="/alphabet/ecoute" element={<AlphabetEcoute />} />
+        <Route path="/alphabet/chanson" element={<AlphabetChanson />} />
         <Route path="/test-sentence" element={<TestSentence />} />
         <Route path="/lesson-sentence" element={<LessonSentence />} />
         <Route path="/parent-create-child" element={<ParentCreateChild />} />

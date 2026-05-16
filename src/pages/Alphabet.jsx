@@ -262,6 +262,26 @@ export default function Alphabet() {
         🎧 Exercice 2 : Écoute et choisis
       </button>
 
+      {/* Lien vers l'Exercice 3 */}
+      <button
+        onClick={() => navigate('/alphabet/chanson')}
+        style={{
+          marginTop: '12px',
+          padding: '16px 20px',
+          background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+          border: 'none',
+          borderRadius: '16px',
+          color: '#FFFFFF',
+          fontFamily: 'Nunito, sans-serif',
+          fontSize: '15px',
+          fontWeight: '800',
+          cursor: 'pointer',
+          boxShadow: '0 4px 16px rgba(139,92,246,0.3)',
+        }}
+      >
+        🎵 Exercice 3 : Chantons l'alphabet
+      </button>
+
       {/* Footer info */}
       <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginTop: '16px' }}>
         {nombreLettres} lettres · {langue?.nom}

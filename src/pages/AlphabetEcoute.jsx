@@ -233,7 +233,7 @@ export default function AlphabetEcoute() {
   }
 
   if (termine) {
-    return <EcranFin score={score} total={partie.length} onRetour={() => navigate('/learn')} onRejouer={rejouerPartie} />
+    return <EcranFin score={score} total={partie.length} onRetour={() => navigate('/learn')} onExerciceSuivant={() => navigate('/alphabet/chanson')} onRejouer={rejouerPartie} />
   }
 
   const question = partie[questionActuelle]
@@ -415,7 +415,7 @@ export default function AlphabetEcoute() {
   )
 }
 
-function EcranFin({ score, total, onRetour, onRejouer }) {
+function EcranFin({ score, total, onRetour, onExerciceSuivant, onRejouer }) {
   const pourcentage = Math.round((score / total) * 100)
 
   return (
@@ -459,6 +459,26 @@ function EcranFin({ score, total, onRetour, onRejouer }) {
         }}
       >
         Retour à l'apprentissage
+      </button>
+      <button
+        onClick={onExerciceSuivant}
+        style={{
+          width: '100%',
+          height: '48px',
+          marginBottom: '12px',
+          background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+          color: '#FFFFFF',
+          border: 'none',
+          borderRadius: '14px',
+          fontFamily: 'Nunito, sans-serif',
+          fontSize: '15px',
+          fontWeight: '700',
+          cursor: 'pointer',
+          boxShadow: '0 4px 16px rgba(139,92,246,0.3)',
+          transition: 'all 0.3s ease',
+        }}
+      >
+        🎵 Exercice suivant : Chantons l'alphabet
       </button>
       <button
         onClick={onRejouer}
