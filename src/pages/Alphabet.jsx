@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getLangueActive, getLangueByCode } from '../utils/languages'
 import { ALPHABET_DATA, getAlphabetImageUrl } from '../data/alphabetData'
@@ -11,15 +12,15 @@ const ALPHABETS = {
 
 const TTS_MAP = { en: 'en-US', es: 'es-ES', de: 'de-DE', pt: 'pt-PT' }
 
-function playLetter(letter, lang) {
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel()
-    const u = new SpeechSynthesisUtterance(letter)
-    u.lang = TTS_MAP[lang] || 'en-US'
-    u.rate = 0.7
-    u.pitch = 1
-    window.speechSynthesis.speak(u)
-  }
+function playLetter(letter, lang, voix) {
+  if (!('speechSynthesis' in window)) return
+  window.speechSynthesis.cancel()
+  const u = new SpeechSynthesisUtterance(letter)
+  u.lang = TTS_MAP[lang] || 'en-US'
+  if (voix) u.voice = voix
+  u.rate = 0.9
+  u.pitch = 1
+  window.speechSynthesis.speak(u)
 }
 
 function taillePoliceMot(mot) {
@@ -29,13 +30,13 @@ function taillePoliceMot(mot) {
   return '13px'
 }
 
-function CarteRiche({ item, codeLangue }) {
+function CarteRiche({ item, codeLangue, voix }) {
   const imageUrl = getAlphabetImageUrl(codeLangue, item.image)
 
   return (
     <button
       aria-label={item.lettre}
-      onClick={() => playLetter(item.lettre, codeLangue)}
+      onClick={() => playLetter(item.lettre, codeLangue, voix)}
       style={{
         position: 'relative',
         aspectRatio: '1',
@@ -123,11 +124,11 @@ function CarteRiche({ item, codeLangue }) {
   )
 }
 
-function CarteSimple({ lettre, codeLangue }) {
+function CarteSimple({ lettre, codeLangue, voix }) {
   return (
     <button
       aria-label={lettre}
-      onClick={() => playLetter(lettre, codeLangue)}
+      onClick={() => playLetter(lettre, codeLangue, voix)}
       style={{
         aspectRatio: '1',
         background: 'rgba(255,255,255,0.04)',
@@ -172,6 +173,44 @@ export default function Alphabet() {
   const lettresSimples = ALPHABETS[codeLangue] || ALPHABETS.en
   const nombreLettres = modeRiche ? donneesRiches.length : lettresSimples.length
 
+  // Sélectionne une voix TTS qui correspond à la langue active.
+  // Sans ça, le navigateur retombe sur la voix système par défaut
+  // (souvent française sur un Mac configuré en FR) → prononciation parasite.
+  const [voix, setVoix] = useState(null)
+  useEffect(() => {
+    if (!('speechSynthesis' in window)) return
+
+    function chargerVoix() {
+      const liste = window.speechSynthesis.getVoices()
+      // TEMP — logs de debug pour vérifier les voix disponibles
+      console.log(
+        '🎤 Voix disponibles:',
+        liste.map((v) => `${v.name} [${v.lang}]`)
+      )
+
+      const langExact = TTS_MAP[codeLangue]
+      let trouvee = liste.find((v) => v.lang === langExact)
+      if (!trouvee) {
+        trouvee = liste.find((v) =>
+          v.lang.toLowerCase().startsWith(codeLangue)
+        )
+      }
+
+      if (trouvee) {
+        setVoix(trouvee)
+        console.log('✅ Voix sélectionnée:', trouvee.name, trouvee.lang)
+      } else {
+        console.warn('⚠️ Aucune voix trouvée pour', codeLangue)
+      }
+    }
+
+    chargerVoix()
+    window.speechSynthesis.addEventListener('voiceschanged', chargerVoix)
+    return () => {
+      window.speechSynthesis.removeEventListener('voiceschanged', chargerVoix)
+    }
+  }, [codeLangue])
+
   return (
     <div style={{ minHeight: '100vh', background: '#090E1A', padding: '20px', maxWidth: '430px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
 
@@ -204,13 +243,13 @@ export default function Alphabet() {
       {modeRiche ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', flex: 1 }}>
           {donneesRiches.map((item) => (
-            <CarteRiche key={item.lettre} item={item} codeLangue={codeLangue} />
+            <CarteRiche key={item.lettre} item={item} codeLangue={codeLangue} voix={voix} />
           ))}
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', flex: 1 }}>
           {lettresSimples.map((lettre, i) => (
-            <CarteSimple key={i} lettre={lettre} codeLangue={codeLangue} />
+            <CarteSimple key={i} lettre={lettre} codeLangue={codeLangue} voix={voix} />
           ))}
         </div>
       )}
