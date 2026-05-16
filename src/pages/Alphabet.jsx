@@ -34,6 +34,7 @@ function CarteRiche({ item, codeLangue }) {
 
   return (
     <button
+      aria-label={item.lettre}
       onClick={() => playLetter(item.lettre, codeLangue)}
       style={{
         position: 'relative',
@@ -69,6 +70,7 @@ function CarteRiche({ item, codeLangue }) {
       }}
     >
       <span
+        aria-hidden="true"
         style={{
           position: 'absolute',
           top: '8px',
@@ -96,7 +98,7 @@ function CarteRiche({ item, codeLangue }) {
       >
         <LeconThumbnail
           imageUrl={imageUrl}
-          alt={item.mot}
+          alt=""
           fill
           objectFit="contain"
           borderRadius={0}
@@ -104,6 +106,7 @@ function CarteRiche({ item, codeLangue }) {
       </div>
 
       <span
+        aria-hidden="true"
         style={{
           fontFamily: 'DM Sans, sans-serif',
           fontSize: taillePoliceMot(item.mot),
@@ -123,6 +126,7 @@ function CarteRiche({ item, codeLangue }) {
 function CarteSimple({ lettre, codeLangue }) {
   return (
     <button
+      aria-label={lettre}
       onClick={() => playLetter(lettre, codeLangue)}
       style={{
         aspectRatio: '1',
