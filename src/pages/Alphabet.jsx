@@ -182,12 +182,6 @@ export default function Alphabet() {
 
     function chargerVoix() {
       const liste = window.speechSynthesis.getVoices()
-      // TEMP — logs de debug pour vérifier les voix disponibles
-      console.log(
-        '🎤 Voix disponibles:',
-        liste.map((v) => `${v.name} [${v.lang}]`)
-      )
-
       const langExact = TTS_MAP[codeLangue]
       let trouvee = liste.find((v) => v.lang === langExact)
       if (!trouvee) {
@@ -195,13 +189,7 @@ export default function Alphabet() {
           v.lang.toLowerCase().startsWith(codeLangue)
         )
       }
-
-      if (trouvee) {
-        setVoix(trouvee)
-        console.log('✅ Voix sélectionnée:', trouvee.name, trouvee.lang)
-      } else {
-        console.warn('⚠️ Aucune voix trouvée pour', codeLangue)
-      }
+      if (trouvee) setVoix(trouvee)
     }
 
     chargerVoix()
