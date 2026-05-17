@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getLangueByCode } from '../utils/languages'
+import { getLangueActive, getLangueByCode } from '../utils/languages'
 import Neuri3D from '../components/Neuri3D'
 
 const TTS_MAP = { en: 'en-US', es: 'es-ES', de: 'de-DE', pt: 'pt-PT' }
@@ -9,17 +9,30 @@ const TTS_MAP = { en: 'en-US', es: 'es-ES', de: 'de-DE', pt: 'pt-PT' }
 // sera prêt. Pour l'instant, on défile à 1 lettre par seconde via TTS.
 const DUREE_PAR_LETTRE_MS = 1000
 
-const COUPLETS = [
-  ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
-  ['H', 'I', 'J', 'K'],
-  ['L', 'M', 'N', 'O', 'P'],
-  ['Q', 'R', 'S'],
-  ['T', 'U', 'V'],
-  ['W', 'X'],
-  ['Y', 'Z'],
-]
-const LETTRES = COUPLETS.flat()
-const NB_LETTRES = LETTRES.length
+// Couplets de la chanson alphabet par langue. Ajouter une langue ici pour
+// l'activer (et remplir aussi ALPHABET_DATA dans src/data/alphabetData.js
+// pour les Ex 1 et 2).
+const COUPLETS_PAR_LANGUE = {
+  en: [
+    ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+    ['H', 'I', 'J', 'K'],
+    ['L', 'M', 'N', 'O', 'P'],
+    ['Q', 'R', 'S'],
+    ['T', 'U', 'V'],
+    ['W', 'X'],
+    ['Y', 'Z'],
+  ],
+  es: [
+    ['A', 'B', 'C', 'D'],
+    ['E', 'F', 'G'],
+    ['H', 'I', 'J', 'K'],
+    ['L', 'M', 'N', 'Ñ'],
+    ['O', 'P', 'Q'],
+    ['R', 'S', 'T'],
+    ['U', 'V', 'W'],
+    ['X', 'Y', 'Z'],
+  ],
+}
 
 function playLetter(letter, lang, voix) {
   if (!('speechSynthesis' in window)) return
@@ -32,23 +45,23 @@ function playLetter(letter, lang, voix) {
   window.speechSynthesis.speak(u)
 }
 
-function getPosition(lettreIndex) {
+function getPosition(couplets, lettreIndex) {
   let restant = lettreIndex
-  for (let i = 0; i < COUPLETS.length; i++) {
-    if (restant < COUPLETS[i].length) {
+  for (let i = 0; i < couplets.length; i++) {
+    if (restant < couplets[i].length) {
       return { coupletIndex: i, indexDansCouplet: restant }
     }
-    restant -= COUPLETS[i].length
+    restant -= couplets[i].length
   }
   return {
-    coupletIndex: COUPLETS.length - 1,
-    indexDansCouplet: COUPLETS[COUPLETS.length - 1].length - 1,
+    coupletIndex: couplets.length - 1,
+    indexDansCouplet: couplets[couplets.length - 1].length - 1,
   }
 }
 
-function getLettreIndexDebutCouplet(coupletIndex) {
+function getLettreIndexDebutCouplet(couplets, coupletIndex) {
   let total = 0
-  for (let i = 0; i < coupletIndex; i++) total += COUPLETS[i].length
+  for (let i = 0; i < coupletIndex; i++) total += couplets[i].length
   return total
 }
 
@@ -60,7 +73,20 @@ function formatTemps(secondes) {
 
 export default function AlphabetChanson() {
   const navigate = useNavigate()
-  const langue = getLangueByCode('en')
+
+  // Langue figée au mount : changement de langue → sortir/revenir.
+  // Fallback sur 'en' si pas de couplets définis pour la langue active.
+  const [codeLangue] = useState(() => {
+    const demandee = getLangueActive()
+    return COUPLETS_PAR_LANGUE[demandee] ? demandee : 'en'
+  })
+  const langue = getLangueByCode(codeLangue)
+
+  // useMemo pour stabiliser les références entre renders → évite que le
+  // useEffect TTS auto se ré-exécute en boucle.
+  const couplets = useMemo(() => COUPLETS_PAR_LANGUE[codeLangue], [codeLangue])
+  const lettres = useMemo(() => couplets.flat(), [couplets])
+  const nbLettres = lettres.length
 
   const [lettreIndex, setLettreIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -68,7 +94,7 @@ export default function AlphabetChanson() {
 
   // `termine` est dérivé de lettreIndex pour éviter un setState synchrone
   // dans un useEffect (anti-pattern React Compiler).
-  const termine = lettreIndex >= NB_LETTRES
+  const termine = lettreIndex >= nbLettres
 
   // Chargement de la voix anglaise (dupliqué depuis AlphabetEcoute.jsx)
   useEffect(() => {
@@ -76,10 +102,10 @@ export default function AlphabetChanson() {
 
     function chargerVoix() {
       const liste = window.speechSynthesis.getVoices()
-      const langExact = TTS_MAP.en
+      const langExact = TTS_MAP[codeLangue] || 'en-US'
       let trouvee = liste.find((v) => v.lang === langExact)
       if (!trouvee) {
-        trouvee = liste.find((v) => v.lang.toLowerCase().startsWith('en'))
+        trouvee = liste.find((v) => v.lang.toLowerCase().startsWith(codeLangue))
       }
       if (trouvee) setVoix(trouvee)
     }
@@ -89,20 +115,20 @@ export default function AlphabetChanson() {
     return () => {
       window.speechSynthesis.removeEventListener('voiceschanged', chargerVoix)
     }
-  }, [])
+  }, [codeLangue])
 
   // TODO: Remplacer par lecture MP3 Suno + timestamps par lettre quand
   // l'audio sera prêt. Pour l'instant : useEffect déclaratif qui à chaque
   // changement de lettreIndex lit la lettre puis programme la suivante.
   useEffect(() => {
     if (!isPlaying) return
-    if (lettreIndex >= NB_LETTRES) return
-    if (voix) playLetter(LETTRES[lettreIndex], 'en', voix)
+    if (lettreIndex >= nbLettres) return
+    if (voix) playLetter(lettres[lettreIndex], codeLangue, voix)
     const t = setTimeout(() => {
       setLettreIndex((prev) => prev + 1)
     }, DUREE_PAR_LETTRE_MS)
     return () => clearTimeout(t)
-  }, [isPlaying, lettreIndex, voix])
+  }, [isPlaying, lettreIndex, voix, codeLangue, lettres, nbLettres])
 
   function togglePlay() {
     if (termine) {
@@ -115,20 +141,20 @@ export default function AlphabetChanson() {
   }
 
   function coupletPrecedent() {
-    const { coupletIndex } = getPosition(lettreIndex)
+    const { coupletIndex } = getPosition(couplets, lettreIndex)
     if (coupletIndex === 0) return
-    setLettreIndex(getLettreIndexDebutCouplet(coupletIndex - 1))
+    setLettreIndex(getLettreIndexDebutCouplet(couplets, coupletIndex - 1))
   }
 
   function coupletSuivant() {
-    const { coupletIndex } = getPosition(lettreIndex)
-    if (coupletIndex >= COUPLETS.length - 1) return
-    setLettreIndex(getLettreIndexDebutCouplet(coupletIndex + 1))
+    const { coupletIndex } = getPosition(couplets, lettreIndex)
+    if (coupletIndex >= couplets.length - 1) return
+    setLettreIndex(getLettreIndexDebutCouplet(couplets, coupletIndex + 1))
   }
 
   function repeterCouplet() {
-    const { coupletIndex } = getPosition(lettreIndex)
-    setLettreIndex(getLettreIndexDebutCouplet(coupletIndex))
+    const { coupletIndex } = getPosition(couplets, lettreIndex)
+    setLettreIndex(getLettreIndexDebutCouplet(couplets, coupletIndex))
   }
 
   function rejouerChanson() {
@@ -147,21 +173,22 @@ export default function AlphabetChanson() {
   }
 
   const { coupletIndex, indexDansCouplet } = getPosition(
-    Math.min(lettreIndex, NB_LETTRES - 1)
+    couplets,
+    Math.min(lettreIndex, nbLettres - 1)
   )
-  const couplet = COUPLETS[coupletIndex]
+  const coupletCourant = couplets[coupletIndex]
 
-  const totalSec = Math.round((NB_LETTRES * DUREE_PAR_LETTRE_MS) / 1000)
+  const totalSec = Math.round((nbLettres * DUREE_PAR_LETTRE_MS) / 1000)
   const ecouleSec = Math.min(
     totalSec,
     Math.round((lettreIndex * DUREE_PAR_LETTRE_MS) / 1000)
   )
   const tempsEcoule = formatTemps(ecouleSec)
   const tempsTotal = formatTemps(totalSec)
-  const progression = (lettreIndex / NB_LETTRES) * 100
+  const progression = (lettreIndex / nbLettres) * 100
 
   const peutReculer = coupletIndex > 0
-  const peutAvancer = coupletIndex < COUPLETS.length - 1
+  const peutAvancer = coupletIndex < couplets.length - 1
 
   return (
     <div style={{ minHeight: '100vh', background: '#090E1A', padding: '20px', maxWidth: '430px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
@@ -212,7 +239,7 @@ export default function AlphabetChanson() {
 
       {/* Couplet en gros */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        {couplet.map((lettre, i) => (
+        {coupletCourant.map((lettre, i) => (
           <span key={i} style={{
             fontFamily: 'Nunito, sans-serif',
             fontSize: '36px',
@@ -228,7 +255,7 @@ export default function AlphabetChanson() {
 
       {/* Ligne de cadres carrés */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '24px', flexWrap: 'wrap' }}>
-        {couplet.map((lettre, i) => {
+        {coupletCourant.map((lettre, i) => {
           const courante = i === indexDansCouplet
           return (
             <div key={i} style={{

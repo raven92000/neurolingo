@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getLangueByCode } from '../utils/languages'
+import { getLangueActive, getLangueByCode } from '../utils/languages'
 import { ALPHABET_DATA } from '../data/alphabetData'
 import Neuri3D from '../components/Neuri3D'
 
@@ -26,8 +26,8 @@ function shuffle(arr) {
   return copie
 }
 
-function genererPartie() {
-  const toutesLesLettres = ALPHABET_DATA.en.map((item) => item.lettre)
+function genererPartie(codeLangue) {
+  const toutesLesLettres = ALPHABET_DATA[codeLangue].map((item) => item.lettre)
   const cibles = shuffle(toutesLesLettres).slice(0, 10)
   return cibles.map((lettre) => {
     const candidats = toutesLesLettres.filter((l) => l !== lettre)
@@ -39,9 +39,17 @@ function genererPartie() {
 
 export default function AlphabetEcoute() {
   const navigate = useNavigate()
-  const langue = getLangueByCode('en')
 
-  const [partie, setPartie] = useState(genererPartie)
+  // Langue figée au mount : si l'utilisateur change de langue en cours
+  // d'exercice, il faudra sortir et revenir pour que ça s'applique.
+  // Fallback sur 'en' si ALPHABET_DATA[langue active] est vide (DE/PT).
+  const [codeLangue] = useState(() => {
+    const demandee = getLangueActive()
+    return ALPHABET_DATA[demandee]?.length > 0 ? demandee : 'en'
+  })
+  const langue = getLangueByCode(codeLangue)
+
+  const [partie, setPartie] = useState(() => genererPartie(codeLangue))
   const [questionActuelle, setQuestionActuelle] = useState(0)
   const [score, setScore] = useState(0)
   const [feedback, setFeedback] = useState(null) // null | 'correct' | 'wrong'
@@ -62,10 +70,10 @@ export default function AlphabetEcoute() {
 
     function chargerVoix() {
       const liste = window.speechSynthesis.getVoices()
-      const langExact = TTS_MAP.en
+      const langExact = TTS_MAP[codeLangue] || 'en-US'
       let trouvee = liste.find((v) => v.lang === langExact)
       if (!trouvee) {
-        trouvee = liste.find((v) => v.lang.toLowerCase().startsWith('en'))
+        trouvee = liste.find((v) => v.lang.toLowerCase().startsWith(codeLangue))
       }
       if (trouvee) setVoix(trouvee)
     }
@@ -75,7 +83,7 @@ export default function AlphabetEcoute() {
     return () => {
       window.speechSynthesis.removeEventListener('voiceschanged', chargerVoix)
     }
-  }, [])
+  }, [codeLangue])
 
   // Lecture automatique de la lettre cible à chaque question
   // (500ms uniforme — laisse charger la voix au début + respiration entre questions)
@@ -84,10 +92,10 @@ export default function AlphabetEcoute() {
     if (!voix) return
     if (!partie[questionActuelle]) return
     const t = setTimeout(() => {
-      playLetter(partie[questionActuelle].lettre, 'en', voix)
+      playLetter(partie[questionActuelle].lettre, codeLangue, voix)
     }, 500)
     return () => clearTimeout(t)
-  }, [voix, questionActuelle, partie, termine])
+  }, [voix, questionActuelle, partie, termine, codeLangue])
 
   // Cleanup AudioContext + intervalle countdown + auto-continue au unmount
   useEffect(() => {
@@ -138,7 +146,7 @@ export default function AlphabetEcoute() {
   function rejouerSon() {
     if (termine) return
     if (!partie[questionActuelle]) return
-    playLetter(partie[questionActuelle].lettre, 'en', voix)
+    playLetter(partie[questionActuelle].lettre, codeLangue, voix)
   }
 
   function startCountdown(seconds) {
@@ -166,7 +174,7 @@ export default function AlphabetEcoute() {
     // Joue la lettre tapée pour que l'enfant l'entende et la compare au
     // son qu'il vient d'écouter. Renforce la mémorisation, même en cas
     // d'erreur ("ah, c'était un L, pas un M").
-    playLetter(lettre, 'en', voix)
+    playLetter(lettre, codeLangue, voix)
 
     setLettreChoisie(lettre)
     setFeedback(correct ? 'correct' : 'wrong')
@@ -229,7 +237,7 @@ export default function AlphabetEcoute() {
       clearTimeout(autoContinueRef.current)
       autoContinueRef.current = null
     }
-    setPartie(genererPartie())
+    setPartie(genererPartie(codeLangue))
     setQuestionActuelle(0)
     setScore(0)
     setFeedback(null)
