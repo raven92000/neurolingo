@@ -109,16 +109,21 @@ export default function Stats() {
     let actif = true
     ;(async () => {
       setChargementDonnees(true)
-      const { data: progressions } = await supabase.from('progression').select('lecon_id, completee_le, partie_completee').eq('user_id', profil.user_id)
-      const { data: lecons } = await supabase.from('lecons').select('id, nombre_mots, chapitre_id')
+      // Les 3 requêtes sont indépendantes → on les lance EN PARALLÈLE.
+      // (Requêtes identiques à avant : le calcul de progression ne change pas.)
+      const [progRes, lecRes, chapRes] = await Promise.all([
+        supabase.from('progression').select('lecon_id, completee_le, partie_completee').eq('user_id', profil.user_id),
+        supabase.from('lecons').select('id, nombre_mots, chapitre_id'),
+        profil?.langue_id
+          ? supabase.from('chapitres').select('id, numero').eq('langue_id', profil.langue_id)
+          : Promise.resolve({ data: [] }),
+      ])
+      if (!actif) return
+      const progressions = progRes.data
+      const lecons = lecRes.data
+      const chapitres = chapRes.data || []
       const motsParLecon = (lecons || []).reduce((acc, l) => ({ ...acc, [l.id]: l.nombre_mots }), {})
 
-      let chapitres = []
-      if (profil?.langue_id) {
-        const res = await supabase.from('chapitres').select('id, numero').eq('langue_id', profil.langue_id)
-        chapitres = res.data || []
-      }
-      if (!actif) return
       setXpParJour(calculerXPParJour(progressions, motsParLecon))
       setStreak(calculerStreak(progressions))
       setNiveauData(calculerNiveauActuel(chapitres, lecons, progressions))

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { useProfil } from '../context/ProfilContext'
+import { useContenu } from '../context/ContenuContext'
 import Neuri2D from '../components/Neuri2D'
 import { getVersionFromDate } from '../utils/neuriUtils'
 import BottomNav from '../components/BottomNav'
@@ -166,6 +167,7 @@ function EcranToutComplete({ profil, equipes, navigate, onReset, onContinuer }) 
 export default function Dashboard() {
   const navigate = useNavigate()
   const { user, profil, chargementProfil, refreshProfil } = useProfil()
+  const { chargerContenu } = useContenu()
   const [leconSuivante, setLeconSuivante] = useState(null)
   const [toutComplete, setToutComplete] = useState(false)
   const [chargementDonnees, setChargementDonnees] = useState(true)
@@ -182,18 +184,17 @@ export default function Dashboard() {
   // La langue est déjà alignée par la mémoire partagée → plus de window.location.reload.
   const chargerDonnees = async (uid) => {
     if (!uid) return
-    const codeLangue = getLangueActive()
-    const { data: langue } = await supabase.from('langues').select('id').eq('code', codeLangue).single()
-    if (!langue) { setToutComplete(true); setLeconSuivante(null); setChargementDonnees(false); return }
+    // Contenu pédagogique (souvent déjà en cache) EN PARALLÈLE de la progression
+    // (toujours fraîche). La progression ne dépend pas du contenu.
+    const [contenu, progRes] = await Promise.all([
+      chargerContenu(getLangueActive()),
+      supabase.from('progression').select('lecon_id').eq('user_id', uid),
+    ])
 
-    const { data: chapitres } = await supabase.from('chapitres').select('id').eq('langue_id', langue.id)
-    const chapitreIds = (chapitres || []).map(c => c.id)
+    if (!contenu.langueId) { setToutComplete(true); setLeconSuivante(null); setChargementDonnees(false); return }
 
-    const { data: lecons } = await supabase.from('lecons').select('id, titre, duree_minutes, nombre_mots, ordre, type').in('chapitre_id', chapitreIds).order('ordre')
-    const { data: progressions } = await supabase.from('progression').select('lecon_id').eq('user_id', uid)
-
-    const idsCompletes = new Set((progressions || []).map(pr => pr.lecon_id))
-    const prochaine = (lecons || []).find(l => !idsCompletes.has(l.id))
+    const idsCompletes = new Set((progRes.data || []).map(pr => pr.lecon_id))
+    const prochaine = (contenu.lecons || []).find(l => !idsCompletes.has(l.id))
 
     if (!prochaine) {
       setToutComplete(true)
@@ -229,12 +230,7 @@ export default function Dashboard() {
   }
 
   const handleContinuer = async () => {
-    const codeLangue = getLangueActive()
-    const { data: langue } = await supabase.from('langues').select('id').eq('code', codeLangue).single()
-    if (!langue) return
-    const { data: chapitres } = await supabase.from('chapitres').select('id').eq('langue_id', langue.id)
-    const chapitreIds = (chapitres || []).map(c => c.id)
-    const { data: lecons } = await supabase.from('lecons').select('id').in('chapitre_id', chapitreIds)
+    const { lecons } = await chargerContenu(getLangueActive())
     if (!lecons || lecons.length === 0) return
     const aleatoire = lecons[Math.floor(Math.random() * lecons.length)]
     navigate(`/lesson?lecon=${aleatoire.id}`)

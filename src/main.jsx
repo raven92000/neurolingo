@@ -3,11 +3,14 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { ProfilProvider } from './context/ProfilContext.jsx'
+import { ContenuProvider } from './context/ContenuContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ProfilProvider>
-      <App />
+      <ContenuProvider>
+        <App />
+      </ContenuProvider>
     </ProfilProvider>
   </StrictMode>,
 )

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { useProfil } from '../context/ProfilContext'
+import { useContenu } from '../context/ContenuContext'
 import BottomNav from '../components/BottomNav'
 import Skeleton from '../components/Skeleton'
 import { LANGUES, getLangueActive, setLangueActive, getLangueByCode } from '../utils/languages'
@@ -287,6 +288,7 @@ function CardNiveau({ niveau, etat, progression, isSelected, onClick, trancheAge
 export default function Learn() {
   const navigate = useNavigate()
   const { user, profil, chargementProfil, refreshProfil } = useProfil()
+  const { chargerContenu } = useContenu()
   const [chapitres, setChapitres] = useState([])
   const [lecons, setLecons] = useState([])
   const [progressions, setProgressions] = useState([])
@@ -325,24 +327,16 @@ export default function Learn() {
     let actif = true
     ;(async () => {
       setChargement(true)
-      const { data: langue } = await supabase.from('langues').select('id').eq('code', codeLangue).single()
-      if (!langue) { if (actif) setChargement(false); return }
-
-      const { data: chaps } = await supabase.from('chapitres').select('*').eq('langue_id', langue.id).order('numero')
-      const chapitreIds = (chaps || []).map(c => c.id)
-
-      let lecs = []
-      if (chapitreIds.length > 0) {
-        const res = await supabase.from('lecons').select('*').in('chapitre_id', chapitreIds).order('ordre')
-        lecs = res.data || []
-      }
-
-      const { data: progs } = await supabase.from('progression').select('lecon_id, partie_completee').eq('user_id', user.id)
-
+      // Contenu (chapitres/leçons, souvent déjà en cache) EN PARALLÈLE de la
+      // progression (toujours fraîche). Déverrouillage inchangé : mêmes données.
+      const [contenu, progRes] = await Promise.all([
+        chargerContenu(codeLangue),
+        supabase.from('progression').select('lecon_id, partie_completee').eq('user_id', user.id),
+      ])
       if (!actif) return
-      setChapitres(chaps || [])
-      setLecons(lecs)
-      setProgressions(progs || [])
+      setChapitres(contenu.chapitres)
+      setLecons(contenu.lecons)
+      setProgressions(progRes.data || [])
       setChargement(false)
     })()
     return () => { actif = false }
