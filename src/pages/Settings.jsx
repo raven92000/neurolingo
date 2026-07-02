@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Neuri2D from '../components/Neuri2D'
 import BottomNav from '../components/BottomNav'
+import Skeleton from '../components/Skeleton'
 import { supabase } from '../supabase'
-import { PROFIL_COLUMNS } from '../utils/profilColumns'
+import { useProfil } from '../context/ProfilContext'
 
 // ═══════════════════════════════════════════════════════════════════
 // COMPOSANTS RÉUTILISABLES
@@ -241,9 +242,8 @@ function PopupChangePassword({ onClose, onSuccess }) {
 
 export default function Settings() {
   const navigate = useNavigate()
+  const { user, profil: profilData, chargementProfil } = useProfil()
   const [openSection, setOpenSection] = useState(null)
-  const [chargement, setChargement] = useState(true)
-  const [user, setUser] = useState(null)
   const [profilId, setProfilId] = useState(null)
   const [popupChangePwd, setPopupChangePwd] = useState(false)
   const [popupDelete, setPopupDelete] = useState(false)
@@ -285,16 +285,16 @@ export default function Settings() {
   const neuriVersionToDB = { 'Auto': null, 'Enfant': 'enfant', 'Ado': 'ado', 'Adulte': 'adulte', 'Mature': 'mature' }
   const neuriVersionToUI = { null: 'Auto', 'enfant': 'Enfant', 'ado': 'Ado', 'adulte': 'Adulte', 'mature': 'Mature' }
 
-  // ─── Charger les settings depuis Supabase ────────────────────
+  // Redirige si non connecté
   useEffect(() => {
-    async function charger() {
-      const { data: { user: u } } = await supabase.auth.getUser()
-      if (!u) { navigate('/login'); return }
-      setUser(u)
+    if (!chargementProfil && !user) navigate('/login')
+  }, [chargementProfil, user, navigate])
 
-      const { data, error } = await supabase.from('profils').select(PROFIL_COLUMNS).eq('user_id', u.id).single()
-      if (error || !data) { setChargement(false); return }
-
+  // ─── Alimenter les réglages depuis la mémoire partagée du profil ─────
+  useEffect(() => {
+    const data = profilData
+    if (!data) return
+    {
       setProfilUtilisateur(data)
       setProfilId(data.id)
       setProfil(profilToUI[data.profil_type] || 'TDAH')
@@ -320,11 +320,8 @@ export default function Settings() {
       setNotifPedagogiques(data.notif_pedagogiques ?? true)
       setObjectifXP(xpToUI[data.objectif_xp_quotidien] || '60 XP')
       setAfficherStreak(data.afficher_streak ?? true)
-
-      setChargement(false)
     }
-    charger()
-  }, [])
+  }, [profilData])
 
   // ─── Helper pour sauvegarder une colonne ─────────────────────
   const sauvegarder = async (colonne, valeur) => {
@@ -395,12 +392,18 @@ export default function Settings() {
     setOpenSection(openSection === key ? null : key)
   }
 
-  // ─── Loader ──────────────────────────────────────────────────
-  if (chargement) {
+  // ─── Squelette (chargement à froid uniquement) ───────────────
+  if (chargementProfil && !profilData) {
     return (
-      <div style={{ minHeight: '100vh', background: '#080D18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 40, height: 40, border: '3px solid rgba(139,92,246,0.2)', borderTop: '3px solid #8B5CF6', borderRadius: '50%', animation: 'spin 1s linear infinite' }}/>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ minHeight: '100vh', background: '#080D18', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
+        <div style={{ padding: '52px 24px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Skeleton width={160} height={30} />
+          <Skeleton width={80} height={80} radius={16} />
+        </div>
+        <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {[0, 1, 2, 3, 4].map(i => <Skeleton key={i} height={56} radius={16} />)}
+        </div>
+        <BottomNav />
       </div>
     )
   }

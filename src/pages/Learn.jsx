@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
+import { useProfil } from '../context/ProfilContext'
 import BottomNav from '../components/BottomNav'
+import Skeleton from '../components/Skeleton'
 import { LANGUES, getLangueActive, setLangueActive, getLangueByCode } from '../utils/languages'
 
 // ═══════════════════════════════════════════════════════════════
@@ -284,6 +286,7 @@ function CardNiveau({ niveau, etat, progression, isSelected, onClick, trancheAge
 // ═══════════════════════════════════════════════════════════════
 export default function Learn() {
   const navigate = useNavigate()
+  const { user, profil, chargementProfil, refreshProfil } = useProfil()
   const [chapitres, setChapitres] = useState([])
   const [lecons, setLecons] = useState([])
   const [progressions, setProgressions] = useState([])
@@ -297,22 +300,33 @@ export default function Learn() {
 
   const langueActuelle = getLangueByCode(codeLangue)
 
+  // Redirige si non connecté
   useEffect(() => {
-    async function charger() {
+    if (!chargementProfil && !user) navigate('/login')
+  }, [chargementProfil, user, navigate])
+
+  // Objectif + tranche d'âge lus depuis la mémoire partagée du profil
+  useEffect(() => {
+    if (profil?.objectif_minutes) setObjectifMinutes(profil.objectif_minutes)
+    setTrancheAge(getTrancheAge(profil?.neuri_version, profil?.date_naissance))
+  }, [profil?.objectif_minutes, profil?.neuri_version, profil?.date_naissance])
+
+  // Aligne la langue affichée sur celle fixée par la mémoire partagée (depuis le
+  // profil), une fois le profil chargé. Remplace l'ancien reload de Dashboard.
+  useEffect(() => {
+    if (!chargementProfil) setCodeLangue(getLangueActive())
+  }, [chargementProfil])
+
+  // Données propres (mondes / leçons / progression) — indexées sur la langue.
+  // Logique de déverrouillage inchangée : mêmes requêtes qu'avant.
+  // Gate sur `chargementProfil` pour être sûr que la langue est alignée.
+  useEffect(() => {
+    if (chargementProfil || !user?.id) return
+    let actif = true
+    ;(async () => {
       setChargement(true)
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { navigate('/login'); return }
-
-      const { data: profil } = await supabase
-        .from('profils')
-        .select('objectif_minutes, date_naissance, neuri_version')
-        .eq('user_id', user.id)
-        .single()
-      if (profil?.objectif_minutes) setObjectifMinutes(profil.objectif_minutes)
-      setTrancheAge(getTrancheAge(profil?.neuri_version, profil?.date_naissance))
-
       const { data: langue } = await supabase.from('langues').select('id').eq('code', codeLangue).single()
-      if (!langue) { setChargement(false); return }
+      if (!langue) { if (actif) setChargement(false); return }
 
       const { data: chaps } = await supabase.from('chapitres').select('*').eq('langue_id', langue.id).order('numero')
       const chapitreIds = (chaps || []).map(c => c.id)
@@ -325,22 +339,24 @@ export default function Learn() {
 
       const { data: progs } = await supabase.from('progression').select('lecon_id, partie_completee').eq('user_id', user.id)
 
+      if (!actif) return
       setChapitres(chaps || [])
       setLecons(lecs)
       setProgressions(progs || [])
       setChargement(false)
-    }
-    charger()
-  }, [codeLangue, navigate])
+    })()
+    return () => { actif = false }
+  }, [codeLangue, user?.id, chargementProfil])
 
   const handleChoisirLangue = async (code) => {
     setLangueActive(code)
     setCodeLangue(code)
     setModalOuverte(false)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
+    const { data: { user: u } } = await supabase.auth.getUser()
+    if (u) {
       const { data: langue } = await supabase.from('langues').select('id').eq('code', code).single()
-      if (langue) await supabase.from('profils').update({ langue_id: langue.id }).eq('user_id', user.id)
+      if (langue) await supabase.from('profils').update({ langue_id: langue.id }).eq('user_id', u.id)
+      refreshProfil() // garde la mémoire partagée du profil à jour (langue)
     }
   }
 
@@ -389,11 +405,25 @@ export default function Learn() {
   const chapitresNiveau = chapitres.filter(c => niveauActuel?.chapitresNumeros.includes(c.numero))
   const etatNiveauActuel = niveauActuel ? getEtatNiveau(niveauActuel) : { fait: 0, total: 0 }
 
+  // Squelette pendant le chargement des mondes/leçons — barre du bas visible.
   if (chargement) {
     return (
-      <div style={{ minHeight: '100vh', background: '#090E1A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(139,92,246,0.2)', borderTop: '3px solid #8B5CF6', borderRadius: '50%', animation: 'spin 1s linear infinite' }}/>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ minHeight: '100vh', background: '#090E1A', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
+        <div style={{ padding: '52px 24px 16px' }}>
+          <Skeleton width={140} height={28} />
+          <div style={{ height: 8 }} />
+          <Skeleton width={200} height={16} />
+        </div>
+        <div style={{ padding: '0 24px 20px' }}>
+          <Skeleton height={56} radius={16} />
+        </div>
+        <div style={{ display: 'flex', gap: '12px', padding: '4px 24px 16px', overflow: 'hidden' }}>
+          {[0, 1, 2].map(i => <Skeleton key={i} width={150} height={180} radius={18} style={{ flexShrink: 0 }} />)}
+        </div>
+        <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {[0, 1, 2].map(i => <Skeleton key={i} height={80} radius={16} />)}
+        </div>
+        <BottomNav />
       </div>
     )
   }

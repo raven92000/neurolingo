@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
-import { PROFIL_COLUMNS } from '../utils/profilColumns'
+import { useProfil } from '../context/ProfilContext'
 import Neuri2D from '../components/Neuri2D'
 import { getVersionFromDate } from '../utils/neuriUtils'
 import BottomNav from '../components/BottomNav'
-import { getLangueActive, setLangueActive, getLangueByCode } from '../utils/languages'
+import Skeleton from '../components/Skeleton'
+import { getLangueActive, getLangueByCode } from '../utils/languages'
 
 function PopupReset({ onConfirm, onCancel }) {
   return (
@@ -164,11 +165,11 @@ function EcranToutComplete({ profil, equipes, navigate, onReset, onContinuer }) 
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const [profil, setProfil] = useState(null)
+  const { user, profil, chargementProfil, refreshProfil } = useProfil()
   const [leconSuivante, setLeconSuivante] = useState(null)
   const [toutComplete, setToutComplete] = useState(false)
-  const [chargement, setChargement] = useState(true)
-  const [equipes, setEquipes] = useState({
+  const [chargementDonnees, setChargementDonnees] = useState(true)
+  const [equipes] = useState({
     chapeau: null,
     haut: null,
     lunettes: null,
@@ -177,36 +178,19 @@ export default function Dashboard() {
 
   const langueActuelle = getLangueByCode(getLangueActive())
 
-  const charger = async () => {
-    setChargement(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { navigate('/login'); return }
-
-    const { data: p } = await supabase.from('profils').select(PROFIL_COLUMNS).eq('user_id', user.id).single()
-setProfil(p)
-
-// Synchroniser la langue active avec celle du profil
-if (p?.langue_id) {
-  const { data: langueUser } = await supabase.from('langues').select('code').eq('id', p.langue_id).single()
-  if (langueUser?.code && langueUser.code !== getLangueActive()) {
-    setLangueActive(langueUser.code)
-    window.location.reload()
-    return
-  }
-}
-
-    // Récupérer la langue active
+  // Charge uniquement les données propres à la page (leçon suivante / tout complété).
+  // La langue est déjà alignée par la mémoire partagée → plus de window.location.reload.
+  const chargerDonnees = async (uid) => {
+    if (!uid) return
     const codeLangue = getLangueActive()
     const { data: langue } = await supabase.from('langues').select('id').eq('code', codeLangue).single()
-    if (!langue) { setToutComplete(true); setLeconSuivante(null); setChargement(false); return }
+    if (!langue) { setToutComplete(true); setLeconSuivante(null); setChargementDonnees(false); return }
 
-    // Récupérer les chapitres de cette langue
     const { data: chapitres } = await supabase.from('chapitres').select('id').eq('langue_id', langue.id)
     const chapitreIds = (chapitres || []).map(c => c.id)
 
-    // Récupérer uniquement les leçons de cette langue
     const { data: lecons } = await supabase.from('lecons').select('id, titre, duree_minutes, nombre_mots, ordre, type').in('chapitre_id', chapitreIds).order('ordre')
-    const { data: progressions } = await supabase.from('progression').select('lecon_id').eq('user_id', user.id)
+    const { data: progressions } = await supabase.from('progression').select('lecon_id').eq('user_id', uid)
 
     const idsCompletes = new Set((progressions || []).map(pr => pr.lecon_id))
     const prochaine = (lecons || []).find(l => !idsCompletes.has(l.id))
@@ -218,17 +202,30 @@ if (p?.langue_id) {
       setToutComplete(false)
       setLeconSuivante(prochaine)
     }
-    setChargement(false)
+    setChargementDonnees(false)
   }
 
-  useEffect(() => { charger() }, [])
+  // Redirige si non connecté
+  useEffect(() => {
+    if (!chargementProfil && !user) navigate('/login')
+  }, [chargementProfil, user, navigate])
+
+  // Une fois le profil chargé (et la langue alignée par la mémoire), on charge
+  // les données de la page. Le gate sur `chargementProfil` garantit que la
+  // langue active est correcte AVANT de calculer la leçon suivante.
+  useEffect(() => {
+    if (chargementProfil || !user?.id) return
+    refreshProfil()
+    chargerDonnees(user.id)
+  }, [chargementProfil, user?.id])
 
   const handleReset = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     await supabase.from('progression').delete().eq('user_id', user.id)
     await supabase.from('profils').update({ lecons_completees: 0, mots_appris: 0 }).eq('user_id', user.id)
-    await charger()
+    setChargementDonnees(true)
+    await refreshProfil()
+    await chargerDonnees(user.id)
   }
 
   const handleContinuer = async () => {
@@ -243,11 +240,23 @@ if (p?.langue_id) {
     navigate(`/lesson?lecon=${aleatoire.id}`)
   }
 
-  if (chargement) {
+  // Squelette uniquement au chargement à froid (arrivée directe sur le dashboard).
+  // En navigation interne, le profil est déjà en mémoire → affichage immédiat.
+  if (chargementProfil && !profil) {
     return (
-      <div style={{ minHeight: '100vh', background: '#090E1A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(139,92,246,0.2)', borderTop: '3px solid #8B5CF6', borderRadius: '50%', animation: 'spin 1s linear infinite' }}/>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ minHeight: '100vh', background: '#090E1A', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
+        <div style={{ padding: '52px 24px 0', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Skeleton width={120} height={30} />
+            <Skeleton width={120} height={38} radius={12} />
+          </div>
+          <Skeleton height={150} radius={20} style={{ alignSelf: 'center', width: 280 }} />
+          <Skeleton height={92} radius={20} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            {[0, 1, 2, 3].map(i => <Skeleton key={i} height={70} radius={14} />)}
+          </div>
+        </div>
+        <BottomNav />
       </div>
     )
   }
@@ -299,14 +308,18 @@ if (p?.langue_id) {
         <h2 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '26px', fontWeight: '900', color: '#FFFFFF', textAlign: 'center', margin: '0 0 4px' }}>{profil?.objectif_minutes || 5} min pour progresser</h2>
         <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '15px', color: '#A78BFA', textAlign: 'center', margin: '0 0 24px' }}>Ta leçon t'attend</p>
 
-        <div onClick={() => navigate(leconSuivante.type === 'alphabet' ? '/alphabet' : `/lesson?lecon=${leconSuivante.id}`)} style={{ background: 'rgba(139,92,246,0.08)', border: '1.5px solid rgba(139,92,246,0.4)', borderRadius: '20px', padding: '20px 22px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 0 28px rgba(139,92,246,0.18)', marginBottom: '20px' }}>
-          <div style={{ fontSize: '40px' }}>📚</div>
-          <div style={{ flex: 1 }}>
-            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', fontWeight: '700', color: '#A78BFA', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 4px' }}>Leçon suivante</p>
-            <h3 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '20px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 4px' }}>{leconSuivante?.titre}</h3>
-            <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>{profil?.objectif_minutes || 5} mots · ~{profil?.objectif_minutes || 5} min</p>
+        {chargementDonnees || !leconSuivante ? (
+          <Skeleton height={96} radius={20} style={{ marginBottom: '20px' }} />
+        ) : (
+          <div onClick={() => navigate(leconSuivante.type === 'alphabet' ? '/alphabet' : `/lesson?lecon=${leconSuivante.id}`)} style={{ background: 'rgba(139,92,246,0.08)', border: '1.5px solid rgba(139,92,246,0.4)', borderRadius: '20px', padding: '20px 22px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 0 28px rgba(139,92,246,0.18)', marginBottom: '20px' }}>
+            <div style={{ fontSize: '40px' }}>📚</div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '11px', fontWeight: '700', color: '#A78BFA', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 4px' }}>Leçon suivante</p>
+              <h3 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '20px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 4px' }}>{leconSuivante?.titre}</h3>
+              <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.45)', margin: 0 }}>{profil?.objectif_minutes || 5} mots · ~{profil?.objectif_minutes || 5} min</p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '16px 18px', marginBottom: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>

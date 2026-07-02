@@ -3,34 +3,35 @@ import { useNavigate } from 'react-router-dom'
 import Neuri2D from '../components/Neuri2D'
 import { getVersionFromDate } from '../utils/neuriUtils'
 import { supabase } from '../supabase'
-import { PROFIL_COLUMNS } from '../utils/profilColumns'
 import { applyProfileClass } from '../profileSettings'
+import { useProfil } from '../context/ProfilContext'
 import BottomNav from '../components/BottomNav'
+import Skeleton from '../components/Skeleton'
 
 export default function Profile() {
   const navigate = useNavigate()
-  const [profil, setProfil] = useState(null)
-  const [chargement, setChargement] = useState(true)
+  const { user, profil, setProfil, chargementProfil, refreshProfil } = useProfil()
   const [changementEnCours, setChangementEnCours] = useState(false)
   const [messageConfirmation, setMessageConfirmation] = useState(null)
-  const [equipes, setEquipes] = useState({
+  const [equipes] = useState({
     chapeau: null,
     haut: null,
     lunettes: null,
     compagnonObjet: null
   })
 
+  // Redirige vers la connexion si personne n'est connecté
   useEffect(() => {
-    async function chargerProfil() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { navigate('/login'); return }
-      const { data } = await supabase.from('profils').select(PROFIL_COLUMNS).eq('user_id', user.id).single()
-      setProfil(data)
-      if (data?.profil_type) applyProfileClass(data.profil_type)
-      setChargement(false)
-    }
-    chargerProfil()
-  }, [])
+    if (!chargementProfil && !user) navigate('/login')
+  }, [chargementProfil, user, navigate])
+
+  // Rafraîchit le profil en arrière-plan (XP à jour) sans bloquer l'affichage
+  useEffect(() => { refreshProfil() }, [refreshProfil])
+
+  // Applique la classe d'accessibilité liée au profil (TDAH / dyslexie)
+  useEffect(() => {
+    if (profil?.profil_type) applyProfileClass(profil.profil_type)
+  }, [profil?.profil_type])
 
   const handleChangerProfil = async (nouveauProfil) => {
     if (nouveauProfil === profil?.profil_type || changementEnCours) return
@@ -49,11 +50,20 @@ export default function Profile() {
     navigate('/login')
   }
 
-  if (chargement) {
+  // N'affiche un squelette que sur un chargement à froid (arrivée directe sur /profile).
+  // En navigation interne, le profil est déjà en mémoire → affichage immédiat.
+  if (chargementProfil && !profil) {
     return (
-      <div style={{ minHeight: '100vh', background: '#090E1A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(139,92,246,0.2)', borderTop: '3px solid #8B5CF6', borderRadius: '50%', animation: 'spin 1s linear infinite' }}/>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ minHeight: '100vh', background: '#090E1A', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
+        <div style={{ padding: '52px 24px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
+          <Skeleton width={160} height={160} radius={24} />
+          <Skeleton width={140} height={22} />
+          <Skeleton width={110} height={28} radius={20} />
+        </div>
+        <div style={{ padding: '0 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          {[0, 1, 2, 3].map(i => <Skeleton key={i} height={72} radius={16} />)}
+        </div>
+        <BottomNav />
       </div>
     )
   }

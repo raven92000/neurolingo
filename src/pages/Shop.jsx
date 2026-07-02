@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../supabase'
-import { PROFIL_COLUMNS } from '../utils/profilColumns'
 import Neuri2D from '../components/Neuri2D'
 import { getVersionFromDate } from '../utils/neuriUtils'
+import { useProfil } from '../context/ProfilContext'
 import BottomNav from '../components/BottomNav'
+import Skeleton from '../components/Skeleton'
 
 // ═══════════════════════════════════════════════════════════════════
 // DONNÉES MOCKÉES
@@ -156,8 +156,7 @@ function ItemCard({ item, isOwned, isEquipped, canBuy, lockReason, onBuy, onEqui
 
 export default function Shop() {
   const navigate = useNavigate()
-  const [chargement, setChargement] = useState(true)
-  const [profil, setProfil] = useState(null)
+  const { user, profil, chargementProfil, refreshProfil } = useProfil()
   const [categorieActive, setCategorieActive] = useState('vetements')
 
   const [inventaire, setInventaire] = useState({
@@ -170,16 +169,11 @@ export default function Shop() {
     }
   })
 
+  // Redirige si non connecté ; rafraîchit l'XP en arrière-plan
   useEffect(() => {
-    async function charger() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { navigate('/login'); return }
-      const { data } = await supabase.from('profils').select(PROFIL_COLUMNS).eq('user_id', user.id).single()
-      setProfil(data)
-      setChargement(false)
-    }
-    charger()
-  }, [])
+    if (!chargementProfil && !user) navigate('/login')
+  }, [chargementProfil, user, navigate])
+  useEffect(() => { refreshProfil() }, [refreshProfil])
 
   const xpTotal = profil?.xp || 0
   const versionNeuri = profil?.neuri_version || getVersionFromDate(profil?.date_naissance)
@@ -206,11 +200,18 @@ export default function Shop() {
 
   const itemsAffiches = ITEMS.filter(item => item.category === categorieActive)
 
-  if (chargement) {
+  // Squelette seulement au chargement à froid (arrivée directe sur /shop)
+  if (chargementProfil && !profil) {
     return (
-      <div style={{ minHeight: '100vh', background: '#080D18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 40, height: 40, border: '3px solid rgba(139,92,246,0.2)', borderTop: '3px solid #8B5CF6', borderRadius: '50%', animation: 'spin 1s linear infinite' }}/>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ minHeight: '100vh', background: '#080D18', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
+        <div style={{ padding: '52px 24px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <Skeleton width={140} height={26} />
+          <Skeleton width={180} height={140} radius={20} style={{ alignSelf: 'center' }} />
+        </div>
+        <div style={{ padding: '0 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          {[0, 1, 2, 3].map(i => <Skeleton key={i} height={120} radius={16} />)}
+        </div>
+        <BottomNav />
       </div>
     )
   }

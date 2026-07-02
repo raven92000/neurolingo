@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Neuri2D from '../components/Neuri2D'
 import { supabase } from '../supabase'
-import { PROFIL_COLUMNS } from '../utils/profilColumns'
+import { useProfil } from '../context/ProfilContext'
 import BottomNav from '../components/BottomNav'
+import Skeleton from '../components/Skeleton'
 import { getVersionFromDate } from '../utils/neuriUtils'
 import './Stats.css'
 
@@ -89,43 +90,59 @@ function calculerStreak(progressions) {
 // ═══════════════════════════════════════════════════════════════
 export default function Stats() {
   const navigate = useNavigate()
-  const [profil, setProfil] = useState(null)
+  const { user, profil, chargementProfil, refreshProfil } = useProfil()
   const [xpParJour, setXpParJour] = useState([])
   const [streak, setStreak] = useState(0)
   const [niveauData, setNiveauData] = useState({ niveau: NIVEAUX_CONFIG[0], progression: { fait: 0, total: 0 } })
-  const [chargement, setChargement] = useState(true)
+  const [chargementDonnees, setChargementDonnees] = useState(true)
 
+  // Redirige si non connecté ; rafraîchit le profil (XP) en arrière-plan
   useEffect(() => {
-    async function charger() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { navigate('/login'); return }
+    if (!chargementProfil && !user) navigate('/login')
+  }, [chargementProfil, user, navigate])
+  useEffect(() => { refreshProfil() }, [refreshProfil])
 
-      const { data: p } = await supabase.from('profils').select(PROFIL_COLUMNS).eq('user_id', user.id).single()
-      setProfil(p)
-
-      const { data: progressions } = await supabase.from('progression').select('lecon_id, completee_le, partie_completee').eq('user_id', user.id)
+  // Données propres à la page (progression, niveau) — rechargées à chaque visite
+  // pour garantir un suivi de progression toujours à jour.
+  useEffect(() => {
+    if (!profil?.user_id) return
+    let actif = true
+    ;(async () => {
+      setChargementDonnees(true)
+      const { data: progressions } = await supabase.from('progression').select('lecon_id, completee_le, partie_completee').eq('user_id', profil.user_id)
       const { data: lecons } = await supabase.from('lecons').select('id, nombre_mots, chapitre_id')
       const motsParLecon = (lecons || []).reduce((acc, l) => ({ ...acc, [l.id]: l.nombre_mots }), {})
 
       let chapitres = []
-      if (p?.langue_id) {
-        const res = await supabase.from('chapitres').select('id, numero').eq('langue_id', p.langue_id)
+      if (profil?.langue_id) {
+        const res = await supabase.from('chapitres').select('id, numero').eq('langue_id', profil.langue_id)
         chapitres = res.data || []
       }
-
+      if (!actif) return
       setXpParJour(calculerXPParJour(progressions, motsParLecon))
       setStreak(calculerStreak(progressions))
       setNiveauData(calculerNiveauActuel(chapitres, lecons, progressions))
-      setChargement(false)
-    }
-    charger()
-  }, [navigate])
+      setChargementDonnees(false)
+    })()
+    return () => { actif = false }
+  }, [profil?.user_id, profil?.langue_id])
 
-  if (chargement) {
+  // Squelette tant que le profil ou les données de progression ne sont pas prêts.
+  // La barre du bas reste visible en permanence.
+  if ((chargementProfil && !profil) || chargementDonnees) {
     return (
-      <div style={{ minHeight: '100vh', background: '#090E1A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(139,92,246,0.2)', borderTop: '3px solid #8B5CF6', borderRadius: '50%', animation: 'spin 1s linear infinite' }}/>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <div style={{ minHeight: '100vh', background: '#090E1A', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
+        <div style={{ padding: '52px 24px 16px' }}>
+          <Skeleton width={160} height={28} />
+          <div style={{ height: 8 }} />
+          <Skeleton width={220} height={16} />
+        </div>
+        <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <Skeleton height={150} radius={20} />
+          <Skeleton height={120} radius={20} />
+          <Skeleton height={90} radius={16} />
+        </div>
+        <BottomNav />
       </div>
     )
   }
