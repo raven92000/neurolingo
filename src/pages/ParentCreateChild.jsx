@@ -237,7 +237,6 @@ export default function ParentCreateChild() {
         user_id: childUserId,
         nom: trimmedPrenom,
         identifiant_login: normalizedLogin,
-        code_pin: codePin,
         date_naissance: dateNaissance,
         xp: 0,
         streak: 0,

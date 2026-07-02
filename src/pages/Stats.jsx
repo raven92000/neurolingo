@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Neuri3D from '../components/Neuri3D'
 import Neuri2D from '../components/Neuri2D'
 import { supabase } from '../supabase'
+import { PROFIL_COLUMNS } from '../utils/profilColumns'
 import BottomNav from '../components/BottomNav'
 import { getVersionFromDate } from '../utils/neuriUtils'
 import './Stats.css'
@@ -100,7 +101,7 @@ export default function Stats() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { navigate('/login'); return }
 
-      const { data: p } = await supabase.from('profils').select('*').eq('user_id', user.id).single()
+      const { data: p } = await supabase.from('profils').select(PROFIL_COLUMNS).eq('user_id', user.id).single()
       setProfil(p)
 
       const { data: progressions } = await supabase.from('progression').select('lecon_id, completee_le, partie_completee').eq('user_id', user.id)

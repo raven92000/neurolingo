@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../supabase'
+import { PROFIL_COLUMNS } from '../utils/profilColumns'
 import Neuri2D from '../components/Neuri2D'
 import BottomNavParent from '../components/BottomNavParent'
 import { getVersionFromDate } from '../utils/neuriUtils'
@@ -111,7 +112,7 @@ export default function ParentDashboard() {
         if (!user) { navigate('/login'); return }
 
         const { data: profilParent, error: erreurProfilParent } = await supabase
-          .from('profils').select('*').eq('user_id', user.id).single()
+          .from('profils').select(PROFIL_COLUMNS).eq('user_id', user.id).single()
         if (erreurProfilParent) throw erreurProfilParent
 
         if (profilParent?.role !== 'parent') {

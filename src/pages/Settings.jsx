@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Neuri3D from '../components/Neuri3D'
 import BottomNav from '../components/BottomNav'
 import { supabase } from '../supabase'
+import { PROFIL_COLUMNS } from '../utils/profilColumns'
 
 // ═══════════════════════════════════════════════════════════════════
 // COMPOSANTS RÉUTILISABLES
@@ -291,7 +292,7 @@ export default function Settings() {
       if (!u) { navigate('/login'); return }
       setUser(u)
 
-      const { data, error } = await supabase.from('profils').select('*').eq('user_id', u.id).single()
+      const { data, error } = await supabase.from('profils').select(PROFIL_COLUMNS).eq('user_id', u.id).single()
       if (error || !data) { setChargement(false); return }
 
       setProfilUtilisateur(data)

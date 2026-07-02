@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { supabase } from '../../supabase'
 import ConfirmUnlinkModal from './ConfirmUnlinkModal'
 import EditProfileModal from './EditProfileModal'
+import ResetPinModal from './ResetPinModal'
 
 const STUBS = [
   { icon: '🌍', label: 'Ajouter une langue' },
@@ -16,6 +17,7 @@ export default function ChildDetailActions({ enfant, onProfileUpdated }) {
   const [modalOuverte, setModalOuverte] = useState(false)
   const [erreurDeliement, setErreurDeliement] = useState(null)
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isResetPinOpen, setIsResetPinOpen] = useState(false)
 
   async function copierCode() {
     const code = enfant?.code_enfant
@@ -188,6 +190,47 @@ export default function ChildDetailActions({ enfant, onProfileUpdated }) {
         <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '18px' }}>›</span>
       </button>
 
+      {/* Action fonctionnelle : réinitialiser le code PIN de l'enfant */}
+      <button
+        onClick={() => setIsResetPinOpen(true)}
+        style={{
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: '18px',
+          padding: '14px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          cursor: 'pointer',
+          textAlign: 'left',
+          color: '#FFFFFF',
+          transition: 'background 0.15s ease',
+        }}
+      >
+        <span style={{ fontSize: '20px' }}>🔑</span>
+        <span style={{ flex: 1 }}>
+          <span style={{
+            display: 'block',
+            fontFamily: 'Nunito, sans-serif',
+            fontSize: '14px',
+            fontWeight: '800',
+            color: '#FFFFFF',
+          }}>
+            Réinitialiser le code PIN
+          </span>
+          <span style={{
+            display: 'block',
+            fontFamily: 'DM Sans, sans-serif',
+            fontSize: '11px',
+            color: 'rgba(255,255,255,0.4)',
+            marginTop: '2px',
+          }}>
+            En cas d'oubli du PIN par {prenom}
+          </span>
+        </span>
+        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '18px' }}>{'›'}</span>
+      </button>
+
       {/* Action fonctionnelle : voir la progression détaillée (Sprint 3) */}
       <button
         onClick={() => navigate(`/parent/enfant/${userId}/progression`, { state: { from: location.pathname } })}
@@ -307,6 +350,14 @@ export default function ChildDetailActions({ enfant, onProfileUpdated }) {
         onClose={() => setIsEditOpen(false)}
         enfant={enfant}
         onSuccess={() => { setIsEditOpen(false); onProfileUpdated?.() }}
+      />
+
+      <ResetPinModal
+        isOpen={isResetPinOpen}
+        onClose={() => setIsResetPinOpen(false)}
+        childUserId={userId}
+        prenom={prenom}
+        onSuccess={() => { setIsResetPinOpen(false); onProfileUpdated?.('Code PIN réinitialisé ✓') }}
       />
     </div>
   )

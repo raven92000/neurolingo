@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
+import { PROFIL_COLUMNS } from '../utils/profilColumns'
 import BottomNavParent from '../components/BottomNavParent'
 
 export default function ParentSettings() {
@@ -12,7 +13,7 @@ export default function ParentSettings() {
     async function charger() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { navigate('/login'); return }
-      const { data: profil } = await supabase.from('profils').select('*').eq('user_id', user.id).single()
+      const { data: profil } = await supabase.from('profils').select(PROFIL_COLUMNS).eq('user_id', user.id).single()
       if (profil?.role !== 'parent') { navigate('/dashboard'); return }
       setParent(profil)
       setChargement(false)

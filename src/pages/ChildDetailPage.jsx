@@ -97,9 +97,9 @@ export default function ChildDetailPage() {
   }, [toastProfil])
 
   // Appelé par EditProfileModal après UPDATE réussi : refresh + toast
-  function handleProfileUpdated() {
+  function handleProfileUpdated(message) {
     setRefreshKey(k => k + 1)
-    setToastProfil('Profil mis à jour ✓')
+    setToastProfil(typeof message === 'string' ? message : 'Profil mis à jour ✓')
   }
 
   // Bouton retour : utilise location.state.from posé par la page d'origine

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
+import { PROFIL_COLUMNS } from '../utils/profilColumns'
 import Neuri2D from '../components/Neuri2D'
 import { getVersionFromDate } from '../utils/neuriUtils'
 import BottomNav from '../components/BottomNav'
@@ -181,7 +182,7 @@ export default function Dashboard() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { navigate('/login'); return }
 
-    const { data: p } = await supabase.from('profils').select('*').eq('user_id', user.id).single()
+    const { data: p } = await supabase.from('profils').select(PROFIL_COLUMNS).eq('user_id', user.id).single()
 setProfil(p)
 
 // Synchroniser la langue active avec celle du profil

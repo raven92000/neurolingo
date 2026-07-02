@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Neuri2D from '../components/Neuri2D'
 import { getVersionFromDate } from '../utils/neuriUtils'
 import { supabase } from '../supabase'
+import { PROFIL_COLUMNS } from '../utils/profilColumns'
 import { applyProfileClass } from '../profileSettings'
 import BottomNav from '../components/BottomNav'
 
@@ -23,7 +24,7 @@ export default function Profile() {
     async function chargerProfil() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { navigate('/login'); return }
-      const { data } = await supabase.from('profils').select('*').eq('user_id', user.id).single()
+      const { data } = await supabase.from('profils').select(PROFIL_COLUMNS).eq('user_id', user.id).single()
       setProfil(data)
       if (data?.profil_type) applyProfileClass(data.profil_type)
       setChargement(false)
