@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import Neuri3D from '../components/Neuri3D'
+import Neuri2D from '../components/Neuri2D'
 
 function Home() {
   const navigate = useNavigate()
@@ -45,7 +45,7 @@ function Home() {
 
       {/* Neuri 3D */}
       <div style={{ width: '260px', height: '260px', marginBottom: '8px' }}>
-        <Neuri3D color="#8B5CF6" />
+        <Neuri2D size={260} glowColor="#8B5CF6" />
       </div>
 
       {/* Tagline */}

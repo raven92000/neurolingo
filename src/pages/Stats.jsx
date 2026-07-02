@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Neuri3D from '../components/Neuri3D'
 import Neuri2D from '../components/Neuri2D'
 import { supabase } from '../supabase'
 import { PROFIL_COLUMNS } from '../utils/profilColumns'
@@ -287,7 +286,7 @@ export default function Stats() {
 
         <div style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '20px', padding: '18px', display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{ width: '52px', height: '52px', flexShrink: 0 }}>
-            <Neuri3D color="#8B5CF6" />
+            <Neuri2D size={52} glowColor="#8B5CF6" />
           </div>
           <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', margin: 0, lineHeight: 1.5 }}>
             {streak >= 3

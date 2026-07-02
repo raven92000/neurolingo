@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { normalizeLogin, buildChildFakeEmail, buildChildPassword } from '../utils/childAuth'
-import Neuri3D from '../components/Neuri3D'
+import Neuri2D from '../components/Neuri2D'
 
 // ═══════════════════════════════════════════════════════════════════
 // COMPOSANT INPUT MOT DE PASSE AVEC ŒIL
@@ -238,7 +238,7 @@ export default function Login() {
     <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.18) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', maxWidth: '430px', margin: '0 auto' }}>
 
       <div style={{ width: '100px', height: '100px', marginBottom: '16px' }}>
-        <Neuri3D color="#8B5CF6" />
+        <Neuri2D size={100} glowColor="#8B5CF6" />
       </div>
 
       <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '26px', fontWeight: '900', color: '#FFFFFF', margin: '0 0 6px', textAlign: 'center' }}>

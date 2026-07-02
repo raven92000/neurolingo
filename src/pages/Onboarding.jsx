@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Neuri3D from '../components/Neuri3D'
+import Neuri2D from '../components/Neuri2D'
 import { supabase } from '../supabase'
 
 function ParticlesBg({ active }) {
@@ -88,7 +88,7 @@ function EcranPrenom({ nom, setNom, onNext }) {
     <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.18) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', position: 'relative' }}>
       <ProgressBar etape={1} total={5} />
       <div style={{ width: '140px', height: '140px', marginBottom: '24px' }}>
-        <Neuri3D color="#8B5CF6" />
+        <Neuri2D size={140} glowColor="#8B5CF6" />
       </div>
       <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '32px', fontWeight: '900', color: '#FFFFFF', textAlign: 'center', margin: '0 0 8px' }}>
         Comment tu t'appelles ?
@@ -171,7 +171,7 @@ function EcranDateNaissance({ dateNaissance, setDateNaissance, onNext, onBack })
     <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.18) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', position: 'relative' }}>
       <ProgressBar etape={2} total={5} />
       <div style={{ width: '130px', height: '130px', marginBottom: '24px' }}>
-        <Neuri3D color="#8B5CF6" />
+        <Neuri2D size={130} glowColor="#8B5CF6" />
       </div>
       <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '30px', fontWeight: '900', color: '#FFFFFF', textAlign: 'center', margin: '0 0 8px', lineHeight: 1.2 }}>
         Quelle est ta date de naissance ?
@@ -253,7 +253,7 @@ function EcranProfil({ profil, setProfil, onNext, onBack }) {
     <div style={{ minHeight: '100vh', background: bgGradient, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', transition: 'background 0.8s ease', overflow: 'hidden', position: 'relative' }}>
       <ProgressBar etape={3} total={5} />
       <div style={{ width: '150px', height: '150px', transition: 'transform 0.4s ease', transform: profil ? 'scale(1.06)' : 'scale(1)', marginBottom: '20px' }}>
-        <Neuri3D color={neurColor} />
+        <Neuri2D size={150} glowColor={neurColor} />
       </div>
       <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '34px', fontWeight: '700', color: '#FFFFFF', textAlign: 'center', margin: '0 0 8px', lineHeight: '1.15' }}>
         Je m'adapte à toi.
@@ -329,7 +329,7 @@ function EcranLangue({ langue, setLangue, onNext, onBack }) {
     <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.18) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', position: 'relative' }}>
       <ProgressBar etape={4} total={5} />
       <div style={{ width: '120px', height: '120px', marginBottom: '20px' }}>
-        <Neuri3D color="#8B5CF6" />
+        <Neuri2D size={120} glowColor="#8B5CF6" />
       </div>
       <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '32px', fontWeight: '700', color: '#FFFFFF', textAlign: 'center', margin: '0 0 8px', lineHeight: '1.15' }}>
         Quelle langue veux-tu apprendre ?
@@ -380,7 +380,7 @@ function EcranObjectifTDAH({ objectif, setObjectif, onFinish, onBack, sauvegarde
     <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.18) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', position: 'relative' }}>
       <ProgressBar etape={5} total={5} />
       <div style={{ width: '120px', height: '120px', marginBottom: '20px' }}>
-        <Neuri3D color="#8B5CF6" />
+        <Neuri2D size={120} glowColor="#8B5CF6" />
       </div>
       <h1 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '32px', fontWeight: '700', color: '#FFFFFF', textAlign: 'center', margin: '0 0 8px', lineHeight: '1.15' }}>
         On part sur quel rythme ?
@@ -434,7 +434,7 @@ function EcranObjectifDyslexie({ objectif, setObjectif, onFinish, onBack, sauveg
     <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, rgba(37,99,235,0.18) 0%, #090E1A 55%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 22px 32px', position: 'relative' }}>
       <ProgressBar etape={5} total={5} />
       <div style={{ width: '120px', height: '120px', marginBottom: '32px' }}>
-        <Neuri3D color="#3B82F6" />
+        <Neuri2D size={120} glowColor="#3B82F6" />
       </div>
       <h1 style={{ ...fontDyslexie, fontSize: '34px', fontWeight: '700', color: '#FFFFFF', textAlign: 'center', margin: '0 0 40px' }}>
         Ton rythme

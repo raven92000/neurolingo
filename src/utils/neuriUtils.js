@@ -25,9 +25,9 @@ export function getVersionFromDate(dateNaissance) {
   return getVersionNeuri(getAgeFromDate(dateNaissance))
 }
 
-// Retourne le chemin du PNG du corps
+// Retourne le chemin de l'image du corps (WebP, ~10x plus léger que les PNG)
 export function getCorpsPng(version, angle = 'face') {
-  return `/neuri/corps/neuri-${version}-${angle}.png`
+  return `/neuri/corps/neuri-${version}-${angle}.webp`
 }
 
 // Retourne le chemin d'un accessoire (null si pas de fichier)

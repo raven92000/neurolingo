@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { getCorpsPng, getAccessoirePng, SLOT_TO_DOSSIER } from '../utils/neuriUtils'
 
 /*
@@ -8,6 +7,9 @@ import { getCorpsPng, getAccessoirePng, SLOT_TO_DOSSIER } from '../utils/neuriUt
   - equipes   : { chapeau, haut, lunettes, compagnonObjet }
   - size      : nombre en px (défaut 200)
   - animate   : booléen — légère animation de flottement (défaut true)
+  - glowColor : couleur (ex '#8B5CF6') d'un halo lumineux autour de Neuri.
+                Sert à conserver la couleur dynamique (violet/bleu/vert)
+                qui était portée par l'ancienne mascotte 3D. Défaut : aucun halo.
 */
 
 export default function Neuri2D({
@@ -15,7 +17,8 @@ export default function Neuri2D({
   angle = 'face',
   equipes = {},
   size = 200,
-  animate = true
+  animate = true,
+  glowColor = null
 }) {
   const corpsSrc = getCorpsPng(version, angle)
 
@@ -33,7 +36,8 @@ export default function Neuri2D({
       width: size,
       height: size,
       flexShrink: 0,
-      animation: animate ? 'neuriFlottement 3s ease-in-out infinite' : 'none'
+      animation: animate ? 'neuriFlottement 3s ease-in-out infinite' : 'none',
+      filter: glowColor ? `drop-shadow(0 0 10px ${glowColor}) drop-shadow(0 0 22px ${glowColor})` : 'none'
     }}>
 
       {/* Corps de Neuri */}

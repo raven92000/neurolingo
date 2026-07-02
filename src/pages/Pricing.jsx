@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import Neuri3D from '../components/Neuri3D'
+import Neuri2D from '../components/Neuri2D'
 
 function Check({ color = '#55D600' }) {
   return (
@@ -93,7 +93,7 @@ export default function Pricing() {
             </p>
           </div>
           <div style={{ width: 80, height: 80, marginLeft: 12, flexShrink: 0 }}>
-            <Neuri3D color="#8B5CF6" />
+            <Neuri2D size={80} glowColor="#8B5CF6" />
           </div>
         </div>
       </div>
@@ -190,7 +190,7 @@ export default function Pricing() {
           display: 'flex', alignItems: 'center', gap: 14
         }}>
           <div style={{ width: 60, height: 60, flexShrink: 0 }}>
-            <Neuri3D color="#8B5CF6" />
+            <Neuri2D size={60} glowColor="#8B5CF6" />
           </div>
           <div style={{ flex: 1 }}>
             <p style={{ fontSize: 14, fontWeight: 700, color: '#A78BFA', margin: '0 0 4px' }}>Déjà convaincu ?</p>

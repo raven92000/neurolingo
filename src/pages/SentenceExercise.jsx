@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import Neuri3D from '../components/Neuri3D'
+import Neuri2D from '../components/Neuri2D'
 import { getLangueActive } from '../utils/languages'
 
 const config = {
@@ -408,7 +408,7 @@ export default function SentenceExercise({ phrase, profile = 'tdah', onComplete 
 
       <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0' }}>
         <div style={{ width: '64px', height: '64px' }}>
-          <Neuri3D color={neuriColor} />
+          <Neuri2D size={64} glowColor={neuriColor} />
         </div>
       </div>
 

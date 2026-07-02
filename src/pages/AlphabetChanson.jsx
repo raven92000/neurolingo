@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getLangueActive, getLangueByCode } from '../utils/languages'
-import Neuri3D from '../components/Neuri3D'
+import Neuri2D from '../components/Neuri2D'
 
 const TTS_MAP = { en: 'en-US', es: 'es-ES', de: 'de-DE', pt: 'pt-PT' }
 
@@ -249,7 +249,7 @@ export default function AlphabetChanson() {
       {/* Neuri + bulle */}
       <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '28px' }}>
         <div style={{ width: '90px', height: '90px', flexShrink: 0 }}>
-          <Neuri3D color="#8B5CF6" />
+          <Neuri2D size={90} glowColor="#8B5CF6" />
         </div>
         <div style={{ flex: 1, background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '14px', padding: '12px 14px' }}>
           <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0, lineHeight: 1.5 }}>

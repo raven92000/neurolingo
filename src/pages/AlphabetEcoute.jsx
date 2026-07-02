@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getLangueActive, getLangueByCode } from '../utils/languages'
 import { ALPHABET_DATA } from '../data/alphabetData'
-import Neuri3D from '../components/Neuri3D'
+import Neuri2D from '../components/Neuri2D'
 
 const TTS_MAP = { en: 'en-US', es: 'es-ES', de: 'de-DE', pt: 'pt-PT' }
 
@@ -370,7 +370,7 @@ export default function AlphabetEcoute() {
       {showNeuri && (
         <div style={{ width: '100%', display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '16px' }}>
           <div style={{ width: '52px', height: '52px', flexShrink: 0 }}>
-            <Neuri3D color={feedback === 'correct' ? '#58CC02' : '#8B5CF6'} />
+            <Neuri2D size={52} glowColor={feedback === 'correct' ? '#58CC02' : '#8B5CF6'} />
           </div>
           <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '12px 14px', flex: 1 }}>
             <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0, lineHeight: 1.5 }}>

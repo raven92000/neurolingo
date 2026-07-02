@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import Neuri3D from '../components/Neuri3D'
+import Neuri2D from '../components/Neuri2D'
 import { supabase } from '../supabase'
 import { getProfileSettings, applyProfileClass } from '../profileSettings'
 import { getLangueActive } from '../utils/languages'
@@ -246,7 +246,7 @@ function EcranExercice({ mot, etape, total, onNext, onErreur, settings }) {
       </div>
       {showNeuri && (
         <div style={{ width: '100%', display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '16px' }}>
-          <div style={{ width: '52px', height: '52px', flexShrink: 0 }}><Neuri3D color={neurColor} /></div>
+          <div style={{ width: '52px', height: '52px', flexShrink: 0 }}><Neuri2D size={52} glowColor={neurColor} /></div>
           <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '12px 14px', flex: 1 }}>
             <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0, lineHeight: 1.5 }}>{neuriMessage}</p>
           </div>

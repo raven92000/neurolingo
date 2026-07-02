@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Neuri3D from '../components/Neuri3D'
+import Neuri2D from '../components/Neuri2D'
 import BottomNav from '../components/BottomNav'
 import { supabase } from '../supabase'
 import { PROFIL_COLUMNS } from '../utils/profilColumns'
@@ -546,7 +546,7 @@ export default function Settings() {
     <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: '4px 0 0' }}>Personnalise ton expérience NeuroLingo</p>
   </div>
   <div style={{ width: 80, height: 80, marginTop: -10, flexShrink: 0 }}>
-    <Neuri3D color="#8B5CF6" />
+    <Neuri2D size={80} glowColor="#8B5CF6" />
   </div>
 </div>
 
@@ -610,7 +610,7 @@ export default function Settings() {
         {/* FOOTER NEURI */}
         <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: '16px 20px', marginTop: 16, display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{ width: 64, height: 64, flexShrink: 0 }}>
-            <Neuri3D color="#8B5CF6" />
+            <Neuri2D size={64} glowColor="#8B5CF6" />
           </div>
           <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', margin: 0, lineHeight: 1.4, flex: 1 }}>
             <span style={{ color: '#A78BFA', fontWeight: 700 }}>Neuri</span> est là pour t'accompagner, pas pour te juger. <span style={{ color: '#8B5CF6' }}>💜</span>
