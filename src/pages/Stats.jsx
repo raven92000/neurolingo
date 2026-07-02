@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Neuri2D from '../components/Neuri2D'
-import { supabase } from '../supabase'
 import { useProfil } from '../context/ProfilContext'
+import { useContenu } from '../context/ContenuContext'
+import { useProgression } from '../context/ProgressionContext'
 import BottomNav from '../components/BottomNav'
 import Skeleton from '../components/Skeleton'
 import { getVersionFromDate } from '../utils/neuriUtils'
@@ -91,10 +92,9 @@ function calculerStreak(progressions) {
 export default function Stats() {
   const navigate = useNavigate()
   const { user, profil, chargementProfil, refreshProfil } = useProfil()
-  const [xpParJour, setXpParJour] = useState([])
-  const [streak, setStreak] = useState(0)
-  const [niveauData, setNiveauData] = useState({ niveau: NIVEAUX_CONFIG[0], progression: { fait: 0, total: 0 } })
-  const [chargementDonnees, setChargementDonnees] = useState(true)
+  const { chargerLeconsToutes } = useContenu()
+  const { progression, refreshProgression } = useProgression()
+  const [leconsToutes, setLeconsToutes] = useState(null) // null = pas encore chargées
 
   // Redirige si non connecté ; rafraîchit le profil (XP) en arrière-plan
   useEffect(() => {
@@ -102,39 +102,39 @@ export default function Stats() {
   }, [chargementProfil, user, navigate])
   useEffect(() => { refreshProfil() }, [refreshProfil])
 
-  // Données propres à la page (progression, niveau) — rechargées à chaque visite
-  // pour garantir un suivi de progression toujours à jour.
+  // Leçons (en cache après la 1re fois) + revalidation de la progression en
+  // arrière-plan (« affiche tout de suite, rafraîchis en arrière-plan »).
   useEffect(() => {
     if (!profil?.user_id) return
     let actif = true
     ;(async () => {
-      setChargementDonnees(true)
-      // Les 3 requêtes sont indépendantes → on les lance EN PARALLÈLE.
-      // (Requêtes identiques à avant : le calcul de progression ne change pas.)
-      const [progRes, lecRes, chapRes] = await Promise.all([
-        supabase.from('progression').select('lecon_id, completee_le, partie_completee').eq('user_id', profil.user_id),
-        supabase.from('lecons').select('id, nombre_mots, chapitre_id'),
-        profil?.langue_id
-          ? supabase.from('chapitres').select('id, numero').eq('langue_id', profil.langue_id)
-          : Promise.resolve({ data: [] }),
-      ])
+      const lecs = await chargerLeconsToutes()
       if (!actif) return
-      const progressions = progRes.data
-      const lecons = lecRes.data
-      const chapitres = chapRes.data || []
-      const motsParLecon = (lecons || []).reduce((acc, l) => ({ ...acc, [l.id]: l.nombre_mots }), {})
-
-      setXpParJour(calculerXPParJour(progressions, motsParLecon))
-      setStreak(calculerStreak(progressions))
-      setNiveauData(calculerNiveauActuel(chapitres, lecons, progressions))
-      setChargementDonnees(false)
+      setLeconsToutes(lecs)
     })()
+    refreshProgression()
     return () => { actif = false }
-  }, [profil?.user_id, profil?.langue_id])
+  }, [profil?.user_id])
 
-  // Squelette tant que le profil ou les données de progression ne sont pas prêts.
-  // La barre du bas reste visible en permanence.
-  if ((chargementProfil && !profil) || chargementDonnees) {
+  // Stats dérivées — recalculées quand la progression est revalidée en arrière-plan.
+  // chapitres = [] : la requête d'origine (langue_id code vs colonne UUID) renvoie
+  // TOUJOURS vide (12/12 enfants ont un code) → on préserve exactement ce comportement
+  // (niveau figé) sans faire un aller-retour réseau inutile. Quirk laissé tel quel.
+  const { xpParJour, streak, niveauData } = useMemo(() => {
+    if (leconsToutes === null || progression === null) {
+      return { xpParJour: [], streak: 0, niveauData: { niveau: NIVEAUX_CONFIG[0], progression: { fait: 0, total: 0 } } }
+    }
+    const motsParLecon = (leconsToutes || []).reduce((acc, l) => ({ ...acc, [l.id]: l.nombre_mots }), {})
+    return {
+      xpParJour: calculerXPParJour(progression, motsParLecon),
+      streak: calculerStreak(progression),
+      niveauData: calculerNiveauActuel([], leconsToutes, progression),
+    }
+  }, [leconsToutes, progression])
+
+  // Squelette seulement s'il n'y a encore RIEN à montrer. En navigation répétée
+  // (leçons en cache + dernière progression connue), on affiche directement.
+  if ((chargementProfil && !profil) || leconsToutes === null || progression === null) {
     return (
       <div style={{ minHeight: '100vh', background: '#090E1A', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
         <div style={{ padding: '52px 24px 16px' }}>

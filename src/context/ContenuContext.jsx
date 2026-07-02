@@ -27,13 +27,32 @@ export function ContenuProvider({ children }) {
   const cacheRef = useRef(new Map())    // code -> { code, langueId, chapitres, lecons }
   const languesRef = useRef(null)        // [{ id, code }, ...] (chargé une fois)
   const inflightRef = useRef(new Map())  // code -> Promise (évite les doubles chargements)
+  const leconsToutesRef = useRef(null)   // toutes les leçons (pour Stats), chargées une fois
+  const leconsToutesInflight = useRef(null)
 
   // Vide le contenu mémorisé à la déconnexion / au changement de compte.
   useEffect(() => {
     cacheRef.current.clear()
     languesRef.current = null
     inflightRef.current.clear()
+    leconsToutesRef.current = null
+    leconsToutesInflight.current = null
   }, [user?.id])
+
+  // Toutes les leçons (id, nombre_mots, chapitre_id) — utilisées par Stats.
+  // Contenu stable dans une session → chargé une seule fois, puis servi du cache.
+  const chargerLeconsToutes = useCallback(async () => {
+    if (leconsToutesRef.current) return leconsToutesRef.current
+    if (leconsToutesInflight.current) return leconsToutesInflight.current
+    const promesse = (async () => {
+      const { data } = await supabase.from('lecons').select('id, nombre_mots, chapitre_id')
+      leconsToutesRef.current = data || []
+      leconsToutesInflight.current = null
+      return leconsToutesRef.current
+    })()
+    leconsToutesInflight.current = promesse
+    return promesse
+  }, [])
 
   const chargerContenu = useCallback(async (code) => {
     if (!code) return { code, langueId: null, chapitres: [], lecons: [] }
@@ -76,7 +95,7 @@ export function ContenuProvider({ children }) {
   }, [])
 
   return (
-    <ContenuContext.Provider value={{ chargerContenu }}>
+    <ContenuContext.Provider value={{ chargerContenu, chargerLeconsToutes }}>
       {children}
     </ContenuContext.Provider>
   )

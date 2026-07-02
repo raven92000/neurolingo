@@ -4,12 +4,15 @@ import './index.css'
 import App from './App.jsx'
 import { ProfilProvider } from './context/ProfilContext.jsx'
 import { ContenuProvider } from './context/ContenuContext.jsx'
+import { ProgressionProvider } from './context/ProgressionContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ProfilProvider>
       <ContenuProvider>
-        <App />
+        <ProgressionProvider>
+          <App />
+        </ProgressionProvider>
       </ContenuProvider>
     </ProfilProvider>
   </StrictMode>,

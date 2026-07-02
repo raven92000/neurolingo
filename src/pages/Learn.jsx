@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { useProfil } from '../context/ProfilContext'
 import { useContenu } from '../context/ContenuContext'
+import { useProgression } from '../context/ProgressionContext'
 import BottomNav from '../components/BottomNav'
 import Skeleton from '../components/Skeleton'
 import { LANGUES, getLangueActive, setLangueActive, getLangueByCode } from '../utils/languages'
@@ -289,11 +290,11 @@ export default function Learn() {
   const navigate = useNavigate()
   const { user, profil, chargementProfil, refreshProfil } = useProfil()
   const { chargerContenu } = useContenu()
+  const { progression, refreshProgression } = useProgression()
   const [chapitres, setChapitres] = useState([])
   const [lecons, setLecons] = useState([])
-  const [progressions, setProgressions] = useState([])
+  const [codeCharge, setCodeCharge] = useState(null) // code dont le contenu est chargé
   const [niveauSelectionne, setNiveauSelectionne] = useState(1)
-  const [chargement, setChargement] = useState(true)
   const [codeLangue, setCodeLangue] = useState(getLangueActive())
   const [modalOuverte, setModalOuverte] = useState(false)
   const [objectifMinutes, setObjectifMinutes] = useState(5)
@@ -319,28 +320,24 @@ export default function Learn() {
     if (!chargementProfil) setCodeLangue(getLangueActive())
   }, [chargementProfil])
 
-  // Données propres (mondes / leçons / progression) — indexées sur la langue.
-  // Logique de déverrouillage inchangée : mêmes requêtes qu'avant.
-  // Gate sur `chargementProfil` pour être sûr que la langue est alignée.
+  // Contenu des mondes/leçons (souvent déjà en cache → instantané) + revalidation
+  // de la progression en arrière-plan (« affiche tout de suite »). Déverrouillage
+  // inchangé : mêmes données (chapitres/leçons + progression) alimentent le calcul.
   useEffect(() => {
     if (chargementProfil || !user?.id) return
     let actif = true
     ;(async () => {
-      setChargement(true)
-      // Contenu (chapitres/leçons, souvent déjà en cache) EN PARALLÈLE de la
-      // progression (toujours fraîche). Déverrouillage inchangé : mêmes données.
-      const [contenu, progRes] = await Promise.all([
-        chargerContenu(codeLangue),
-        supabase.from('progression').select('lecon_id, partie_completee').eq('user_id', user.id),
-      ])
+      const contenu = await chargerContenu(codeLangue)
       if (!actif) return
       setChapitres(contenu.chapitres)
       setLecons(contenu.lecons)
-      setProgressions(progRes.data || [])
-      setChargement(false)
+      setCodeCharge(contenu.code)
     })()
+    refreshProgression()
     return () => { actif = false }
   }, [codeLangue, user?.id, chargementProfil])
+
+  const progressions = progression || []
 
   const handleChoisirLangue = async (code) => {
     setLangueActive(code)
@@ -399,8 +396,10 @@ export default function Learn() {
   const chapitresNiveau = chapitres.filter(c => niveauActuel?.chapitresNumeros.includes(c.numero))
   const etatNiveauActuel = niveauActuel ? getEtatNiveau(niveauActuel) : { fait: 0, total: 0 }
 
-  // Squelette pendant le chargement des mondes/leçons — barre du bas visible.
-  if (chargement) {
+  // Squelette seulement s'il n'y a encore RIEN à montrer : contenu de la langue
+  // courante pas encore chargé, ou aucune progression connue. En navigation
+  // répétée (tout en cache), on saute directement à l'affichage.
+  if (codeCharge !== codeLangue || progression === null) {
     return (
       <div style={{ minHeight: '100vh', background: '#090E1A', paddingBottom: '100px', maxWidth: '430px', margin: '0 auto' }}>
         <div style={{ padding: '52px 24px 16px' }}>

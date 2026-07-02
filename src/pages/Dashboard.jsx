@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { useProfil } from '../context/ProfilContext'
 import { useContenu } from '../context/ContenuContext'
+import { useProgression } from '../context/ProgressionContext'
 import Neuri2D from '../components/Neuri2D'
 import { getVersionFromDate } from '../utils/neuriUtils'
 import BottomNav from '../components/BottomNav'
@@ -168,9 +169,10 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const { user, profil, chargementProfil, refreshProfil } = useProfil()
   const { chargerContenu } = useContenu()
-  const [leconSuivante, setLeconSuivante] = useState(null)
-  const [toutComplete, setToutComplete] = useState(false)
-  const [chargementDonnees, setChargementDonnees] = useState(true)
+  const { progression, refreshProgression } = useProgression()
+  // Leçons de la langue (null = contenu pas encore chargé) + validité de la langue
+  const [lecons, setLecons] = useState(null)
+  const [langueOk, setLangueOk] = useState(true)
   const [equipes] = useState({
     chapeau: null,
     haut: null,
@@ -180,53 +182,48 @@ export default function Dashboard() {
 
   const langueActuelle = getLangueByCode(getLangueActive())
 
-  // Charge uniquement les données propres à la page (leçon suivante / tout complété).
-  // La langue est déjà alignée par la mémoire partagée → plus de window.location.reload.
-  const chargerDonnees = async (uid) => {
-    if (!uid) return
-    // Contenu pédagogique (souvent déjà en cache) EN PARALLÈLE de la progression
-    // (toujours fraîche). La progression ne dépend pas du contenu.
-    const [contenu, progRes] = await Promise.all([
-      chargerContenu(getLangueActive()),
-      supabase.from('progression').select('lecon_id').eq('user_id', uid),
-    ])
-
-    if (!contenu.langueId) { setToutComplete(true); setLeconSuivante(null); setChargementDonnees(false); return }
-
-    const idsCompletes = new Set((progRes.data || []).map(pr => pr.lecon_id))
-    const prochaine = (contenu.lecons || []).find(l => !idsCompletes.has(l.id))
-
-    if (!prochaine) {
-      setToutComplete(true)
-      setLeconSuivante(null)
-    } else {
-      setToutComplete(false)
-      setLeconSuivante(prochaine)
-    }
-    setChargementDonnees(false)
-  }
-
   // Redirige si non connecté
   useEffect(() => {
     if (!chargementProfil && !user) navigate('/login')
   }, [chargementProfil, user, navigate])
 
-  // Une fois le profil chargé (et la langue alignée par la mémoire), on charge
-  // les données de la page. Le gate sur `chargementProfil` garantit que la
-  // langue active est correcte AVANT de calculer la leçon suivante.
+  // Une fois le profil chargé (langue alignée) : on récupère le contenu (souvent
+  // déjà en cache → instantané) et on rafraîchit profil + progression en
+  // arrière-plan (« affiche tout de suite, rafraîchis en arrière-plan »).
   useEffect(() => {
     if (chargementProfil || !user?.id) return
+    let actif = true
+    ;(async () => {
+      const contenu = await chargerContenu(getLangueActive())
+      if (!actif) return
+      setLangueOk(!!contenu.langueId)
+      setLecons(contenu.lecons || [])
+    })()
     refreshProfil()
-    chargerDonnees(user.id)
+    refreshProgression()
+    return () => { actif = false }
   }, [chargementProfil, user?.id])
+
+  // Leçon suivante / tout complété — DÉRIVÉS du contenu + de la dernière
+  // progression connue. Se recalcule tout seul quand la progression est
+  // revalidée en arrière-plan. Logique de choix inchangée.
+  const { leconSuivante, toutComplete } = useMemo(() => {
+    if (lecons === null || progression === null) return { leconSuivante: null, toutComplete: false }
+    if (!langueOk) return { leconSuivante: null, toutComplete: true }
+    const idsCompletes = new Set((progression || []).map(pr => pr.lecon_id))
+    const prochaine = (lecons || []).find(l => !idsCompletes.has(l.id))
+    return prochaine ? { leconSuivante: prochaine, toutComplete: false } : { leconSuivante: null, toutComplete: true }
+  }, [lecons, progression, langueOk])
+
+  // Vrai seulement tant qu'on n'a rien à montrer (contenu ou progression manquants)
+  const donneesPretes = lecons !== null && progression !== null
 
   const handleReset = async () => {
     if (!user) return
     await supabase.from('progression').delete().eq('user_id', user.id)
     await supabase.from('profils').update({ lecons_completees: 0, mots_appris: 0 }).eq('user_id', user.id)
-    setChargementDonnees(true)
     await refreshProfil()
-    await chargerDonnees(user.id)
+    await refreshProgression()
   }
 
   const handleContinuer = async () => {
@@ -304,7 +301,7 @@ export default function Dashboard() {
         <h2 style={{ fontFamily: 'Nunito, sans-serif', fontSize: '26px', fontWeight: '900', color: '#FFFFFF', textAlign: 'center', margin: '0 0 4px' }}>{profil?.objectif_minutes || 5} min pour progresser</h2>
         <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '15px', color: '#A78BFA', textAlign: 'center', margin: '0 0 24px' }}>Ta leçon t'attend</p>
 
-        {chargementDonnees || !leconSuivante ? (
+        {!donneesPretes ? (
           <Skeleton height={96} radius={20} style={{ marginBottom: '20px' }} />
         ) : (
           <div onClick={() => navigate(leconSuivante.type === 'alphabet' ? '/alphabet' : `/lesson?lecon=${leconSuivante.id}`)} style={{ background: 'rgba(139,92,246,0.08)', border: '1.5px solid rgba(139,92,246,0.4)', borderRadius: '20px', padding: '20px 22px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 0 28px rgba(139,92,246,0.18)', marginBottom: '20px' }}>
